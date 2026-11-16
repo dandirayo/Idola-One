@@ -2,6 +2,9 @@ import { createBrowserRouter, Navigate } from 'react-router'
 import { AppShell } from '@/app/AppShell'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { LoginPage } from '@/pages/LoginPage'
+import { OrderDetailPage } from '@/pages/OrderDetailPage'
+import { OrderNewPage } from '@/pages/OrderNewPage'
+import { OrdersPage } from '@/pages/OrdersPage'
 import { PlaceholderPage } from '@/pages/PlaceholderPage'
 
 const soon = (title: string, phase: string) => <PlaceholderPage title={title} phase={phase} />
@@ -14,8 +17,9 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="/dashboard" replace /> },
       { path: 'dashboard', element: <DashboardPage /> },
-      { path: 'orders', element: soon('Pesanan', 'Fase 1') },
-      { path: 'orders/new', element: soon('Pesanan Baru', 'Fase 1') },
+      { path: 'orders', element: <OrdersPage /> },
+      { path: 'orders/new', element: <OrderNewPage /> },
+      { path: 'orders/:orderId', element: <OrderDetailPage /> },
       { path: 'customers', element: soon('Pelanggan', 'Fase 1') },
       { path: 'services', element: soon('Layanan & Harga', 'Fase 1') },
       { path: 'inventory', element: soon('Stok', 'Fase 2') },

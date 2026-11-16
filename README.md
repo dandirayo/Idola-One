@@ -2,7 +2,7 @@
 
 Aplikasi web operasional dan kasir multi-usaha untuk Idola Laundry. Menggantikan aplikasi Android Flutter dan dashboard owner dari repo `LaundryApp`, dengan backend di server sendiri.
 
-Status: **Fase 0 (fondasi)**. Yang sudah ada baru kerangka proyek, tema, halaman login, dan dashboard owner dengan **data contoh**. Belum terhubung ke server atau data nyata.
+Status: **Fase 0 (fondasi) dan awal Fase 1**. Sudah ada kerangka proyek, tema, login, dashboard owner, serta halaman Pesanan (daftar, buat baru, detail dengan status, pembayaran, dan WhatsApp). Semuanya memakai **data contoh di memori** dan belum terhubung ke server atau data nyata. Cetak nota, pelanggan, dan layanan belum dibuat.
 
 ## Menjalankan secara lokal
 

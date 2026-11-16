@@ -8,6 +8,26 @@ const toneClass: Record<Tone, string> = {
   cream: 'bg-cream',
 }
 
+export const inputClass =
+  'h-11 w-full rounded-xl border border-line bg-canvas px-3.5 text-sm outline-none placeholder:text-muted focus:border-ink'
+
+export const primaryButton =
+  'inline-flex h-11 items-center justify-center rounded-full bg-sidebar px-6 text-sm font-bold text-white hover:bg-sidebar-hover disabled:opacity-60'
+
+export const orderStatusTone: Record<string, Tone> = {
+  received: 'cream',
+  processing: 'lilac',
+  ready: 'lime',
+  picked_up: 'peach',
+  cancelled: 'peach',
+}
+
+export const paymentTone: Record<string, Tone> = {
+  unpaid: 'peach',
+  partial: 'cream',
+  paid: 'lime',
+}
+
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
   return <section className={`rounded-card bg-surface p-5 shadow-card ${className}`}>{children}</section>
 }
