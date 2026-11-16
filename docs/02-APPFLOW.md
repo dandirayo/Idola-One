@@ -3,6 +3,8 @@
 **Versi dokumen:** 0.1 (draf)
 **Tanggal:** 16 November 2026
 **Mengacu ke:** [01-PRD.md](01-PRD.md)
+
+> **Pembaruan (16 Nov 2026):** backend memakai server sendiri, bukan Supabase. Istilah Supabase, RLS, RPC, dan Edge Function di dokumen ini dibaca sebagai "backend sendiri" sesuai [04-BACKEND.md](04-BACKEND.md). Alur dan aturan bisnis tidak berubah.
 **Dasar alur:** `Knowledge Core/product/04-APPFLOW.md` dan `BLUEPRINT.md` di repo LaundryApp. Alur bisnisnya sama, yang berubah adalah cara kerja di browser (bagian 12).
 
 Istilah ID seperti `ORD-01` merujuk ke kebutuhan di PRD.

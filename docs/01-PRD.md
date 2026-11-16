@@ -6,6 +6,8 @@
 **Status:** Draf untuk ditinjau owner
 **Pengganti dari:** aplikasi Android Flutter `laundry_app_flutter` (2.1.15+31) dan dashboard owner `admin_dashboard_web`
 
+> **Pembaruan keputusan (16 Nov 2026):** backend tidak lagi memakai layanan Supabase, tetapi server sendiri (VPS/mini server). Semua bagian dokumen ini yang menyebut Supabase, RLS, RPC, atau Edge Function sebagai backend dibaca sebagai **"backend sendiri"** sesuai [04-BACKEND.md](04-BACKEND.md). Fitur, aturan bisnis, dan prioritas tidak berubah. Desain visual diganti mengikuti referensi dashboard "Eduplex" (bagian 11).
+
 ---
 
 ## 1. Ringkasan
@@ -84,16 +86,16 @@ Pertimbangan utama:
 | --- | --- | --- |
 | Bahasa | **TypeScript** (strict) | Tipe data dari skema Supabase dapat dibuat otomatis, sehingga kesalahan kolom terdeteksi sebelum rilis |
 | Framework UI | **React** + **Vite** (Single Page App) | Sama dengan dashboard sekarang. Ringan, cepat, cocok untuk PWA, dan cukup di-hosting sebagai file statis. |
-| Routing | **TanStack Router** | Route bertipe, guard per peran, dan parameter URL yang aman (misal filter periode laporan) |
+| Routing | **React Router** (terpasang di proyek) | Route per peran dan guard. TanStack Router tidak jadi dipakai karena React Router sudah cukup. |
 | Data dan cache | **TanStack Query** + **supabase-js** | Cache, refetch saat fokus, dan invalidasi saat event Realtime. Pola ini sudah dipakai di Flutter dan dashboard. |
-| Tampilan | **Tailwind CSS** + **shadcn/ui** (Radix) | Komponen aksesibel (dialog, sheet, tabel, form) yang bisa disesuaikan dengan token warna Idola |
+| Tampilan | **Tailwind CSS v4** + komponen sendiri (shadcn/ui dapat ditambahkan bila perlu) | Komponen aksesibel (dialog, sheet, tabel, form) yang bisa disesuaikan dengan token warna Idola |
 | Form dan validasi | **React Hook Form** + **Zod** | Validasi form pesanan, pembayaran, dan pengajuan konsisten di satu tempat |
 | Tabel dan grafik | **TanStack Table**, **Recharts** | Tabel dengan paginasi/filter server, grafik laporan |
 | PWA dan offline | **vite-plugin-pwa** (Workbox), **Dexie** (IndexedDB) | Bisa dipasang di layar utama, cache tampilan, antrean aksi ringan saat jaringan putus |
 | Notifikasi push | **Web Push** lewat service worker (FCM web atau VAPID) | Pengganti Firebase Messaging di Android |
 | Backend | **Supabase** yang sudah ada | Data, RLS, RPC, trigger, Realtime, Storage, dan Edge Function tetap dipakai |
 | Pengujian | **Vitest**, **Testing Library**, **Playwright** | Unit, komponen, dan uji alur kasir end-to-end |
-| Kualitas kode | **oxlint** atau ESLint, **Prettier**, **pnpm** | oxlint sudah dipakai dashboard sekarang |
+| Kualitas kode | **oxlint**, **Vitest**, **npm** | oxlint sudah dipakai dashboard sekarang. npm dipilih karena sudah terpasang di komputer, tanpa memasang alat tambahan. |
 | Hosting | Hosting statis (Cloudflare Pages atau VPS + Nginx) | Tidak perlu server aplikasi. Lihat keputusan terbuka K-03. |
 | CI/CD | **GitHub Actions** | Lint, test, dan build di setiap PR, lalu deploy otomatis dari `main` |
 
@@ -302,19 +304,20 @@ Prioritas:
 
 ## 11. Desain dan tampilan
 
-Melanjutkan identitas visual Idola yang sudah ada:
+Mengikuti referensi dashboard "Eduplex" yang dipilih owner: sidebar gelap dengan menu aktif berwarna hijau-limau, kartu putih bersudut besar, ikon dalam kotak pastel, grafik batang dengan tooltip, kalender kecil, dan kartu promosi gelap di kolom kanan. Token yang dipakai di kode (`src/index.css`):
 
 | Token | Nilai |
 | --- | --- |
 | Font | DM Sans 400–700 |
-| Navy | `#071F70` |
-| Biru utama | `#0B2E9F` |
-| Royal blue | `#123FC4` |
-| Emas | `#F5A800` |
-| Latar | `#FAFAF8` |
-| Permukaan | `#FFFFFF` |
-| Teks utama / sekunder | `#172033` / `#667085` |
+| Sidebar / teks gelap | `#1E1E2D` / `#1B1B28` |
+| Aksen utama (lime) | `#D9F36B` |
+| Latar halaman | `#F6F6F2` |
+| Permukaan kartu | `#FFFFFF` |
+| Pastel: peach / lilac / lime lembut / krem | `#FBE3D6` / `#E4E1F8` / `#EAF5C8` / `#FBEBD3` |
+| Teks sekunder / garis | `#8A8A96` / `#ECECE6` |
 | Sukses / peringatan / error | `#15803D` / `#D97706` / `#D92D20` |
+
+Palet biru-emas Idola sebelumnya diganti. Logo dan warna merek final dapat disesuaikan kemudian tanpa mengubah struktur.
 
 Navigasi:
 
@@ -376,15 +379,17 @@ Dokumen desain rinci (wireframe tiap layar) dibuat terpisah sebagai `docs/03-UI-
 
 ## 16. Keputusan terbuka
 
-| No | Pertanyaan | Usulan |
+Keputusan backend, hosting, printer, dan repo ada di [04-BACKEND.md](04-BACKEND.md). Ringkasan status:
+
+| No | Pertanyaan | Status |
 | --- | --- | --- |
-| K-01 | Printer apa yang dipakai di toko, dan apakah mendukung BLE? | Uji Web Bluetooth dengan printer yang ada di Fase 0, lalu pilih jalur cetak |
-| K-02 | Di mana folder `supabase/` (migration) disimpan ke depannya? | Pindahkan ke repo IdolaOne sebagai satu-satunya sumber, setelah migration `20261106073457` dari branch `codex/laundry-stability-p0`/`chore/repo-hygiene-v3` digabung |
-| K-03 | Hosting: Cloudflare Pages, Vercel, atau VPS sendiri? | Cloudflare Pages (gratis, CDN, deploy dari GitHub). VPS bila ingin satu tempat dengan layanan lain. |
-| K-04 | Domain aplikasi? | Mis. `app.idolalaundry.com` (menunggu keputusan owner) |
-| K-05 | Apakah perlu staging Supabase terpisah? | Ya. Pakai Supabase branching atau project staging untuk uji migration baru. |
-| K-06 | Apakah karyawan login dengan username/password atau tetap ada PIN? | Username/password via Supabase Auth, dengan sesi panjang di perangkat toko |
-| K-07 | Kapan APK resmi dihentikan? | Setelah Fase 4 terpenuhi |
+| K-01 | Printer thermal | Aplikasi Android memakai Bluetooth biasa. Nama/tipe printer perlu dicatat dari halaman Printer di aplikasi. Jalur cetak web menunggu ini (04-BACKEND bagian 6). |
+| K-02 | Lokasi folder migration database | Dipindahkan ke repo ini setelah arsitektur backend diputuskan (B-01) |
+| K-03 | Hosting | Bertahap: pratinjau dari GitHub/lokal, lalu VPS atau mini server sendiri (04-BACKEND bagian 4) |
+| K-04 | Domain | Ditunda |
+| K-05 | Staging | Tidak lagi memakai Supabase. Server uji sendiri berisi salinan data, setelah B-01 dan B-05 |
+| K-06 | Login karyawan | Username dan password dengan sesi panjang di perangkat toko |
+| K-07 | Penghentian APK | Setelah Fase 4 terpenuhi |
 
 ## 17. Referensi
 

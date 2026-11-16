@@ -4,6 +4,8 @@
 **Tanggal:** 16 November 2026
 **Mengacu ke:** [01-PRD.md](01-PRD.md) (fase di bagian 13) dan [02-APPFLOW.md](02-APPFLOW.md)
 
+> **Pembaruan (16 Nov 2026):** backend memakai server sendiri, bukan Supabase. Istilah Supabase, RLS, RPC, dan Edge Function di dokumen ini dibaca sebagai "backend sendiri" sesuai [04-BACKEND.md](04-BACKEND.md). Alur dan aturan bisnis tidak berubah.
+
 Dokumen ini memecah fase PRD menjadi tugas. **Tidak ada estimasi tanggal**, karena kecepatan kerja belum diketahui. Urutan dan kriteria selesai yang mengikat. Estimasi bisa ditambahkan setelah Fase 0 selesai.
 
 Penanda tugas:
@@ -16,7 +18,7 @@ Penanda tugas:
 
 ## Prinsip pelaksanaan
 
-1. **Database produksi tidak diubah saat pengembangan.** Pengembangan memakai staging Supabase. Produksi hanya menerima migration yang sudah lulus uji.
+1. **Database produksi tidak diubah saat pengembangan.** Pengembangan memakai server uji dengan salinan data. Produksi hanya menerima migration yang sudah lulus uji.
 2. **Hanya menambah.** Tidak mengubah atau menghapus data, ID, snapshot harga, atau tanggal transaksi lama.
 3. **Satu fitur selesai = kode, uji, dan alur terverifikasi** (bukan hanya tampilan jadi).
 4. **Kunci versi dependency** di lockfile dan tidak menaikkan versi di tengah fase tanpa alasan.
@@ -30,18 +32,18 @@ Tujuan: kerangka proyek, login, dan lingkungan uji siap. Belum ada fitur bisnis.
 
 | No | Tugas | Hasil |
 | --- | --- | --- |
-| 0.1 | Putuskan K-01 s.d. K-06. Terutama **uji printer** dengan printer toko lewat Web Bluetooth, RawBT, dan Web Serial. | Catatan hasil uji dan jalur cetak terpilih |
-| 0.2 | Buat repo GitHub `IdolaOne` dan rapikan konvensi (branch, commit, PR) | Repo siap |
-| 0.3 | Setup proyek: Vite + React + TypeScript strict, pnpm, oxlint/ESLint, Prettier, Vitest, Playwright | `pnpm dev`, `lint`, `test`, `build` berjalan |
+| 0.1 | Putuskan B-01 s.d. B-05 di `04-BACKEND.md`. Catat nama/tipe printer, lalu **uji cetak** pada jalur yang dipilih (server cetak, RawBT, atau PDF). | Catatan keputusan dan hasil uji cetak |
+| 0.2 | Repo GitHub `Idola-One` dibuat (private) dan konvensi branch: satu `main` + branch pendek `feature/*`/`fix/*` lewat PR | Repo siap (selesai) |
+| 0.3 | Setup proyek: Vite + React + TypeScript strict, npm, oxlint, Vitest. Playwright menyusul. | `npm run dev`, `lint`, `test`, `build` berjalan (selesai) |
 | 0.4 | Setup CI GitHub Actions: lint, type-check, test, build | CI hijau di setiap PR |
-| 0.5 | Siapkan **staging Supabase** (K-05) dari skema produksi dan data contoh. Satukan folder migration ke repo ini (K-02). | Staging berjalan, migration terurut |
-| 0.6 | Generate tipe TypeScript dari skema (`supabase gen types`) | Tipe database dalam repo |
-| 0.7 | Tema: token warna, font DM Sans, komponen dasar (tombol, input, kartu, dialog, tabel, sheet, toast, state kosong/error/loading) | Pustaka komponen dasar |
-| 0.8 | Router dengan guard per peran dan tata letak: sidebar (owner desktop), navigasi bawah (ponsel) | Shell Owner, Karyawan, POS kosong |
-| 0.9 | Klien Supabase, penyimpanan sesi, TanStack Query, helper Realtime, penanganan error terpusat | Fondasi data |
-| 0.10 | Auth: login, logout, pemulihan sesi, akun nonaktif ditolak, pilih usaha | AUTH-01, 02, 03, 06 |
+| 0.5 | Siapkan **server uji sendiri** (PostgreSQL + API) dari skema yang ada dan data contoh. Satukan migration ke repo ini (K-02). | Server uji berjalan, migration terurut |
+| 0.6 | Buat tipe TypeScript bersama dari skema database (pembuat tipe sesuai opsi backend) | Tipe database dalam repo |
+| 0.7 | Tema gaya Eduplex: token warna, font DM Sans, komponen dasar (kartu, chip, grafik, kalender selesai; dialog, tabel, sheet, toast menyusul) | Pustaka komponen dasar (sebagian selesai) |
+| 0.8 | Router dengan guard per peran dan tata letak: sidebar (desktop), menu geser (ponsel). Shell Owner selesai, Karyawan dan POS menyusul. | Shell Owner (selesai) |
+| 0.9 | Lapisan data yang bisa diganti (data contoh atau API), penyimpanan sesi, TanStack Query, helper realtime, penanganan error terpusat | Fondasi data |
+| 0.10 | Auth: halaman login (selesai, mode pratinjau), lalu login sungguhan ke backend, pemulihan sesi, akun nonaktif ditolak, pilih usaha | AUTH-01, 02, 03, 06 |
 | 0.11 | PWA dasar: manifest, service worker, banner "Versi baru, muat ulang" | Dapat dipasang di layar utama |
-| 0.12 | Deploy staging otomatis dari `main` (K-03, K-04) | URL staging |
+| 0.12 | Pratinjau otomatis dari `main` (GitHub atau lokal), lalu deploy ke server sendiri | URL pratinjau |
 
 **Gerbang Fase 0:**
 
