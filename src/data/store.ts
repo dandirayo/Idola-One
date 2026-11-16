@@ -6,7 +6,15 @@ import { useSyncExternalStore } from 'react'
 import type { CashEntry } from '@/lib/finance'
 import type { ShopInfo } from '@/lib/receipt'
 import { isMoneyRequest, type RequestStatus, type RequestType } from '@/lib/requests'
-import { normalizePhone, orderTotal, type OrderStatus, type PaymentMethod, type Unit } from '@/lib/orders'
+import { formatRupiah } from '@/lib/format'
+import {
+  normalizePhone,
+  orderTotal,
+  paymentMethodLabel,
+  type OrderStatus,
+  type PaymentMethod,
+  type Unit,
+} from '@/lib/orders'
 
 export interface Service {
   id: string
@@ -88,6 +96,17 @@ export interface Employee {
   active: boolean
 }
 
+/** Jejak perubahan penting. Hanya ditambah, tidak pernah diubah atau dihapus. */
+export interface AuditEntry {
+  id: string
+  at: string
+  orderId: string
+  orderNumber: string
+  action: string
+  before: string
+  after: string
+}
+
 export interface EmployeeRequest {
   id: string
   type: RequestType
@@ -109,6 +128,7 @@ interface State {
   requests: EmployeeRequest[]
   employees: Employee[]
   shop: ShopInfo
+  audit: AuditEntry[]
   /** Satu-satunya sumber pergerakan kas. Diisi oleh aksi di bawah, meniru trigger database. */
   cash: CashEntry[]
 }
@@ -238,6 +258,7 @@ let state: State = {
   requests: seedRequests,
   employees: seedEmployees,
   shop: seedShop,
+  audit: [],
   cash: [
     {
       id: 'cash-opening',
@@ -578,4 +599,67 @@ export function updateShop(patch: Partial<ShopInfo>) {
   next.address = next.address.trim()
   next.footer = next.footer.trim()
   emit({ ...state, shop: next })
+}
+
+export interface PaymentCorrection {
+  amount: number
+  method: PaymentMethod
+  at: string // ISO
+}
+
+const auditDate = new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' })
+
+const describePayment = (amount: number, method: PaymentMethod, at: string) =>
+  `${formatRupiah(amount)} · ${paymentMethodLabel[method]} · ${auditDate.format(new Date(at))}`
+
+/**
+ * Koreksi pembayaran (khusus owner). Memperbarui pembayaran, total dibayar pada
+ * pesanan, dan baris kas yang terkait dalam satu langkah, lalu mencatat audit.
+ * Jumlah semua pembayaran tidak boleh melebihi tagihan pesanan.
+ */
+export function correctPayment(orderId: string, paymentId: string, input: PaymentCorrection) {
+  const order = getOrder(orderId)
+  if (!order) throw new Error('Pesanan tidak ditemukan.')
+  const payment = order.payments.find((p) => p.id === paymentId)
+  if (!payment) throw new Error('Pembayaran tidak ditemukan.')
+  requirePositive(input.amount, 'Nominal')
+  const when = new Date(input.at)
+  if (Number.isNaN(when.getTime())) throw new Error('Tanggal pembayaran tidak valid.')
+  if (when.getTime() > Date.now() + 60_000) throw new Error('Tanggal pembayaran tidak boleh di masa depan.')
+
+  const othersPaid = order.paid - payment.amount
+  if (othersPaid + input.amount > order.total) throw new Error('Total pembayaran melebihi tagihan pesanan.')
+  const nextAt = when.toISOString()
+  if (input.amount === payment.amount && input.method === payment.method && nextAt === new Date(payment.at).toISOString()) {
+    throw new Error('Tidak ada perubahan.')
+  }
+
+  const entry: AuditEntry = {
+    id: `a${Date.now()}-${state.audit.length}`,
+    at: new Date().toISOString(),
+    orderId,
+    orderNumber: order.number,
+    action: 'Koreksi pembayaran',
+    before: describePayment(payment.amount, payment.method, new Date(payment.at).toISOString()),
+    after: describePayment(input.amount, input.method, nextAt),
+  }
+
+  emit({
+    ...state,
+    orders: state.orders.map((o) =>
+      o.id === orderId
+        ? {
+            ...o,
+            paid: othersPaid + input.amount,
+            payments: o.payments.map((p) =>
+              p.id === paymentId ? { ...p, amount: input.amount, method: input.method, at: nextAt } : p,
+            ),
+          }
+        : o,
+    ),
+    cash: state.cash.map((c) =>
+      c.id === `cash-${paymentId}` ? { ...c, amount: input.amount, method: input.method, at: nextAt } : c,
+    ),
+    audit: [entry, ...state.audit],
+  })
 }

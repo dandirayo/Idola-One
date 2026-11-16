@@ -25,7 +25,7 @@ Arti kolom Status pada tabel di bawah:
 - **Sebagian:** ada sebagian yang jadi, sisanya belum (lihat kolom tugas).
 - **Belum:** belum dikerjakan.
 
-Ringkasan dari 55 tugas (Fase 0 sampai 3): 2 Selesai, 22 Tampilan saja atau Sebagian, 31 Belum.
+Ringkasan dari 55 tugas (Fase 0 sampai 3): 2 Selesai, 26 Tampilan saja atau Sebagian, 27 Belum.
 
 ---
 
@@ -105,9 +105,9 @@ Tujuan: karyawan dapat menjalankan alur harian dari web.
 | 2.3 | `[DB]` RPC aggregate untuk Beranda dan laporan | RPT-03 | Belum |
 | 2.4 | Buku Kas: saldo, masuk, keluar, rincian metode, periode, ekspor CSV | PAY-05 | Sebagian |
 | 2.5 | Beranda owner (KPI, pengajuan menunggu, pesanan terbaru) | RPT-01 | Tampilan saja |
-| 2.6 | Laporan Pesanan dan Keuangan | RPT-02 | Belum |
-| 2.7 | Laporan Pembayaran karyawan dan draf WhatsApp | PAY-06 | Belum |
-| 2.8 | Koreksi pembayaran oleh owner | PAY-04 | Belum |
+| 2.6 | Laporan Pesanan dan Keuangan | RPT-02 | Tampilan saja |
+| 2.7 | Laporan Pembayaran karyawan dan draf WhatsApp | PAY-06 | Tampilan saja |
+| 2.8 | Koreksi pembayaran oleh owner | PAY-04 | Tampilan saja |
 | 2.9 | Absensi selfie: kamera browser, unggah Storage, waktu server | ATT-01 | Belum |
 | 2.10 | Pengajuan: form per jenis (karyawan) dan Pusat Pengajuan (owner), label status yang benar | REQ-01 s.d. 04 | Tampilan saja |
 | 2.11 | Karyawan: tambah akun (Edge Function), ubah, aktif/nonaktif | EMP-01 | Tampilan saja |
@@ -139,7 +139,7 @@ Tujuan: karyawan dapat menjalankan alur harian dari web.
 | 3.10 | Stok: koreksi +/− oleh owner | INV-04 | Tampilan saja |
 | 3.11 | `[DB]` Histori transisi status pesanan (append-only) dan Analitik | RPT-04 | Belum |
 | 3.12 | Audit: garis waktu, filter, perbandingan data, paginasi server | AUD-01 | Belum |
-| 3.13 | Ekspor CSV pesanan, kas, pelanggan | RPT-05 | Belum |
+| 3.13 | Ekspor CSV pesanan, kas, pelanggan | RPT-05 | Sebagian |
 | 3.14 | `[DB]` Web Push (tabel langganan, pengirim) | NTF-03 | Belum |
 | 3.15 | Uji E2E tambahan: POS, pengajuan, proyek | NFR-12 | Belum |
 
@@ -222,12 +222,16 @@ Keputusan kecil yang diambil saat membangun versi tampilan. Semuanya perlu dicek
 | Stok | Beli Stok mencatat mutasi, pengeluaran kategori Stok, dan kas keluar sekaligus. Pakai Stok tidak membuat kas. | Di backend, harus satu transaksi database |
 | Login | Mode pratinjau, isian apa pun diterima | Ganti dengan autentikasi backend. Mode pratinjau tidak boleh ikut ke produksi. |
 | Dashboard beranda | KPI, grafik mingguan, dan daftar dihitung di browser dari data di store (`src/lib/dashboard.ts`). Grafik hanya memuat pesanan yang ada di memori. | Ganti dengan agregat server (RPT-03). Angka tidak boleh dihitung dari daftar yang termuat saja. |
-| Pengujian | Hanya diuji di browser lewat teks dan struktur halaman. Tangkapan layar hanya untuk Beranda awal dan pratinjau nota. Tata letak halaman Pelanggan, Layanan, Stok, Buku Kas, Pengajuan, Tim, dan Pengaturan belum dilihat secara visual. Cetak sungguhan (dialog cetak, printer fisik) belum dicoba. | Periksa visual di ponsel dan desktop, lalu uji cetak di printer toko |
+| Pengujian | Hanya diuji di browser lewat teks dan struktur halaman. Tangkapan layar hanya untuk Beranda awal dan pratinjau nota. Tata letak halaman Pelanggan, Layanan, Stok, Buku Kas, Pengajuan, Tim, Pengaturan, dan Laporan belum dilihat secara visual. Cetak sungguhan (dialog cetak, printer fisik) dan unduhan CSV sungguhan belum dicoba. | Periksa visual di ponsel dan desktop, uji cetak di printer toko, dan uji unduhan CSV |
 | Saldo pembuka | Entri kategori "Saldo Awal" dihitung dalam saldo akhir, tetapi **tidak** dihitung sebagai pemasukan periode atau KPI pemasukan (`OPENING_CATEGORY` di `src/lib/finance.ts`). | Konfirmasi dengan owner. Sistem lama belum punya alur saldo pembuka. |
 | Pengajuan | Hanya kasbon yang berdampak uang: setelah disetujui tombolnya "Bayar" dan menghasilkan kas keluar. Jenis lain memakai "Tandai Dilaksanakan" tanpa kas. Menolak wajib disertai alasan. Status `completed` tampil sebagai "Dilaksanakan". | Dokumen lama berbeda: aplikasi Android menampilkan `completed` sebagai "Disetujui", sedangkan dokumen upgrade UI/UX 30 Okt memakai "Dilaksanakan". Perlu diputuskan satu istilah. Pengajuan stok juga belum otomatis menambah stok dan kas seperti di BLUEPRINT lama. |
 | Peran | Belum ada pemisahan peran. Semua halaman terbuka untuk sesi pratinjau (owner). Form pengajuan memakai isian nama pengaju. | Karyawan membuat pengajuan dari akunnya sendiri, hanya owner yang memutuskan (ditegakkan backend) |
 | Cetak | Nota, label cucian, dan bukti pengambilan disusun sebagai baris teks monospace (`src/lib/receipt.ts`) selebar 32 kolom (58 mm) atau 48 kolom (80 mm), sesuai aplikasi Android. Dicetak lewat dialog cetak browser (`window.print()`), yang juga memungkinkan "Simpan sebagai PDF". Pratinjau nota diperiksa di browser. | **Belum diuji pada printer fisik** dan dialog cetak belum dibuka dalam pengujian. Cetak langsung ke printer thermal Bluetooth menunggu keputusan jalur di 04-BACKEND bagian 6. Baris yang sama dapat dipakai ulang sebagai ESC/POS. Aturan "Minimal 3 kg" di nota mengikuti perkiraan di layar, bukan server. |
 | Tim dan Pengaturan | Tim: tambah, ubah, nonaktifkan (bukan hapus) dengan gaji mingguan. Pengaturan: nama, telepon, alamat, pesan nota, lebar kertas, dan cetak uji. | Akun login karyawan, jadwal, absensi, dan gaji belum ada. Profil dan ganti password belum ada. Nomor telepon dan alamat toko di data contoh adalah karangan. |
+| Laporan | Laporan Pesanan (jumlah, nilai, volume, sisa, per status, per layanan) dan Keuangan (masuk, keluar, bersih, per metode, per kategori) dihitung di browser (`src/lib/reports.ts`). Pesanan dihitung menurut **tanggal dibuat**, bukan tanggal selesai. Pesanan batal tidak dihitung ke nilai dan volume tetapi tampil di rincian status. Saldo awal tidak dihitung sebagai pemasukan. | Angka harus dari agregat server (RPT-03). Laporan "pesanan selesai" yang akurat butuh histori transisi status (3.11). |
+| Ekspor CSV | Pesanan dan kas dapat diekspor dari halaman Laporan. Sel teks berawalan `= + - @` diberi apostrof agar tidak dijalankan sebagai rumus, dan sel dikutip sesuai standar CSV (diuji). | Tombol unduh belum dijalankan di browser (butuh izin unduhan). Ekspor pelanggan belum ada. Ekspor Buku Kas langsung dari halaman Buku Kas belum ada. |
+| Laporan Pembayaran | Merangkum pembayaran pelanggan per metode. Hybrid hanya keterangan (nota bertunai dan transfer) dan tidak dijumlahkan lagi. Draf WhatsApp bisa diubah sebelum dikirim. | Nomor tujuan sementara memakai telepon toko, pengganti nomor owner di profil. Dasar waktu memakai zona waktu perangkat, bukan WIB. |
+| Koreksi pembayaran | Hanya untuk sesi owner. Nominal, metode, dan tanggal dapat diubah. Jumlah semua pembayaran tidak boleh melebihi tagihan, tanggal masa depan ditolak, dan koreksi tanpa perubahan ditolak. Pembayaran, total dibayar, baris kas, dan catatan audit diperbarui sekaligus. Status bayar mengikuti (bisa turun dari Lunas ke DP). | Halaman Audit belum ada (3.12), catatan audit baru tampil di detail pesanan dan hilang saat dimuat ulang. Di backend harus satu transaksi database. Belum diputuskan apakah pesanan yang sudah Diambil boleh dikoreksi, dan efeknya pada poin pelanggan (poin belum dibuat). |
 | Paket | Memakai npm (bukan pnpm) dan React Router (bukan TanStack Router). TypeScript 7 dan React Router 8 sesuai versi terbaru saat setup. | Kunci versi tetap lewat `package-lock.json` |
 
 ## Dokumen berikutnya

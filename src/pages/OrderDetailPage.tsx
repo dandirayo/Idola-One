@@ -1,6 +1,7 @@
 import { ArrowLeft, MessageCircle } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router'
+import { PaymentHistory } from '@/components/PaymentHistory'
 import { PrintDialog } from '@/components/PrintDialog'
 import { buildDocument, docKindLabel, type DocKind } from '@/lib/receipt'
 import { Card, inputClass, orderStatusTone, paymentTone, primaryButton, SectionTitle, StatusChip } from '@/components/ui'
@@ -115,24 +116,7 @@ export function OrderDetailPage() {
             {order.note && <p className="mt-3 rounded-xl bg-canvas p-3 text-sm">Catatan: {order.note}</p>}
           </Card>
 
-          <Card>
-            <SectionTitle>Riwayat Pembayaran</SectionTitle>
-            {order.payments.length === 0 ? (
-              <p className="text-sm text-muted">Belum ada pembayaran.</p>
-            ) : (
-              <ul className="divide-y divide-line text-sm">
-                {order.payments.map((p) => (
-                  <li key={p.id} className="flex items-center justify-between py-2.5">
-                    <span>
-                      {paymentMethodLabel[p.method]}
-                      <span className="block text-xs text-muted">{dateTime.format(new Date(p.at))}</span>
-                    </span>
-                    <span className="font-semibold">{formatRupiah(p.amount)}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Card>
+          <PaymentHistory order={order} />
         </div>
 
         <aside className="space-y-5">

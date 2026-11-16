@@ -9,7 +9,9 @@ import { LoginPage } from '@/pages/LoginPage'
 import { OrderDetailPage } from '@/pages/OrderDetailPage'
 import { OrderNewPage } from '@/pages/OrderNewPage'
 import { OrdersPage } from '@/pages/OrdersPage'
+import { PaymentReportPage } from '@/pages/PaymentReportPage'
 import { PlaceholderPage } from '@/pages/PlaceholderPage'
+import { ReportsPage } from '@/pages/ReportsPage'
 import { RequestNewPage } from '@/pages/RequestNewPage'
 import { RequestsPage } from '@/pages/RequestsPage'
 import { ServicesPage } from '@/pages/ServicesPage'
@@ -32,7 +34,8 @@ export const router = createBrowserRouter([
       { path: 'services', element: <ServicesPage /> },
       { path: 'inventory', element: <InventoryPage /> },
       { path: 'cashbook', element: <CashbookPage /> },
-      { path: 'reports', element: soon('Laporan', 'Fase 2') },
+      { path: 'reports', element: <ReportsPage /> },
+      { path: 'reports/payments', element: <PaymentReportPage /> },
       { path: 'requests/review', element: <RequestsPage /> },
       { path: 'requests/new', element: <RequestNewPage /> },
       { path: 'employees', element: <EmployeesPage /> },
