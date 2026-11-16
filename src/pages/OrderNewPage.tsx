@@ -10,8 +10,10 @@ type PayChoice = 'none' | 'half' | 'full'
 
 export function OrderNewPage() {
   const navigate = useNavigate()
-  const services = useStore((s) => s.services)
-  const customers = useStore((s) => s.customers)
+  const allServices = useStore((s) => s.services)
+  const allCustomers = useStore((s) => s.customers)
+  const services = allServices.filter((s) => s.active)
+  const customers = allCustomers.filter((c) => c.active)
 
   const [customerId, setCustomerId] = useState('')
   const [adding, setAdding] = useState(false)
