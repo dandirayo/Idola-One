@@ -4,6 +4,7 @@
 
 import { useSyncExternalStore } from 'react'
 import type { CashEntry } from '@/lib/finance'
+import type { ShopInfo } from '@/lib/receipt'
 import { isMoneyRequest, type RequestStatus, type RequestType } from '@/lib/requests'
 import { normalizePhone, orderTotal, type OrderStatus, type PaymentMethod, type Unit } from '@/lib/orders'
 
@@ -79,6 +80,14 @@ export interface Expense {
   at: string
 }
 
+export interface Employee {
+  id: string
+  name: string
+  position: string
+  weeklySalary: number
+  active: boolean
+}
+
 export interface EmployeeRequest {
   id: string
   type: RequestType
@@ -98,6 +107,8 @@ interface State {
   movements: StockMovement[]
   expenses: Expense[]
   requests: EmployeeRequest[]
+  employees: Employee[]
+  shop: ShopInfo
   /** Satu-satunya sumber pergerakan kas. Diisi oleh aksi di bawah, meniru trigger database. */
   cash: CashEntry[]
 }
@@ -202,6 +213,21 @@ function expenseCash(e: Expense): CashEntry {
   }
 }
 
+const seedEmployees: Employee[] = [
+  { id: 'em1', name: 'Rina', position: 'Kasir', weeklySalary: 350000, active: true },
+  { id: 'em2', name: 'Dika', position: 'Cuci', weeklySalary: 300000, active: true },
+  { id: 'em3', name: 'Sari', position: 'Setrika', weeklySalary: 300000, active: true },
+]
+
+// Data toko contoh. Nomor dan alamat adalah karangan, bukan data Idola.
+const seedShop: ShopInfo = {
+  name: 'Idola Laundry',
+  phone: '0812-0000-0000',
+  address: 'Alamat toko (contoh)',
+  footer: 'Terima kasih sudah mencuci di Idola Laundry',
+  paperWidth: 80,
+}
+
 let state: State = {
   services,
   customers,
@@ -210,6 +236,8 @@ let state: State = {
   movements: [],
   expenses: seedExpenses,
   requests: seedRequests,
+  employees: seedEmployees,
+  shop: seedShop,
   cash: [
     {
       id: 'cash-opening',
@@ -513,4 +541,41 @@ export function completeRequest(id: string) {
   if (isMoneyRequest(r.type)) throw new Error('Pengajuan uang diselesaikan lewat pembayaran.')
   if (r.status !== 'approved') throw new Error('Setujui pengajuan terlebih dahulu.')
   emit({ ...state, requests: patchRequest(id, { status: 'completed' }) })
+}
+
+function validateEmployee(name: string, position: string, weeklySalary: number) {
+  const clean = name.trim()
+  if (!clean) throw new Error('Nama karyawan wajib diisi.')
+  if (!Number.isInteger(weeklySalary) || weeklySalary < 0) {
+    throw new Error('Gaji mingguan harus bilangan bulat, nol atau lebih.')
+  }
+  return { name: clean, position: position.trim() || 'Karyawan', weeklySalary }
+}
+
+export function addEmployee(name: string, position: string, weeklySalary: number): Employee {
+  const valid = validateEmployee(name, position, weeklySalary)
+  const employee: Employee = { id: `em${Date.now()}`, ...valid, active: true }
+  emit({ ...state, employees: [...state.employees, employee] })
+  return employee
+}
+
+export function updateEmployee(id: string, name: string, position: string, weeklySalary: number) {
+  const valid = validateEmployee(name, position, weeklySalary)
+  emit({ ...state, employees: state.employees.map((e) => (e.id === id ? { ...e, ...valid } : e)) })
+}
+
+/** Nonaktifkan, bukan hapus: riwayat absensi dan gaji tetap utuh. */
+export function setEmployeeActive(id: string, active: boolean) {
+  emit({ ...state, employees: state.employees.map((e) => (e.id === id ? { ...e, active } : e)) })
+}
+
+export function updateShop(patch: Partial<ShopInfo>) {
+  const next: ShopInfo = { ...state.shop, ...patch }
+  next.name = next.name.trim()
+  if (!next.name) throw new Error('Nama toko wajib diisi.')
+  if (next.paperWidth !== 58 && next.paperWidth !== 80) throw new Error('Lebar kertas harus 58 atau 80 mm.')
+  next.phone = next.phone.trim()
+  next.address = next.address.trim()
+  next.footer = next.footer.trim()
+  emit({ ...state, shop: next })
 }

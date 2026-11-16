@@ -49,3 +49,38 @@ body {
     animation-duration: 0.01ms !important;
   }
 }
+
+/* Dokumen cetak: font monospace agar kolom sejajar. Lebar kolom diatur lewat satuan ch. */
+.receipt {
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, 'Courier New', monospace;
+}
+
+.print-only {
+  display: none;
+}
+
+@media print {
+  /* Hanya dokumen cetak yang tampil: sembunyikan aplikasi dan pratinjau layar. */
+  #root,
+  .screen-only {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+  }
+
+  @page {
+    margin: 0;
+  }
+
+  .receipt-print {
+    margin: 0;
+    padding: 2mm 3mm;
+  }
+}

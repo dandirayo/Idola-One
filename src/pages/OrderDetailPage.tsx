@@ -1,6 +1,8 @@
 import { ArrowLeft, MessageCircle } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router'
+import { PrintDialog } from '@/components/PrintDialog'
+import { buildDocument, docKindLabel, type DocKind } from '@/lib/receipt'
 import { Card, inputClass, orderStatusTone, paymentTone, primaryButton, SectionTitle, StatusChip } from '@/components/ui'
 import { addPayment, setOrderStatus, useStore } from '@/data/store'
 import { formatRupiah } from '@/lib/format'
@@ -28,7 +30,9 @@ const dateTime = new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeSty
 export function OrderDetailPage() {
   const { orderId } = useParams()
   const orders = useStore((s) => s.orders)
+  const shop = useStore((s) => s.shop)
   const order = orders.find((o) => o.id === orderId)
+  const [printKind, setPrintKind] = useState<DocKind | null>(null)
 
   const [amount, setAmount] = useState('')
   const [method, setMethod] = useState<PaymentMethod>('cash')
@@ -238,8 +242,36 @@ export function OrderDetailPage() {
               <p className="mt-2 text-xs text-muted">Boleh diambil walau belum lunas. Sisa tetap tercatat.</p>
             )}
           </Card>
+
+          <Card>
+            <SectionTitle>Cetak</SectionTitle>
+            <p className="mb-3 text-xs text-muted">
+              Tiap dokumen dicetak satu per satu agar kertas bisa dipotong dan dibagikan sendiri-sendiri.
+            </p>
+            <div className="flex flex-col gap-2">
+              {(['receipt', 'label', 'pickup'] as DocKind[]).map((k) => (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => setPrintKind(k)}
+                  className="h-11 rounded-full bg-canvas text-sm font-semibold hover:bg-line"
+                >
+                  {docKindLabel[k]}
+                </button>
+              ))}
+            </div>
+          </Card>
         </aside>
       </div>
+
+      {printKind && (
+        <PrintDialog
+          title={`${docKindLabel[printKind]} · ${order.number}`}
+          lines={buildDocument(printKind, order, shop)}
+          paperWidth={shop.paperWidth}
+          onClose={() => setPrintKind(null)}
+        />
+      )}
     </div>
   )
 }

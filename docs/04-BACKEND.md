@@ -100,6 +100,8 @@ Dampak untuk versi web:
 - Dengan server sendiri ada jalur yang lebih andal: **layanan cetak di server atau PC toko**. Web mengirim perintah cetak ke API, lalu API meneruskan ESC/POS ke printer yang terhubung lewat USB, jaringan (port 9100), atau Bluetooth.
 - Jalur cadangan: cetak PDF/HTML 58/80 mm dari browser, atau aplikasi pencetak di Android (misal RawBT).
 
+**Status (16 Nov 2026):** jalur cadangan sudah dibuat di web, yaitu dokumen cetak (nota, label, bukti pengambilan) lewat dialog cetak browser dan "Simpan sebagai PDF", dengan lebar 58 atau 80 mm. Belum diuji pada printer fisik, dan cetak langsung ke printer thermal belum ada.
+
 Jalur akhir ditentukan setelah **nama/tipe printer** diketahui dan satu uji cetak dilakukan. Lokasi mini server (di toko atau di rumah) juga menentukan: layanan cetak hanya bisa memakai printer yang terhubung ke server atau jaringan yang sama.
 
 ## 7. Pertanyaan yang masih terbuka
