@@ -5,6 +5,7 @@ import { Card, inputClass, primaryButton, SectionTitle } from '@/components/ui'
 import { addCustomer, createOrder, useStore, type OrderItem } from '@/data/store'
 import { formatQty, formatRupiah } from '@/lib/format'
 import { lineAmount, MIN_KG, orderTotal, paymentMethodLabel, subtotal, type PaymentMethod } from '@/lib/orders'
+import { INCENTIVE_OPTIONS } from '@/lib/payroll'
 
 type PayChoice = 'none' | 'half' | 'full'
 
@@ -14,6 +15,7 @@ export function OrderNewPage() {
   const allCustomers = useStore((s) => s.customers)
   const services = allServices.filter((s) => s.active)
   const customers = allCustomers.filter((c) => c.active)
+  const employees = useStore((s) => s.employees).filter((e) => e.active)
 
   const [customerId, setCustomerId] = useState('')
   const [adding, setAdding] = useState(false)
@@ -21,6 +23,8 @@ export function OrderNewPage() {
   const [newPhone, setNewPhone] = useState('')
   const [serviceId, setServiceId] = useState(services[0]?.id ?? '')
   const [qty, setQty] = useState('')
+  const [incentive, setIncentive] = useState('0')
+  const [incentiveTo, setIncentiveTo] = useState('')
   const [items, setItems] = useState<OrderItem[]>([])
   const [skipMinKg, setSkipMinKg] = useState(false)
   const [payChoice, setPayChoice] = useState<PayChoice>('none')
@@ -45,11 +49,22 @@ export function OrderNewPage() {
     if (Math.abs(value / step - Math.round(value / step)) > 1e-9) {
       return setError(selected.unit === 'kg' ? 'Berat per 0,1 kg.' : 'Jumlah harus bilangan bulat.')
     }
+    const perUnit = selected.incentive ? Number(incentive) : 0
+    const receiver = incentiveTo || employees[0]?.id || ''
+    if (perUnit > 0 && !receiver) return setError('Pilih karyawan penerima insentif.')
     setItems((prev) => [
       ...prev,
-      { serviceId: selected.id, name: selected.name, unit: selected.unit, qty: value, price: selected.price },
+      {
+        serviceId: selected.id,
+        name: selected.name,
+        unit: selected.unit,
+        qty: value,
+        price: selected.price,
+        ...(perUnit > 0 ? { incentive: { perUnit, employeeId: receiver } } : {}),
+      },
     ])
     setQty('')
+    setIncentive('0')
   }
 
   function saveCustomer() {
@@ -179,6 +194,31 @@ export function OrderNewPage() {
               </button>
             </div>
 
+            {selected?.incentive && (
+              <div className="mt-2 grid gap-2 rounded-2xl bg-canvas p-3 sm:grid-cols-2">
+                <label className="block text-xs font-semibold">
+                  Insentif karyawan per pcs
+                  <select value={incentive} onChange={(e) => setIncentive(e.target.value)} className={`${inputClass} mt-1 bg-surface`}>
+                    {INCENTIVE_OPTIONS.map((v) => (
+                      <option key={v} value={v}>
+                        {v === 0 ? 'Tanpa insentif' : formatRupiah(v)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block text-xs font-semibold">
+                  Penerima
+                  <select value={incentiveTo || employees[0]?.id || ''} onChange={(e) => setIncentiveTo(e.target.value)} className={`${inputClass} mt-1 bg-surface`}>
+                    {employees.map((e) => (
+                      <option key={e.id} value={e.id}>
+                        {e.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            )}
+
             {items.length === 0 ? (
               <p className="mt-4 text-sm text-muted">Belum ada layanan ditambahkan.</p>
             ) : (
@@ -189,6 +229,7 @@ export function OrderNewPage() {
                       <p className="truncate text-sm font-semibold">{i.name}</p>
                       <p className="text-xs text-muted">
                         {formatQty(i.qty)} {i.unit} × {formatRupiah(i.price)}
+                        {i.incentive ? ` · insentif ${formatRupiah(i.incentive.perUnit)}/pcs` : ''}
                       </p>
                     </div>
                     <p className="text-sm font-semibold">{formatRupiah(lineAmount(i.qty, i.price))}</p>

@@ -1,61 +1,88 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { setActor } from '@/data/store'
+import type { Role } from '@/lib/access'
 
-export type Role = 'owner' | 'employee' | 'pos'
+export type { Role }
 
 export interface Session {
   name: string
   role: Role
+  /** Id karyawan, kosong untuk owner. */
+  employeeId?: string
 }
 
 interface AuthValue {
   session: Session | null
-  signIn: (identity: string, password: string) => Promise<void>
+  /** Usaha yang sedang aktif. Null bila belum dipilih. */
+  businessId: string | null
+  signIn: (session: Session) => void
   signOut: () => void
+  selectBusiness: (id: string | null) => void
 }
 
-const STORAGE_KEY = 'idola.preview.session'
+const SESSION_KEY = 'idola.preview.session'
+const BUSINESS_KEY = 'idola.preview.business'
 const AuthContext = createContext<AuthValue | null>(null)
 
-function readSession(): Session | null {
+function read<T>(key: string): T | null {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? (JSON.parse(raw) as Session) : null
+    const raw = localStorage.getItem(key)
+    return raw ? (JSON.parse(raw) as T) : null
   } catch {
     return null
   }
 }
 
-function writeSession(session: Session | null) {
+function write(key: string, value: unknown) {
   try {
-    if (session) localStorage.setItem(STORAGE_KEY, JSON.stringify(session))
-    else localStorage.removeItem(STORAGE_KEY)
+    if (value === null) localStorage.removeItem(key)
+    else localStorage.setItem(key, JSON.stringify(value))
   } catch {
     // penyimpanan diblokir: sesi hanya hidup selama tab terbuka
   }
 }
 
+/** Sesi lama (tanpa peran valid) dianggap tidak ada. */
+function readSession(): Session | null {
+  const s = read<Session>(SESSION_KEY)
+  return s && (s.role === 'owner' || s.role === 'employee') && typeof s.name === 'string' ? s : null
+}
+
 /**
- * Mode pratinjau: belum ada backend, jadi login menerima isian apa pun.
+ * Mode pratinjau: belum ada backend, jadi masuk cukup dengan memilih orang.
  * Akan diganti autentikasi backend sendiri (lihat docs/04-BACKEND.md).
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(readSession)
+  const [businessId, setBusinessId] = useState<string | null>(() => (session ? read<string>(BUSINESS_KEY) : null))
 
-  const signIn = useCallback(async (identity: string, password: string) => {
-    if (!identity.trim() || !password) {
-      throw new Error('Isi username dan password.')
-    }
-    const next: Session = { name: 'Dandi', role: 'owner' }
-    writeSession(next)
+  useEffect(() => {
+    setActor(session?.name ?? 'Sistem')
+  }, [session])
+
+  const signIn = useCallback((next: Session) => {
+    write(SESSION_KEY, next)
+    write(BUSINESS_KEY, null)
     setSession(next)
+    setBusinessId(null)
   }, [])
 
   const signOut = useCallback(() => {
-    writeSession(null)
+    write(SESSION_KEY, null)
+    write(BUSINESS_KEY, null)
     setSession(null)
+    setBusinessId(null)
   }, [])
 
-  const value = useMemo(() => ({ session, signIn, signOut }), [session, signIn, signOut])
+  const selectBusiness = useCallback((id: string | null) => {
+    write(BUSINESS_KEY, id)
+    setBusinessId(id)
+  }, [])
+
+  const value = useMemo(
+    () => ({ session, businessId, signIn, signOut, selectBusiness }),
+    [session, businessId, signIn, signOut, selectBusiness],
+  )
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 

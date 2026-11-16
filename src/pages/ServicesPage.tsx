@@ -1,5 +1,6 @@
 import { Pencil, Plus } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
+import { useAuth } from '@/lib/auth'
 import { Card, inputClass, primaryButton, StatusChip } from '@/components/ui'
 import { addService, setServiceActive, updateService, useStore, type Service } from '@/data/store'
 import { formatRupiah } from '@/lib/format'
@@ -9,6 +10,8 @@ const unitLabel: Record<Unit, string> = { kg: 'Kiloan (per kg)', pcs: 'Satuan (p
 
 export function ServicesPage() {
   const services = useStore((s) => s.services)
+  const { session } = useAuth()
+  const isOwner = session?.role === 'owner'
 
   const [editing, setEditing] = useState<Service | 'new' | null>(null)
   const [name, setName] = useState('')
@@ -41,21 +44,23 @@ export function ServicesPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold sm:text-3xl">Layanan & Harga</h1>
-        <button
-          type="button"
-          onClick={() => open('new')}
-          className="inline-flex h-11 items-center gap-2 rounded-full bg-lime px-5 text-sm font-bold text-sidebar"
-        >
-          <Plus className="size-4" aria-hidden />
-          Tambah Layanan
-        </button>
+        {isOwner && (
+          <button
+            type="button"
+            onClick={() => open('new')}
+            className="inline-flex h-11 items-center gap-2 rounded-full bg-lime px-5 text-sm font-bold text-sidebar"
+          >
+            <Plus className="size-4" aria-hidden />
+            Tambah Layanan
+          </button>
+        )}
       </div>
 
       <p className="rounded-2xl bg-lilac px-4 py-2.5 text-sm" role="note">
         Data contoh, bukan katalog harga asli. Mengubah harga tidak mengubah pesanan yang sudah dibuat.
       </p>
 
-      {editing && (
+      {editing && isOwner && (
         <Card>
           <form onSubmit={submit} noValidate className="grid gap-3 sm:grid-cols-[1fr_12rem_9rem_auto_auto] sm:items-end">
             <label className="block text-sm font-semibold">
@@ -106,7 +111,7 @@ export function ServicesPage() {
       )}
 
       {(['kg', 'pcs'] as Unit[]).map((u) => {
-        const list = services.filter((s) => s.unit === u)
+        const list = services.filter((s) => s.unit === u && (isOwner || s.active))
         return (
           <section key={u} aria-labelledby={`grp-${u}`}>
             <h2 id={`grp-${u}`} className="mb-3 text-lg font-bold">
@@ -127,21 +132,25 @@ export function ServicesPage() {
                       </p>
                     </div>
                     {!s.active && <StatusChip label="Nonaktif" tone="peach" />}
-                    <button
-                      type="button"
-                      onClick={() => open(s)}
-                      aria-label={`Ubah ${s.name}`}
-                      className="grid size-9 place-items-center rounded-full bg-canvas hover:bg-line"
-                    >
-                      <Pencil className="size-4" aria-hidden />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setServiceActive(s.id, !s.active)}
-                      className="h-9 rounded-full bg-canvas px-4 text-sm font-semibold hover:bg-line"
-                    >
-                      {s.active ? 'Nonaktifkan' : 'Aktifkan'}
-                    </button>
+                    {isOwner && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => open(s)}
+                          aria-label={`Ubah ${s.name}`}
+                          className="grid size-9 place-items-center rounded-full bg-canvas hover:bg-line"
+                        >
+                          <Pencil className="size-4" aria-hidden />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setServiceActive(s.id, !s.active)}
+                          className="h-9 rounded-full bg-canvas px-4 text-sm font-semibold hover:bg-line"
+                        >
+                          {s.active ? 'Nonaktifkan' : 'Aktifkan'}
+                        </button>
+                      </>
+                    )}
                   </li>
                 ))}
               </ul>

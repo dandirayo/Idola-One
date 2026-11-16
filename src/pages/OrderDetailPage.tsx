@@ -1,11 +1,14 @@
 import { ArrowLeft, MessageCircle } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router'
+import { KiloEditor } from '@/components/KiloEditor'
+import { OrderIncentives } from '@/components/OrderIncentives'
 import { PaymentHistory } from '@/components/PaymentHistory'
 import { PrintDialog } from '@/components/PrintDialog'
 import { buildDocument, docKindLabel, type DocKind } from '@/lib/receipt'
 import { Card, inputClass, orderStatusTone, paymentTone, primaryButton, SectionTitle, StatusChip } from '@/components/ui'
 import { addPayment, setOrderStatus, useStore } from '@/data/store'
+import { useAuth } from '@/lib/auth'
 import { formatQty, formatRupiah } from '@/lib/format'
 import {
   lineAmount,
@@ -35,6 +38,7 @@ export function OrderDetailPage() {
   const shop = useStore((s) => s.shop)
   const order = orders.find((o) => o.id === orderId)
   const [printKind, setPrintKind] = useState<DocKind | null>(null)
+  const { session } = useAuth()
 
   const [amount, setAmount] = useState('')
   const [method, setMethod] = useState<PaymentMethod>('cash')
@@ -118,6 +122,8 @@ export function OrderDetailPage() {
           </Card>
 
           <PaymentHistory order={order} />
+          <OrderIncentives order={order} />
+          {session?.role === 'owner' && <KiloEditor order={order} />}
         </div>
 
         <aside className="space-y-5">

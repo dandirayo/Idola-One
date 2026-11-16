@@ -4,11 +4,15 @@ Aplikasi web operasional dan kasir multi-usaha untuk Idola Laundry. Menggantikan
 
 ## Status
 
-**Fase 2 (operasional) baru dimulai, hanya sisi tampilan.** Belum ada backend, login sungguhan, atau data nyata. Semua halaman berjalan dengan **data contoh di memori** yang hilang saat halaman dimuat ulang (`src/data/store.ts`).
+**Fase 2 (operasional) dan sebagian Fase 3, hanya sisi tampilan.** Belum ada backend, login sungguhan, atau data nyata. Semua halaman berjalan dengan **data contoh di memori** yang hilang saat halaman dimuat ulang (`src/data/store.ts` dan modul di `src/data/`).
 
-Halaman yang sudah ada: Beranda, Pesanan (daftar, buat baru, detail dengan status, pembayaran, koreksi pembayaran, WhatsApp, dan cetak nota/label/bukti pengambilan), Pelanggan, Layanan & Harga, Stok, Buku Kas, Laporan (pesanan, keuangan, pembayaran) dengan ekspor CSV, Pusat Pengajuan, Tim, dan Pengaturan toko.
+Yang sudah ada, menurut peran dan usaha yang dipilih:
 
-Yang belum terbukti: cetak ke printer fisik, unduhan CSV di browser, dan hasil CI di GitHub. Rincian status tiap tugas ada di [Implementation Plan](docs/03-IMPLEMENTATION-PLAN.md).
+- **Owner (laundry):** Beranda, Pesanan (buat, detail, status, pembayaran, koreksi pembayaran, ubah layanan kiloan, WhatsApp, cetak nota/label/bukti), Pelanggan (dengan poin), Layanan & Harga, Stok, Proyek B2B, Pengajuan, Tim, Jadwal Shift, Absensi, Buku Kas (dengan kas manual), Gaji & Insentif, Laporan (dengan ekspor CSV), Audit, Kelola Usaha, Pengaturan, dan Notifikasi.
+- **Karyawan laundry:** Beranda karyawan, Pesanan, Pelanggan, Layanan (lihat saja), Stok (pakai), Absensi selfie, Jadwal Saya, Pengajuan Saya (termasuk Lupa Absen), dan Laporan Pembayaran.
+- **Usaha minuman (POS):** Ringkasan dan hari berjualan, Kasir, dan Produk.
+
+Yang belum terbukti: kamera sungguhan, cetak ke printer fisik, unduhan CSV, dan hasil CI di GitHub. Rincian status tiap tugas ada di [Implementation Plan](docs/03-IMPLEMENTATION-PLAN.md).
 
 ## Menjalankan secara lokal
 
@@ -21,7 +25,7 @@ npm run dev
 
 Perintah lain: `npm run lint`, `npm test`, `npm run build`.
 
-Login pada mode pratinjau menerima isian apa pun. Jangan dipakai di produksi.
+Masuk pada mode pratinjau dengan memilih orang (Owner atau karyawan), tanpa password. Jangan dipakai di produksi.
 
 ## Dokumen
 

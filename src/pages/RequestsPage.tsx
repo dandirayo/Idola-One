@@ -114,6 +114,12 @@ function RequestCard({ request: r }: { request: EmployeeRequest }) {
             {requestTypeLabel[r.type]} · {r.requester}
           </p>
           <p className="mt-0.5 text-sm">{r.detail}</p>
+          {r.payload && (
+            <p className="mt-0.5 text-xs text-muted">
+              Tanggal {r.payload.date} · masuk {r.payload.checkIn}
+              {r.payload.checkOut ? ` · pulang ${r.payload.checkOut}` : ''}
+            </p>
+          )}
           <p className="mt-1 text-xs text-muted">{dateTime.format(new Date(r.createdAt))}</p>
         </div>
         {isMoneyRequest(r.type) && <p className="font-bold">{formatRupiah(r.amount)}</p>}

@@ -1,6 +1,8 @@
 import { Pencil, Plus, Search } from 'lucide-react'
 import { useMemo, useState, type FormEvent } from 'react'
+import { Link } from 'react-router'
 import { Card, inputClass, primaryButton, StatusChip } from '@/components/ui'
+import { customerPoints } from '@/lib/points'
 import { addCustomer, setCustomerActive, updateCustomer, useStore, type Customer } from '@/data/store'
 
 export function CustomersPage() {
@@ -131,9 +133,11 @@ export function CustomersPage() {
                 {c.name.charAt(0)}
               </span>
               <div className="min-w-0 flex-1 basis-40">
-                <p className="truncate font-semibold">{c.name}</p>
+                <Link to={`/customers/${c.id}`} className="block truncate font-semibold hover:underline">
+                  {c.name}
+                </Link>
                 <p className="truncate text-xs text-muted">
-                  {c.phone} · {orderCount.get(c.id) ?? 0} pesanan
+                  {c.phone} · {orderCount.get(c.id) ?? 0} pesanan · {customerPoints(orders, c.id).balance} poin
                 </p>
               </div>
               {!c.active && <StatusChip label="Nonaktif" tone="peach" />}

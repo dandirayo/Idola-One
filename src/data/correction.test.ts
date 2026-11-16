@@ -29,7 +29,9 @@ describe('koreksi pembayaran', () => {
     expect(balance(getState().cash)).toBe(balBefore + 15000)
 
     const audit = getState().audit[0]
-    expect(audit.orderId).toBe(o.id)
+    expect(audit.entity).toBe('Pesanan')
+    expect(audit.entityId).toBe(o.id)
+    expect(audit.ref).toBe(o.number)
     expect(audit.action).toBe('Koreksi pembayaran')
     expect(audit.before).toContain('Rp 20.000')
     expect(audit.before).toContain('Tunai')

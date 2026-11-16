@@ -1,4 +1,5 @@
 import { useMemo, useState, type FormEvent } from 'react'
+import { ManualCashForm } from '@/components/ManualCashForm'
 import { Card, inputClass, primaryButton, SectionTitle } from '@/components/ui'
 import { addExpense, useStore } from '@/data/store'
 import { balance, inRange, periodLabel, periodRange, summarize, type Period } from '@/lib/finance'
@@ -15,6 +16,7 @@ export function CashbookPage() {
   const [period, setPeriod] = useState<Period>('today')
   const [showAll, setShowAll] = useState(false)
   const [formOpen, setFormOpen] = useState(false)
+  const [manualOpen, setManualOpen] = useState(false)
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState('Operasional')
   const [amount, setAmount] = useState('')
@@ -46,15 +48,27 @@ export function CashbookPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold sm:text-3xl">Buku Kas</h1>
-        <button
-          type="button"
-          onClick={() => setFormOpen((v) => !v)}
-          aria-expanded={formOpen}
-          className="inline-flex h-11 items-center rounded-full bg-lime px-5 text-sm font-bold text-sidebar"
-        >
-          Catat Pengeluaran
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setManualOpen((v) => !v)}
+            aria-expanded={manualOpen}
+            className="inline-flex h-11 items-center rounded-full bg-surface px-5 text-sm font-semibold shadow-card hover:bg-line"
+          >
+            Kas Manual
+          </button>
+          <button
+            type="button"
+            onClick={() => setFormOpen((v) => !v)}
+            aria-expanded={formOpen}
+            className="inline-flex h-11 items-center rounded-full bg-lime px-5 text-sm font-bold text-sidebar"
+          >
+            Catat Pengeluaran
+          </button>
+        </div>
       </div>
+
+      {manualOpen && <ManualCashForm onDone={() => setManualOpen(false)} />}
 
       <p className="rounded-2xl bg-lilac px-4 py-2.5 text-sm" role="note">
         Data contoh. Kas masuk terisi otomatis dari pembayaran pesanan, kas keluar dari pengeluaran dan pembelian stok.
@@ -177,7 +191,7 @@ export function CashbookPage() {
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-semibold">{e.description}</span>
                   <span className="block truncate text-xs text-muted">
-                    {e.category} · {paymentMethodLabel[e.method]} · {dateTime.format(new Date(e.at))}
+                    {e.category}{e.manual ? ' (manual)' : ''} · {paymentMethodLabel[e.method]} · {dateTime.format(new Date(e.at))}
                   </span>
                 </span>
                 <span className={`text-sm font-bold ${e.direction === 'in' ? 'text-success' : 'text-danger'}`}>

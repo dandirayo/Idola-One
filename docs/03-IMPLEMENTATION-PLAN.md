@@ -22,10 +22,10 @@ Arti kolom Status pada tabel di bawah:
 
 - **Selesai:** kode jadi, diuji, dan tidak bergantung pada backend.
 - **Tampilan saja:** halaman dan aturan hitung sudah jadi dan diuji dengan **data contoh di memori** (`src/data/store.ts`). Belum tersambung ke server, jadi belum memenuhi arti "satu fitur selesai" di prinsip nomor 3.
-- **Sebagian:** ada sebagian yang jadi, sisanya belum. Contoh yang belum ada: Contact Picker (1.2), filter periode, paginasi server, dan "Pesanan Saya" (1.5), kolom penerima (1.6), kolom khusus per jenis pengajuan (2.10), dan akun login karyawan (2.11). Status "Tampilan saja" hanya dipakai bila semua bagian yang tertulis pada tugas sudah ada.
+- **Sebagian:** ada sebagian yang jadi, sisanya belum. Contoh yang belum ada: login sungguhan (0.10), Realtime pada notifikasi (1.11), unggah foto ke Storage dan uji kamera sungguhan (2.9), paginasi server pada Audit (3.12), Contact Picker (1.2), filter periode, paginasi server, dan "Pesanan Saya" (1.5), kolom penerima (1.6), kolom khusus per jenis pengajuan (2.10), dan akun login karyawan (2.11). Status "Tampilan saja" hanya dipakai bila semua bagian yang tertulis pada tugas sudah ada.
 - **Belum:** belum dikerjakan.
 
-Ringkasan dari 55 tugas (Fase 0 sampai 3): 2 Selesai, 12 Tampilan saja, 14 Sebagian, 27 Belum.
+Ringkasan dari 55 tugas (Fase 0 sampai 3): 2 Selesai, 21 Tampilan saja, 17 Sebagian, 15 Belum.
 
 ---
 
@@ -52,9 +52,9 @@ Tujuan: kerangka proyek, login, dan lingkungan uji siap. Belum ada fitur bisnis.
 | 0.5 | Siapkan **server uji sendiri** (PostgreSQL + API) dari skema yang ada dan data contoh. Satukan migration ke repo ini (K-02). | Server uji berjalan, migration terurut | Belum |
 | 0.6 | Buat tipe TypeScript bersama dari skema database (pembuat tipe sesuai opsi backend) | Tipe database dalam repo | Belum |
 | 0.7 | Tema gaya Eduplex: token warna, font DM Sans, komponen dasar (kartu, chip, grafik, kalender selesai; dialog, tabel, sheet, toast menyusul) | Pustaka komponen dasar (sebagian selesai) | Sebagian |
-| 0.8 | Router dengan guard per peran dan tata letak: sidebar (desktop), menu geser (ponsel). Shell Owner selesai, Karyawan dan POS menyusul. | Shell Owner (selesai) | Sebagian |
+| 0.8 | Router dengan guard per peran dan tata letak: sidebar (desktop), menu geser (ponsel). Tiga shell (Owner, Karyawan, POS) dengan penjaga akses di tampilan, serta pilih usaha. | Tiga shell per peran dan usaha | Tampilan saja |
 | 0.9 | Lapisan data yang bisa diganti (data contoh atau API), penyimpanan sesi, TanStack Query, helper realtime, penanganan error terpusat | Fondasi data | Sebagian |
-| 0.10 | Auth: halaman login (selesai, mode pratinjau), lalu login sungguhan ke backend, pemulihan sesi, akun nonaktif ditolak, pilih usaha | AUTH-01, 02, 03, 06 | Tampilan saja |
+| 0.10 | Auth: halaman login (selesai, mode pratinjau), lalu login sungguhan ke backend, pemulihan sesi, akun nonaktif ditolak, pilih usaha | AUTH-01, 02, 03, 06 | Sebagian |
 | 0.11 | PWA dasar: manifest, service worker, banner "Versi baru, muat ulang" | Dapat dipasang di layar utama | Belum |
 | 0.12 | Pratinjau otomatis dari `main` (GitHub atau lokal), lalu deploy ke server sendiri | URL pratinjau | Belum |
 
@@ -83,8 +83,8 @@ Tujuan: karyawan dapat menjalankan alur harian dari web.
 | 1.8 | Template WhatsApp "Siap Diambil" | ORD-06 | Tampilan saja |
 | 1.9 | Terima pembayaran lewat `record_order_payment`, metode Tunai/Transfer/QRIS | PAY-01, 02 | Tampilan saja |
 | 1.10 | Cetak: nota, label cucian, bukti pengambilan, lebar 58/80 mm, cetak uji, cetak ulang, cadangan PDF | PRN-01 s.d. 05 | Sebagian |
-| 1.11 | Notifikasi in-app: badge, daftar, baca, hapus, Realtime | NTF-01, 02 | Belum |
-| 1.12 | Beranda karyawan dengan aksi cepat | AUTH-03 | Belum |
+| 1.11 | Notifikasi in-app: badge, daftar, baca, hapus, Realtime | NTF-01, 02 | Sebagian |
+| 1.12 | Beranda karyawan dengan aksi cepat | AUTH-03 | Tampilan saja |
 | 1.13 | Uji E2E Playwright: login → pesanan baru → bayar → siap → diambil | NFR-12 | Belum |
 | 1.14 | **Masa paralel:** satu karyawan memakai web berdampingan dengan Android selama 1 minggu. Rekonsiliasi harian. | Indikator keberhasilan | Belum |
 
@@ -108,7 +108,7 @@ Tujuan: karyawan dapat menjalankan alur harian dari web.
 | 2.6 | Laporan Pesanan dan Keuangan | RPT-02 | Tampilan saja |
 | 2.7 | Laporan Pembayaran karyawan dan draf WhatsApp | PAY-06 | Tampilan saja |
 | 2.8 | Koreksi pembayaran oleh owner | PAY-04 | Tampilan saja |
-| 2.9 | Absensi selfie: kamera browser, unggah Storage, waktu server | ATT-01 | Belum |
+| 2.9 | Absensi selfie: kamera browser, unggah Storage, waktu server | ATT-01 | Sebagian |
 | 2.10 | Pengajuan: form per jenis (karyawan) dan Pusat Pengajuan (owner), label status yang benar | REQ-01 s.d. 04 | Sebagian |
 | 2.11 | Karyawan: tambah akun (Edge Function), ubah, aktif/nonaktif | EMP-01 | Sebagian |
 | 2.12 | Pengaturan toko, profil, ganti password | SET-01, AUTH-05 | Sebagian |
@@ -127,18 +127,18 @@ Tujuan: karyawan dapat menjalankan alur harian dari web.
 
 | No | Tugas | Kebutuhan | Status |
 | --- | --- | --- | --- |
-| 3.1 | Kelola usaha dan assignment karyawan | AUTH-04 | Belum |
-| 3.2 | Jadwal shift, jadwal saya, Lupa Absen, absensi semua karyawan | SHF-01, ATT-02, 03 | Belum |
-| 3.3 | Payroll dan pembayaran insentif item | PAYR-01, 02, ORD-09 | Belum |
-| 3.4 | Proyek B2B: proyek, batch, termin | PRJ-01 s.d. 03 | Belum |
-| 3.5 | POS minuman: buka jualan, produk, kasir, ringkasan, laporan per usaha | POS-01 s.d. 05 | Belum |
+| 3.1 | Kelola usaha dan assignment karyawan | AUTH-04 | Tampilan saja |
+| 3.2 | Jadwal shift, jadwal saya, Lupa Absen, absensi semua karyawan | SHF-01, ATT-02, 03 | Tampilan saja |
+| 3.3 | Payroll dan pembayaran insentif item | PAYR-01, 02, ORD-09 | Tampilan saja |
+| 3.4 | Proyek B2B: proyek, batch, termin | PRJ-01 s.d. 03 | Tampilan saja |
+| 3.5 | POS minuman: buka jualan, produk, kasir, ringkasan, laporan per usaha | POS-01 s.d. 05 | Tampilan saja |
 | 3.6 | `[DB]` Tambahkan tabel POS ke publication Realtime atau polling terdokumentasi | NFR-04 | Belum |
-| 3.7 | Poin pelanggan: saldo dan riwayat di detail pelanggan | CUS-03, 04 | Belum |
-| 3.8 | Ubah layanan kiloan oleh owner | ORD-08 | Belum |
-| 3.9 | Kas manual | PAY-07 | Belum |
+| 3.7 | Poin pelanggan: saldo dan riwayat di detail pelanggan | CUS-03, 04 | Tampilan saja |
+| 3.8 | Ubah layanan kiloan oleh owner | ORD-08 | Tampilan saja |
+| 3.9 | Kas manual | PAY-07 | Tampilan saja |
 | 3.10 | Stok: koreksi +/− oleh owner | INV-04 | Tampilan saja |
 | 3.11 | `[DB]` Histori transisi status pesanan (append-only) dan Analitik | RPT-04 | Belum |
-| 3.12 | Audit: garis waktu, filter, perbandingan data, paginasi server | AUD-01 | Belum |
+| 3.12 | Audit: garis waktu, filter, perbandingan data, paginasi server | AUD-01 | Sebagian |
 | 3.13 | Ekspor CSV pesanan, kas, pelanggan | RPT-05 | Sebagian |
 | 3.14 | `[DB]` Web Push (tabel langganan, pengirim) | NTF-03 | Belum |
 | 3.15 | Uji E2E tambahan: POS, pengajuan, proyek | NFR-12 | Belum |
@@ -222,7 +222,7 @@ Keputusan kecil yang diambil saat membangun versi tampilan. Semuanya perlu dicek
 | Stok | Beli Stok mencatat mutasi, pengeluaran kategori Stok, dan kas keluar sekaligus. Pakai Stok tidak membuat kas. | Di backend, harus satu transaksi database |
 | Login | Mode pratinjau, isian apa pun diterima | Ganti dengan autentikasi backend. Mode pratinjau tidak boleh ikut ke produksi. |
 | Dashboard beranda | KPI, grafik mingguan, dan daftar dihitung di browser dari data di store (`src/lib/dashboard.ts`). Grafik hanya memuat pesanan yang ada di memori. | Ganti dengan agregat server (RPT-03). Angka tidak boleh dihitung dari daftar yang termuat saja. |
-| Pengujian | Hanya diuji di browser lewat teks dan struktur halaman. Tangkapan layar hanya untuk Beranda awal dan pratinjau nota. Tata letak halaman Pelanggan, Layanan, Stok, Buku Kas, Pengajuan, Tim, Pengaturan, dan Laporan belum dilihat secara visual. Cetak sungguhan (dialog cetak, printer fisik) dan unduhan CSV sungguhan belum dicoba. | Periksa visual di ponsel dan desktop, uji cetak di printer toko, dan uji unduhan CSV |
+| Pengujian | Halaman diuji di browser lewat teks dan struktur halaman, bukan tangkapan layar (kecuali Beranda awal dan pratinjau nota). Alur yang dijalankan ujung ke ujung di browser: login per peran, pilih usaha, penjagaan akses, absensi (foto contoh), POS, pesanan dengan insentif sampai pembayaran insentif, Audit, poin. **Kamera sungguhan tidak bisa diuji** (diblokir di panel pengujian), begitu juga cetak ke printer dan unduhan CSV. Tata letak visual halaman baru belum dilihat. | Periksa visual di ponsel dan desktop, uji kamera di ponsel karyawan, uji cetak di printer toko, dan uji unduhan CSV |
 | Saldo pembuka | Entri kategori "Saldo Awal" dihitung dalam saldo akhir, tetapi **tidak** dihitung sebagai pemasukan periode atau KPI pemasukan (`OPENING_CATEGORY` di `src/lib/finance.ts`). | Konfirmasi dengan owner. Sistem lama belum punya alur saldo pembuka. |
 | Pengajuan | Hanya kasbon yang berdampak uang: setelah disetujui tombolnya "Bayar" dan menghasilkan kas keluar. Jenis lain memakai "Tandai Dilaksanakan" tanpa kas. Menolak wajib disertai alasan. Status `completed` tampil sebagai "Dilaksanakan". | Dokumen lama berbeda: aplikasi Android menampilkan `completed` sebagai "Disetujui", sedangkan dokumen upgrade UI/UX 30 Okt memakai "Dilaksanakan". Perlu diputuskan satu istilah. Pengajuan stok juga belum otomatis menambah stok dan kas seperti di BLUEPRINT lama. |
 | Peran | Belum ada pemisahan peran. Semua halaman terbuka untuk sesi pratinjau (owner). Form pengajuan memakai isian nama pengaju. | Karyawan membuat pengajuan dari akunnya sendiri, hanya owner yang memutuskan (ditegakkan backend) |
@@ -238,6 +238,15 @@ Keputusan kecil yang diambil saat membangun versi tampilan. Semuanya perlu dicek
 | Header | Kolom cari di header membuka halaman Pesanan dengan kata kunci. Ikon lonceng menuju Pusat Pengajuan dan bertitik merah hanya bila ada pengajuan menunggu. | Notifikasi sungguhan (1.11) belum ada. Kartu "Segera: pasang di layar utama HP" menunggu PWA (0.11). |
 | Font | DM Sans dimuat dari Google Fonts lewat `index.html`. | Untuk server sendiri atau jaringan toko yang terbatas, font sebaiknya dihosting sendiri. Itu butuh menambah paket (mis. `@fontsource/dm-sans`) dan perlu persetujuan. |
 | CI | Workflow `.github/workflows/ci.yml` ada, tetapi hasilnya belum pernah terlihat. Repo private dan saya tidak punya akses masuk ke GitHub. | Periksa tab Actions di repo |
+| Peran dan usaha | Masuk pratinjau dengan memilih orang (Owner, atau karyawan). Setelah masuk memilih usaha (dilewati bila hanya satu). Menu dan akses halaman mengikuti peran dan jenis usaha (`src/lib/access.ts`, diuji). Halaman khusus karyawan ditutup untuk owner. Karyawan boleh melihat Layanan & Harga tetapi tidak mengubahnya. | Hanya penjaga tampilan. Hak akses sebenarnya harus ditegakkan backend. Tanpa password, jadi bukan autentikasi. Di pratinjau owner tetap boleh membuka form Buat Pengajuan, padahal peta alur menyatakan hanya karyawan. |
+| POS dan Buku Kas | Penjualan POS memakai catatan sendiri dan **tidak** masuk Buku Kas atau laporan laundry. Checkout butuh hari berjualan dibuka. Harga diambil dari katalog dan disalin ke item. Nomor `POS-YYYYMMDD-0001` berurutan. | Perlu diputuskan apakah omzet POS dan pengeluaran POS punya Buku Kas sendiri. Tutup kas, varian, refund, dan struk POS belum ada (P2). |
+| Absensi dan shift | Shift mingguan berulang per karyawan (Libur, Pagi 08–16, Siang 13–21, atau jam khusus). Masuk lebih dari 10 menit setelah jam mulai dihitung terlambat penuh dari jam mulai. Absen di hari libur diizinkan dan diberi catatan. Satu absen masuk per hari, foto wajib, waktu dari sistem. Lupa Absen: pengajuan dengan tanggal dan jam, disetujui owner, lalu "Tandai Dilaksanakan" membuat absensi manual. | Foto hanya di memori (data URL kecil), bukan Storage. Kamera sungguhan belum terbukti. Tombol "foto contoh" ada khusus pratinjau dan harus dihapus di produksi. Belum ada validasi bentrok antar karyawan atau batas jam lembur. |
+| Gaji dan insentif | Gaji mingguan dibayar sekali per karyawan per minggu (Senin–Minggu), menjadi pengeluaran Gaji dan kas keluar. Insentif item satuan (sepatu, helm, tas) bernilai Rp0, 10.000, 15.000, atau 20.000 per pcs untuk karyawan tertentu. Hak insentif tercatat saat pesanan Siap Diambil walau pelanggan belum membayar, dibayar owner sekali, dan baru saat itu mengurangi kas. | Rumus gaji hanya nominal tetap mingguan (belum lembur, potongan kasbon, atau hari hadir). Pembatalan setelah Siap Diambil tidak diizinkan oleh transisi status saat ini, jadi insentif tidak perlu dibatalkan. |
+| Proyek B2B | Tagihan dihitung dari batch (pcs atau kg) dengan hitungan bilangan bulat, dibulatkan ke atas ke Rp1.000. Kemajuan dari akumulasi pcs terhadap target. Pembayaran termin menjadi kas masuk dan **tidak boleh melebihi tagihan berjalan**. | Pembayaran di muka (DP sebelum ada batch) saat ini ditolak. Perlu diputuskan. Laba/rugi per proyek belum ada (P2). |
+| Poin pelanggan | Diturunkan dari pesanan: 1 poin per Rp10.000 pada pesanan lunas yang tidak batal. Bila pesanan tidak lagi lunas (misalnya setelah koreksi), poinnya ikut hilang. Hanya bisa dibaca. | Belum ada penukaran poin. Perilaku saat poin sudah dipakai lalu pesanan dikoreksi perlu diputuskan sebelum penukaran dibuat. |
+| Ubah layanan kiloan | Khusus owner, hanya saat Diterima atau Diproses. Harga dihitung ulang dari katalog saat ini, item satuan tidak berubah, dan total baru tidak boleh lebih kecil dari yang sudah dibayar. Tercatat di Audit. | Aturan sistem lama (migration `owner_edit_kilo_order_service`) belum dibandingkan. Perlu dicek apakah boleh pada status lain. |
+| Kas manual dan Audit | Kas manual (masuk atau keluar) ditandai "manual" dan kategori "Saldo Awal" dicadangkan. Audit menjadi jejak umum (pesanan, kas, layanan, gaji dan insentif, proyek, akses usaha, pembayaran kasbon) dengan nama pelaku. | Audit hanya di memori sesi dan belum paginasi server. Perubahan status pesanan biasa dan pembelian stok belum diaudit. |
+| Notifikasi | Dalam aplikasi: pengajuan baru (ke owner), keputusan pengajuan (ke pengaju), pesanan Siap Diambil, stok melewati batas minimum, insentif dibayar. Tautan hanya ke route internal (diuji). | Push ke ponsel (Web Push) dan Realtime lintas perangkat belum ada. |
 | Paket | Memakai npm (bukan pnpm) dan React Router (bukan TanStack Router). TypeScript 7 dan React Router 8 sesuai versi terbaru saat setup. | Kunci versi tetap lewat `package-lock.json` |
 
 ## Dokumen berikutnya

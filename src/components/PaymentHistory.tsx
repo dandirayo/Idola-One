@@ -18,7 +18,7 @@ function toLocalInput(iso: string): string {
 
 export function PaymentHistory({ order }: { order: Order }) {
   const { session } = useAuth()
-  const audit = useStore((s) => s.audit).filter((a) => a.orderId === order.id)
+  const audit = useStore((s) => s.audit).filter((a) => a.entity === 'Pesanan' && a.entityId === order.id)
   const isOwner = session?.role === 'owner'
 
   const [editing, setEditing] = useState<Payment | null>(null)

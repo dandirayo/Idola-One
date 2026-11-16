@@ -5,9 +5,21 @@
 import { useSyncExternalStore } from 'react'
 import type { CashEntry } from '@/lib/finance'
 import type { ShopInfo } from '@/lib/receipt'
-import { isMoneyRequest, type RequestStatus, type RequestType } from '@/lib/requests'
-import { formatRupiah } from '@/lib/format'
+import type { BusinessKind } from '@/lib/access'
+import type { Audience } from '@/lib/notifications'
+import { isValidIncentive } from '@/lib/payroll'
+import type { CartLine } from '@/lib/pos'
+import type { RateType } from '@/lib/projects'
 import {
+  isMoneyRequest,
+  requestTypeLabel,
+  type RequestStatus,
+  type RequestType,
+} from '@/lib/requests'
+import { dateKey, lateMinutes, minutesOf, shiftPresets, weekdayIndex, type ShiftSlot } from '@/lib/shifts'
+import { formatQty, formatRupiah } from '@/lib/format'
+import {
+  nextStatuses,
   normalizePhone,
   orderTotal,
   paymentMethodLabel,
@@ -22,6 +34,8 @@ export interface Service {
   unit: Unit
   price: number
   active: boolean
+  /** Item satuan yang boleh diberi insentif karyawan (sepatu, helm, tas). */
+  incentive?: boolean
 }
 
 export interface Customer {
@@ -37,6 +51,8 @@ export interface OrderItem {
   unit: Unit
   qty: number
   price: number
+  /** Insentif per pcs untuk karyawan yang ditugaskan. Dibayar owner setelah pesanan Siap Diambil. */
+  incentive?: { perUnit: number; employeeId: string }
 }
 
 export interface Payment {
@@ -100,11 +116,19 @@ export interface Employee {
 export interface AuditEntry {
   id: string
   at: string
-  orderId: string
-  orderNumber: string
+  actor: string
+  entity: string // misalnya Pesanan, Kas, Layanan, Gaji
+  entityId: string
+  ref: string // rujukan yang mudah dibaca, misalnya nomor nota
   action: string
   before: string
   after: string
+}
+
+export interface RequestPayload {
+  date: string // YYYY-MM-DD
+  checkIn: string // HH:mm
+  checkOut?: string // HH:mm
 }
 
 export interface EmployeeRequest {
@@ -116,9 +140,133 @@ export interface EmployeeRequest {
   status: RequestStatus
   ownerNote: string
   createdAt: string
+  payload?: RequestPayload // dipakai pengajuan Lupa Absen
 }
 
-interface State {
+export interface Business {
+  id: string
+  name: string
+  kind: BusinessKind
+  active: boolean
+}
+
+export interface BusinessMember {
+  businessId: string
+  employeeId: string
+  active: boolean
+}
+
+export interface AppNotification {
+  id: string
+  at: string
+  title: string
+  body: string
+  link: string
+  audience: Audience
+  forName?: string
+  read: boolean
+}
+
+export interface ShiftRow {
+  employeeId: string
+  weekday: number // Senin = 0
+  start: string
+  end: string
+}
+
+export interface AttendanceRecord {
+  id: string
+  employeeId: string
+  date: string // YYYY-MM-DD
+  checkIn: string
+  checkOut?: string
+  lateMinutes: number
+  photoIn?: string
+  photoOut?: string
+  source: 'selfie' | 'manual'
+  note: string
+}
+
+export interface PosProduct {
+  id: string
+  businessId: string
+  name: string
+  price: number
+  active: boolean
+  sort: number
+}
+
+export interface PosSale {
+  id: string
+  businessId: string
+  number: string
+  at: string
+  method: PaymentMethod
+  total: number
+  items: CartLine[]
+}
+
+export interface PosDay {
+  businessId: string
+  date: string
+  open: boolean
+  note: string
+}
+
+export interface Project {
+  id: string
+  customerId: string
+  customerName: string
+  name: string
+  targetPcs: number
+  rateType: RateType
+  rate: number
+  note: string
+  status: 'active' | 'done'
+  createdAt: string
+}
+
+export interface ProjectBatchRow {
+  id: string
+  projectId: string
+  date: string
+  pcs: number
+  kg: number
+}
+
+export interface ProjectPaymentRow {
+  id: string
+  projectId: string
+  amount: number
+  method: PaymentMethod
+  at: string
+}
+
+export interface PayrollRow {
+  id: string
+  employeeId: string
+  employeeName: string
+  weekStart: string
+  amount: number
+  method: PaymentMethod
+  at: string
+}
+
+export interface IncentiveRow {
+  id: string
+  orderId: string
+  orderNumber: string
+  employeeId: string
+  itemName: string
+  qty: number
+  perUnit: number
+  amount: number
+  status: 'earned' | 'paid'
+  createdAt: string
+  paidAt?: string
+}
+
+export interface State {
   services: Service[]
   customers: Customer[]
   orders: Order[]
@@ -129,6 +277,19 @@ interface State {
   employees: Employee[]
   shop: ShopInfo
   audit: AuditEntry[]
+  businesses: Business[]
+  members: BusinessMember[]
+  notifications: AppNotification[]
+  shifts: ShiftRow[]
+  attendance: AttendanceRecord[]
+  posProducts: PosProduct[]
+  posSales: PosSale[]
+  posDays: PosDay[]
+  projects: Project[]
+  projectBatches: ProjectBatchRow[]
+  projectPayments: ProjectPaymentRow[]
+  payrolls: PayrollRow[]
+  incentives: IncentiveRow[]
   /** Satu-satunya sumber pergerakan kas. Diisi oleh aksi di bawah, meniru trigger database. */
   cash: CashEntry[]
 }
@@ -140,6 +301,9 @@ const services: Service[] = [
   { id: 's4', name: 'Jas', unit: 'pcs', price: 30000, active: true },
   { id: 's5', name: 'Sprei 180', unit: 'pcs', price: 20000, active: true },
   { id: 's6', name: 'Bed Cover', unit: 'pcs', price: 35000, active: true },
+  { id: 's7', name: 'Sepatu', unit: 'pcs', price: 40000, active: true, incentive: true },
+  { id: 's8', name: 'Helm', unit: 'pcs', price: 25000, active: true, incentive: true },
+  { id: 's9', name: 'Tas', unit: 'pcs', price: 35000, active: true, incentive: true },
 ]
 
 const customers: Customer[] = [
@@ -248,7 +412,7 @@ function paymentCash(order: Order, p: Payment): CashEntry {
   }
 }
 
-function expenseCash(e: Expense): CashEntry {
+export function expenseCash(e: Expense): CashEntry {
   return {
     id: `cash-${e.id}`,
     at: e.at,
@@ -275,6 +439,104 @@ const seedShop: ShopInfo = {
   paperWidth: 80,
 }
 
+const seedBusinesses: Business[] = [
+  { id: 'b1', name: 'Idola Laundry', kind: 'laundry', active: true },
+  { id: 'b2', name: 'Es Teh Manis', kind: 'beverage', active: true },
+]
+
+const seedMembers: BusinessMember[] = [
+  { businessId: 'b1', employeeId: 'em1', active: true },
+  { businessId: 'b1', employeeId: 'em2', active: true },
+  { businessId: 'b2', employeeId: 'em2', active: true },
+  { businessId: 'b2', employeeId: 'em3', active: true },
+]
+
+function buildSeedShifts(): ShiftRow[] {
+  const rows: ShiftRow[] = []
+  const add = (employeeId: string, days: number[], slot: ShiftSlot) => {
+    for (const weekday of days) rows.push({ employeeId, weekday, start: slot.start, end: slot.end })
+  }
+  add('em1', [0, 1, 2, 3, 4, 5], shiftPresets.pagi as ShiftSlot) // Rina: Senin-Sabtu pagi
+  add('em2', [1, 2, 3, 4, 5, 6], shiftPresets.siang as ShiftSlot) // Dika: Selasa-Minggu siang
+  add('em3', [0, 1, 2, 3, 4], shiftPresets.pagi as ShiftSlot) // Sari: Senin-Jumat pagi
+  return rows
+}
+
+const seedPosProducts: PosProduct[] = [
+  { id: 'pp1', businessId: 'b2', name: 'Es Teh Manis', price: 5000, active: true, sort: 1 },
+  { id: 'pp2', businessId: 'b2', name: 'Es Jeruk', price: 7000, active: true, sort: 2 },
+  { id: 'pp3', businessId: 'b2', name: 'Es Kopi Susu', price: 12000, active: true, sort: 3 },
+  { id: 'pp4', businessId: 'b2', name: 'Es Susu Coklat', price: 10000, active: true, sort: 4 },
+]
+
+const seedPosSales: PosSale[] = [
+  {
+    id: 'ps1',
+    businessId: 'b2',
+    number: `POS-${ymd(new Date())}-0001`,
+    at: seedAt(0, 9, 15),
+    method: 'cash',
+    total: 17000,
+    items: [
+      { productId: 'pp1', name: 'Es Teh Manis', price: 5000, qty: 2 },
+      { productId: 'pp2', name: 'Es Jeruk', price: 7000, qty: 1 },
+    ],
+  },
+  {
+    id: 'ps2',
+    businessId: 'b2',
+    number: `POS-${ymd(new Date())}-0002`,
+    at: seedAt(0, 10, 5),
+    method: 'qris',
+    total: 12000,
+    items: [{ productId: 'pp3', name: 'Es Kopi Susu', price: 12000, qty: 1 }],
+  },
+]
+
+const seedProjects: Project[] = [
+  {
+    id: 'pr1',
+    customerId: 'c3',
+    customerName: 'Mbak Dewi',
+    name: 'Hotel Melati: sprei dan handuk',
+    targetPcs: 500,
+    rateType: 'pcs',
+    rate: 3500,
+    note: 'Contoh proyek borongan',
+    status: 'active',
+    createdAt: seedAt(10, 9, 0),
+  },
+]
+const seedProjectBatches: ProjectBatchRow[] = [
+  { id: 'pb1', projectId: 'pr1', date: dateKey(new Date(seedAt(3, 9))), pcs: 120, kg: 0 },
+  { id: 'pb2', projectId: 'pr1', date: dateKey(new Date(seedAt(1, 9))), pcs: 80, kg: 0 },
+]
+const seedProjectPayments: ProjectPaymentRow[] = [
+  { id: 'ppay1', projectId: 'pr1', amount: 300000, method: 'transfer', at: seedAt(2, 15, 0) },
+]
+
+const seedAttendance: AttendanceRecord[] = [
+  { id: 'at1', employeeId: 'em1', date: dateKey(new Date(seedAt(1, 8))), checkIn: seedAt(1, 8, 3), checkOut: seedAt(1, 16, 5), lateMinutes: 0, source: 'selfie', note: 'Data contoh, tanpa foto' },
+  { id: 'at2', employeeId: 'em2', date: dateKey(new Date(seedAt(1, 13))), checkIn: seedAt(1, 13, 20), checkOut: seedAt(1, 21, 2), lateMinutes: 20, source: 'selfie', note: 'Data contoh, tanpa foto' },
+]
+
+const seedNotifications: AppNotification[] = [
+  { id: 'n1', at: seedAt(0, 9, 30), title: 'Pengajuan baru: Kebutuhan Stok', body: 'Rina mengajukan Plastik 40, 200 pcs', link: '/requests/review', audience: 'owner', read: false },
+  { id: 'n2', at: seedAt(1, 19, 0), title: 'Pengajuan Tukar Shift disetujui', body: 'Tukar shift Sabtu dengan Rina', link: '/requests/me', audience: 'employee', forName: 'Dika', read: true },
+]
+
+export function projectPaymentCash(p: ProjectPaymentRow, name: string): CashEntry {
+  return {
+    id: `cash-${p.id}`,
+    at: p.at,
+    direction: 'in',
+    amount: p.amount,
+    method: p.method,
+    category: 'Proyek',
+    description: `Proyek: ${name}`,
+  }
+}
+
 let state: State = {
   services,
   customers,
@@ -286,6 +548,19 @@ let state: State = {
   employees: seedEmployees,
   shop: seedShop,
   audit: [],
+  businesses: seedBusinesses,
+  members: seedMembers,
+  notifications: seedNotifications,
+  shifts: buildSeedShifts(),
+  attendance: seedAttendance,
+  posProducts: seedPosProducts,
+  posSales: seedPosSales,
+  posDays: [{ businessId: 'b2', date: dateKey(new Date()), open: true, note: '' }],
+  projects: seedProjects,
+  projectBatches: seedProjectBatches,
+  projectPayments: seedProjectPayments,
+  payrolls: [],
+  incentives: [],
   cash: [
     {
       id: 'cash-opening',
@@ -298,6 +573,7 @@ let state: State = {
     },
     ...seedOrders.flatMap((o) => o.payments.map((p) => paymentCash(o, p))),
     ...seedExpenses.map(expenseCash),
+    ...seedProjectPayments.map((p) => projectPaymentCash(p, 'Hotel Melati: sprei dan handuk')),
   ],
 }
 
@@ -306,6 +582,44 @@ const listeners = new Set<() => void>()
 function emit(next: State) {
   state = next
   listeners.forEach((l) => l())
+}
+
+/** Dipakai modul data lain untuk mengubah state dalam satu langkah. */
+export function update(fn: (s: State) => State) {
+  emit(fn(state))
+}
+
+let actorName = 'Sistem'
+/** Nama pengguna yang sedang bertindak. Dicatat pada jejak audit. */
+export function setActor(name: string) {
+  actorName = name
+}
+
+let counter = 0
+export function uid(prefix: string): string {
+  counter += 1
+  return `${prefix}${Date.now()}-${counter}`
+}
+
+export function makeAudit(
+  entity: string,
+  entityId: string,
+  ref: string,
+  action: string,
+  before: string,
+  after: string,
+): AuditEntry {
+  return { id: uid('a'), at: new Date().toISOString(), actor: actorName, entity, entityId, ref, action, before, after }
+}
+
+export function makeNotification(n: Omit<AppNotification, 'id' | 'at' | 'read'>): AppNotification {
+  return { id: uid('n'), at: new Date().toISOString(), read: false, ...n }
+}
+
+/** Jadwal shift karyawan pada hari tertentu (Senin = 0). Kosong berarti libur. */
+export function shiftFor(employeeId: string, weekday: number): ShiftSlot | null {
+  const row = state.shifts.find((r) => r.employeeId === employeeId && r.weekday === weekday)
+  return row ? { start: row.start, end: row.end } : null
 }
 
 function subscribe(listener: () => void) {
@@ -339,8 +653,21 @@ export function createOrder(input: NewOrderInput): Order {
   const customer = state.customers.find((c) => c.id === input.customerId)
   if (!customer) throw new Error('Pilih pelanggan terlebih dahulu.')
   if (input.items.length === 0) throw new Error('Tambahkan minimal satu layanan.')
+  const items: OrderItem[] = input.items.map((it) => {
+    if (!it.incentive || it.incentive.perUnit === 0) {
+      const { incentive: _drop, ...rest } = it
+      void _drop
+      return rest
+    }
+    const service = state.services.find((x) => x.id === it.serviceId)
+    if (!service?.incentive || it.unit !== 'pcs') throw new Error(`${it.name} tidak mendapat insentif.`)
+    if (!isValidIncentive(it.incentive.perUnit)) throw new Error('Nilai insentif tidak valid.')
+    const emp = state.employees.find((e) => e.id === it.incentive?.employeeId)
+    if (!emp?.active) throw new Error('Pilih karyawan penerima insentif yang aktif.')
+    return it
+  })
 
-  const total = orderTotal(input.items, input.skipMinKg)
+  const total = orderTotal(items, input.skipMinKg)
   const nowDate = new Date()
   const now = nowDate.toISOString()
   const uid = `${nowDate.getTime()}-${state.orders.length}`
@@ -355,7 +682,7 @@ export function createOrder(input: NewOrderInput): Order {
     customerId: customer.id,
     customerName: customer.name,
     customerPhone: customer.phone,
-    items: input.items,
+    items,
     total,
     paid,
     status: 'received',
@@ -420,7 +747,22 @@ export function addService(name: string, unit: Unit, price: number): Service {
 /** Harga baru tidak mengubah pesanan lama: harga disalin ke item saat pesanan dibuat. */
 export function updateService(id: string, name: string, price: number) {
   const valid = validateService(name, price)
-  emit({ ...state, services: state.services.map((x) => (x.id === id ? { ...x, ...valid } : x)) })
+  const old = state.services.find((x) => x.id === id)
+  const audit =
+    old && (old.price !== valid.price || old.name !== valid.name)
+      ? [
+          makeAudit(
+            'Layanan',
+            id,
+            valid.name,
+            'Ubah layanan',
+            `${old.name} · ${formatRupiah(old.price)}/${old.unit}`,
+            `${valid.name} · ${formatRupiah(valid.price)}/${old.unit}`,
+          ),
+          ...state.audit,
+        ]
+      : state.audit
+  emit({ ...state, services: state.services.map((x) => (x.id === id ? { ...x, ...valid } : x)), audit })
 }
 
 export function setServiceActive(id: string, active: boolean) {
@@ -428,7 +770,48 @@ export function setServiceActive(id: string, active: boolean) {
 }
 
 export function setOrderStatus(id: string, status: OrderStatus) {
-  emit({ ...state, orders: state.orders.map((o) => (o.id === id ? { ...o, status } : o)) })
+  const order = getOrder(id)
+  if (!order) throw new Error('Pesanan tidak ditemukan.')
+  if (!nextStatuses(order.status).includes(status)) {
+    throw new Error(`Status tidak bisa diubah dari ${order.status} ke ${status}.`)
+  }
+  let incentives = state.incentives
+  let notifications = state.notifications
+  if (status === 'ready') {
+    notifications = [
+      makeNotification({
+        title: 'Pesanan siap diambil',
+        body: `${order.customerName} · ${order.number}`,
+        link: `/orders/${order.id}`,
+        audience: 'owner',
+      }),
+      ...notifications,
+    ]
+    // Hak insentif tercatat saat Siap Diambil, walau pelanggan belum membayar atau mengambil
+    if (!incentives.some((i) => i.orderId === order.id)) {
+      const earned: IncentiveRow[] = order.items
+        .filter((it) => it.incentive && it.incentive.perUnit > 0)
+        .map((it) => ({
+          id: uid('inc'),
+          orderId: order.id,
+          orderNumber: order.number,
+          employeeId: it.incentive!.employeeId,
+          itemName: it.name,
+          qty: it.qty,
+          perUnit: it.incentive!.perUnit,
+          amount: Math.round(it.qty) * it.incentive!.perUnit,
+          status: 'earned' as const,
+          createdAt: new Date().toISOString(),
+        }))
+      incentives = [...earned, ...incentives]
+    }
+  }
+  emit({
+    ...state,
+    orders: state.orders.map((o) => (o.id === id ? { ...o, status } : o)),
+    incentives,
+    notifications,
+  })
 }
 
 export function addPayment(id: string, amount: number, method: PaymentMethod) {
@@ -453,7 +836,7 @@ function requireItem(itemId: string): InventoryItem {
   return item
 }
 
-function requirePositive(value: number, label: string) {
+export function requirePositive(value: number, label: string) {
   if (!Number.isFinite(value) || value <= 0) throw new Error(`${label} harus lebih dari nol.`)
 }
 
@@ -491,10 +874,22 @@ export function consumeStock(itemId: string, qty: number, note: string) {
   const item = requireItem(itemId)
   requirePositive(qty, 'Jumlah')
   if (qty > item.stock) throw new Error(`Stok tidak cukup. Sisa ${item.stock} ${item.unit}.`)
+  const crossesMin = item.stock > item.min && item.stock - qty <= item.min
   emit({
     ...state,
     inventory: state.inventory.map((i) => (i.id === itemId ? { ...i, stock: i.stock - qty } : i)),
     movements: [move(itemId, 'OUT', qty, note), ...state.movements],
+    notifications: crossesMin
+      ? [
+          makeNotification({
+            title: `Stok menipis: ${item.name}`,
+            body: `Sisa ${formatQty(item.stock - qty)} ${item.unit}, batas minimum ${formatQty(item.min)}`,
+            link: '/inventory',
+            audience: 'owner',
+          }),
+          ...state.notifications,
+        ]
+      : state.notifications,
   })
 }
 
@@ -535,14 +930,21 @@ function patchRequest(id: string, patch: Partial<EmployeeRequest>): EmployeeRequ
   return state.requests.map((r) => (r.id === id ? { ...r, ...patch } : r))
 }
 
-export function createRequest(type: RequestType, requester: string, detail: string, amount: number): EmployeeRequest {
+export function createRequest(
+  type: RequestType,
+  requester: string,
+  detail: string,
+  amount: number,
+  payload?: RequestPayload,
+): EmployeeRequest {
   const who = requester.trim()
   const text = detail.trim()
   if (!who) throw new Error('Nama pengaju wajib diisi.')
   if (!text) throw new Error('Isi detail pengajuan.')
   if (isMoneyRequest(type)) requirePositive(amount, 'Nominal')
+  if (type === 'forgot_attendance') validateForgotPayload(payload)
   const request: EmployeeRequest = {
-    id: `r${Date.now()}`,
+    id: uid('r'),
     type,
     requester: who,
     detail: text,
@@ -550,9 +952,46 @@ export function createRequest(type: RequestType, requester: string, detail: stri
     status: 'pending',
     ownerNote: '',
     createdAt: new Date().toISOString(),
+    ...(type === 'forgot_attendance' && payload ? { payload } : {}),
   }
-  emit({ ...state, requests: [request, ...state.requests] })
+  emit({
+    ...state,
+    requests: [request, ...state.requests],
+    notifications: [
+      makeNotification({
+        title: `Pengajuan baru: ${requestTypeLabel[type]}`,
+        body: `${who}: ${text}`,
+        link: '/requests/review',
+        audience: 'owner',
+      }),
+      ...state.notifications,
+    ],
+  })
   return request
+}
+
+function validateForgotPayload(payload: RequestPayload | undefined) {
+  if (!payload) throw new Error('Isi tanggal dan jam untuk Lupa Absen.')
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(payload.date)) throw new Error('Tanggal tidak valid.')
+  const day = new Date(`${payload.date}T00:00:00`)
+  if (Number.isNaN(day.getTime())) throw new Error('Tanggal tidak valid.')
+  if (day.getTime() > Date.now()) throw new Error('Tanggal Lupa Absen tidak boleh di masa depan.')
+  try {
+    const inMin = minutesOf(payload.checkIn)
+    if (payload.checkOut && minutesOf(payload.checkOut) <= inMin) throw new Error('Jam pulang harus setelah jam masuk.')
+  } catch (e) {
+    throw new Error(e instanceof Error ? e.message : 'Jam tidak valid.')
+  }
+}
+
+function notifyRequester(r: EmployeeRequest, text: string): AppNotification {
+  return makeNotification({
+    title: `Pengajuan ${requestTypeLabel[r.type]} ${text}`,
+    body: r.detail,
+    link: '/requests/me',
+    audience: 'employee',
+    forName: r.requester,
+  })
 }
 
 /** Keputusan owner. Menolak wajib disertai alasan. */
@@ -564,6 +1003,10 @@ export function decideRequest(id: string, decision: 'approve' | 'reject', note: 
   emit({
     ...state,
     requests: patchRequest(id, { status: decision === 'approve' ? 'approved' : 'rejected', ownerNote: clean }),
+    notifications: [
+      notifyRequester(r, decision === 'approve' ? 'disetujui' : 'ditolak'),
+      ...state.notifications,
+    ],
   })
 }
 
@@ -573,7 +1016,7 @@ export function payRequest(id: string, method: PaymentMethod) {
   if (!isMoneyRequest(r.type)) throw new Error('Pengajuan ini tidak berdampak uang.')
   if (r.status !== 'approved') throw new Error('Setujui pengajuan terlebih dahulu.')
   const expense: Expense = {
-    id: `e${Date.now()}`,
+    id: uid('e'),
     description: `${r.type === 'cash_advance' ? 'Kasbon' : 'Pengajuan'}: ${r.requester}`,
     category: 'Kasbon',
     amount: r.amount,
@@ -585,15 +1028,51 @@ export function payRequest(id: string, method: PaymentMethod) {
     requests: patchRequest(id, { status: 'paid' }),
     expenses: [expense, ...state.expenses],
     cash: [...state.cash, expenseCash(expense)],
+    audit: [
+      makeAudit('Pengajuan', id, `${requestTypeLabel[r.type]} ${r.requester}`, 'Bayar pengajuan', 'Disetujui', `Dibayar ${formatRupiah(r.amount)}`),
+      ...state.audit,
+    ],
+    notifications: [notifyRequester(r, 'dibayar'), ...state.notifications],
   })
 }
 
-/** Tandai pengajuan non-uang sudah dilaksanakan. */
+/** Tandai pengajuan non-uang sudah dilaksanakan. Lupa Absen membuat catatan absensi manual. */
 export function completeRequest(id: string) {
   const r = requireRequest(id)
   if (isMoneyRequest(r.type)) throw new Error('Pengajuan uang diselesaikan lewat pembayaran.')
   if (r.status !== 'approved') throw new Error('Setujui pengajuan terlebih dahulu.')
-  emit({ ...state, requests: patchRequest(id, { status: 'completed' }) })
+
+  let attendance = state.attendance
+  if (r.type === 'forgot_attendance' && r.payload) {
+    const emp = state.employees.find((e) => e.name === r.requester)
+    if (!emp) throw new Error('Karyawan pengaju tidak ditemukan.')
+    if (state.attendance.some((a) => a.employeeId === emp.id && a.date === r.payload!.date)) {
+      throw new Error('Sudah ada absensi pada tanggal itu.')
+    }
+    const [y, m, d] = r.payload.date.split('-').map(Number)
+    const at = (hhmm: string) => {
+      const [h, mi] = hhmm.split(':').map(Number)
+      return new Date(y, m - 1, d, h, mi)
+    }
+    const inDate = at(r.payload.checkIn)
+    const record: AttendanceRecord = {
+      id: uid('at'),
+      employeeId: emp.id,
+      date: r.payload.date,
+      checkIn: inDate.toISOString(),
+      ...(r.payload.checkOut ? { checkOut: at(r.payload.checkOut).toISOString() } : {}),
+      lateMinutes: lateMinutes(shiftFor(emp.id, weekdayIndex(inDate)), inDate),
+      source: 'manual',
+      note: `Lupa Absen disetujui: ${r.detail}`,
+    }
+    attendance = [record, ...attendance]
+  }
+  emit({
+    ...state,
+    requests: patchRequest(id, { status: 'completed' }),
+    attendance,
+    notifications: [notifyRequester(r, 'dilaksanakan'), ...state.notifications],
+  })
 }
 
 function validateEmployee(name: string, position: string, weeklySalary: number) {
@@ -669,15 +1148,14 @@ export function correctPayment(orderId: string, paymentId: string, input: Paymen
     throw new Error('Tidak ada perubahan.')
   }
 
-  const entry: AuditEntry = {
-    id: `a${Date.now()}-${state.audit.length}`,
-    at: new Date().toISOString(),
+  const entry = makeAudit(
+    'Pesanan',
     orderId,
-    orderNumber: order.number,
-    action: 'Koreksi pembayaran',
-    before: describePayment(payment.amount, payment.method, new Date(payment.at).toISOString()),
-    after: describePayment(input.amount, input.method, nextAt),
-  }
+    order.number,
+    'Koreksi pembayaran',
+    describePayment(payment.amount, payment.method, new Date(payment.at).toISOString()),
+    describePayment(input.amount, input.method, nextAt),
+  )
 
   emit({
     ...state,
@@ -696,5 +1174,80 @@ export function correctPayment(orderId: string, paymentId: string, input: Paymen
       c.id === `cash-${paymentId}` ? { ...c, amount: input.amount, method: input.method, at: nextAt } : c,
     ),
     audit: [entry, ...state.audit],
+  })
+}
+
+const RESERVED_CASH_CATEGORIES = ['Saldo Awal']
+
+/**
+ * Kas manual oleh owner (masuk atau keluar) di luar pembayaran dan pengeluaran,
+ * misalnya setoran modal atau penyesuaian. Tercatat di audit.
+ */
+export function addManualCash(
+  direction: 'in' | 'out',
+  description: string,
+  category: string,
+  amount: number,
+  method: PaymentMethod,
+) {
+  const text = description.trim()
+  if (!text) throw new Error('Deskripsi kas wajib diisi.')
+  requirePositive(amount, 'Nominal')
+  const cat = category.trim() || 'Kas Manual'
+  if (RESERVED_CASH_CATEGORIES.includes(cat)) throw new Error('Kategori itu dicadangkan untuk saldo pembuka.')
+  const entry: CashEntry = {
+    id: uid('cash-manual-'),
+    at: new Date().toISOString(),
+    direction,
+    amount,
+    method,
+    category: cat,
+    description: text,
+    manual: true,
+  }
+  emit({
+    ...state,
+    cash: [...state.cash, entry],
+    audit: [
+      makeAudit('Kas', entry.id, text, 'Kas manual', '-', `${direction === 'in' ? 'Masuk' : 'Keluar'} ${formatRupiah(amount)} · ${paymentMethodLabel[method]} · ${cat}`),
+      ...state.audit,
+    ],
+  })
+}
+
+const describeItems = (items: OrderItem[], total: number) =>
+  `${items.map((i) => `${formatQty(i.qty)} ${i.unit} ${i.name}`).join(', ')} · total ${formatRupiah(total)}`
+
+/**
+ * Ubah layanan kiloan pesanan (khusus owner). Harga dan total dihitung ulang
+ * dari katalog saat ini. Item satuan tidak berubah. Total baru tidak boleh
+ * lebih kecil dari yang sudah dibayar.
+ */
+export function updateOrderKiloLines(orderId: string, lines: { serviceId: string; qty: number }[]) {
+  const order = getOrder(orderId)
+  if (!order) throw new Error('Pesanan tidak ditemukan.')
+  if (order.status === 'cancelled' || order.status === 'picked_up') {
+    throw new Error('Pesanan yang sudah diambil atau dibatalkan tidak bisa diubah layanannya.')
+  }
+  if (lines.length === 0) throw new Error('Isi minimal satu layanan kiloan.')
+  const kilo: OrderItem[] = lines.map((l) => {
+    const service = state.services.find((x) => x.id === l.serviceId)
+    if (!service || service.unit !== 'kg') throw new Error('Pilih layanan kiloan.')
+    if (!Number.isFinite(l.qty) || l.qty <= 0) throw new Error('Berat harus lebih dari nol.')
+    if (Math.abs(l.qty * 10 - Math.round(l.qty * 10)) > 1e-9) throw new Error('Berat per 0,1 kg.')
+    return { serviceId: service.id, name: service.name, unit: 'kg', qty: l.qty, price: service.price }
+  })
+  const items = [...kilo, ...order.items.filter((i) => i.unit !== 'kg')]
+  const total = orderTotal(items, order.skipMinKg)
+  if (total < order.paid) {
+    throw new Error('Total baru lebih kecil dari yang sudah dibayar. Koreksi pembayaran dulu.')
+  }
+  emit({
+    ...state,
+    orders: state.orders.map((o) => (o.id === orderId ? { ...o, items, total } : o)),
+    audit: [
+      makeAudit('Pesanan', orderId, order.number, 'Ubah layanan kiloan', describeItems(order.items, order.total), describeItems(items, total)),
+      ...state.audit,
+    ],
   })
 }

@@ -25,6 +25,8 @@ export interface CashEntry {
   method: PaymentMethod
   category: string
   description: string
+  /** Kas yang dicatat manual oleh owner, bukan hasil pembayaran atau pengeluaran. */
+  manual?: boolean
 }
 
 const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate())

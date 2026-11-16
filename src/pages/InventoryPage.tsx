@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Card, inputClass, primaryButton, SectionTitle, StatusChip } from '@/components/ui'
 import { adjustStock, buyStock, consumeStock, useStore, type InventoryItem } from '@/data/store'
+import { useAuth } from '@/lib/auth'
 import { formatQty } from '@/lib/format'
 import { paymentMethodLabel, type PaymentMethod } from '@/lib/orders'
 
@@ -21,6 +22,8 @@ export function InventoryPage() {
   const inventory = useStore((s) => s.inventory)
   const movements = useStore((s) => s.movements)
 
+  const { session } = useAuth()
+  const modes: Mode[] = session?.role === 'owner' ? ['buy', 'use', 'adjust'] : ['use']
   const [target, setTarget] = useState<{ item: InventoryItem; mode: Mode } | null>(null)
   const [qty, setQty] = useState('')
   const [amount, setAmount] = useState('')
@@ -156,7 +159,7 @@ export function InventoryPage() {
               </p>
               {isLow && <StatusChip label="Menipis" tone="peach" />}
               <div className="flex flex-wrap gap-2">
-                {(['buy', 'use', 'adjust'] as Mode[]).map((m) => (
+                {modes.map((m) => (
                   <button
                     key={m}
                     type="button"
