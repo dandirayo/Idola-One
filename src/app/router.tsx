@@ -9,6 +9,8 @@ import { OrderDetailPage } from '@/pages/OrderDetailPage'
 import { OrderNewPage } from '@/pages/OrderNewPage'
 import { OrdersPage } from '@/pages/OrdersPage'
 import { PlaceholderPage } from '@/pages/PlaceholderPage'
+import { RequestNewPage } from '@/pages/RequestNewPage'
+import { RequestsPage } from '@/pages/RequestsPage'
 import { ServicesPage } from '@/pages/ServicesPage'
 
 const soon = (title: string, phase: string) => <PlaceholderPage title={title} phase={phase} />
@@ -29,7 +31,8 @@ export const router = createBrowserRouter([
       { path: 'inventory', element: <InventoryPage /> },
       { path: 'cashbook', element: <CashbookPage /> },
       { path: 'reports', element: soon('Laporan', 'Fase 2') },
-      { path: 'requests/review', element: soon('Pengajuan', 'Fase 2') },
+      { path: 'requests/review', element: <RequestsPage /> },
+      { path: 'requests/new', element: <RequestNewPage /> },
       { path: 'employees', element: soon('Tim', 'Fase 2') },
       { path: 'settings/shop', element: soon('Pengaturan', 'Fase 2') },
       { path: '*', element: soon('Halaman tidak ditemukan', '-') },

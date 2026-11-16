@@ -1,5 +1,5 @@
 import type { ComponentType, ReactNode } from 'react'
-import type { Tone } from '@/data/mock'
+export type Tone = 'peach' | 'lilac' | 'lime' | 'cream'
 
 const toneClass: Record<Tone, string> = {
   peach: 'bg-peach',

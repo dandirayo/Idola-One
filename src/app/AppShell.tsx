@@ -18,13 +18,13 @@ import {
 } from 'lucide-react'
 import { useState, type ComponentType } from 'react'
 import { Navigate, NavLink, Outlet, useNavigate } from 'react-router'
+import { useStore } from '@/data/store'
 import { useAuth } from '@/lib/auth'
 
 interface NavItem {
   to: string
   label: string
   icon: ComponentType<{ className?: string; 'aria-hidden'?: boolean }>
-  badge?: number
 }
 
 const ownerNav: NavItem[] = [
@@ -35,7 +35,7 @@ const ownerNav: NavItem[] = [
   { to: '/inventory', label: 'Stok', icon: Package },
   { to: '/cashbook', label: 'Buku Kas', icon: Wallet },
   { to: '/reports', label: 'Laporan', icon: BarChart3 },
-  { to: '/requests/review', label: 'Pengajuan', icon: Inbox, badge: 2 },
+  { to: '/requests/review', label: 'Pengajuan', icon: Inbox },
   { to: '/employees', label: 'Tim', icon: UserCog },
   { to: '/settings/shop', label: 'Pengaturan', icon: Settings },
 ]
@@ -52,11 +52,15 @@ function Logo() {
 }
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
+  const requests = useStore((s) => s.requests)
+  const pending = requests.filter((r) => r.status === 'pending').length
   return (
     <div className="flex h-full flex-col gap-6 rounded-[1.75rem] bg-sidebar p-5">
       <Logo />
       <nav aria-label="Menu utama" className="flex flex-1 flex-col gap-1.5 overflow-y-auto">
-        {ownerNav.map(({ to, label, icon: Icon, badge }) => (
+        {ownerNav.map(({ to, label, icon: Icon }) => {
+          const badge = to === '/requests/review' ? pending : 0
+          return (
           <NavLink
             key={to}
             to={to}
@@ -75,7 +79,8 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
               </span>
             ) : null}
           </NavLink>
-        ))}
+          )
+        })}
       </nav>
       <div className="rounded-3xl bg-lime p-4 text-sidebar">
         <span className="mb-6 grid size-10 place-items-center rounded-full bg-sidebar text-lime">

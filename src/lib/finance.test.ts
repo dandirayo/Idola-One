@@ -42,6 +42,23 @@ const entries: CashEntry[] = [
   { id: '3', at: '', direction: 'out', amount: 15000, method: 'cash', category: 'Stok', description: '' },
 ]
 
+describe('saldo pembuka', () => {
+  const opening: CashEntry = {
+    id: 'o',
+    at: '',
+    direction: 'in',
+    amount: 500000,
+    method: 'cash',
+    category: 'Saldo Awal',
+    description: '',
+  }
+
+  it('masuk saldo tetapi bukan pemasukan operasional', () => {
+    expect(summarize([opening, ...entries]).in).toBe(78000)
+    expect(balance([opening, ...entries])).toBe(563000)
+  })
+})
+
 describe('summarize dan balance', () => {
   it('menjumlahkan masuk, keluar, dan per metode', () => {
     const s = summarize(entries)

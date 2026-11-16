@@ -4,6 +4,7 @@
 
 import { useSyncExternalStore } from 'react'
 import type { CashEntry } from '@/lib/finance'
+import { isMoneyRequest, type RequestStatus, type RequestType } from '@/lib/requests'
 import { normalizePhone, orderTotal, type OrderStatus, type PaymentMethod, type Unit } from '@/lib/orders'
 
 export interface Service {
@@ -78,6 +79,17 @@ export interface Expense {
   at: string
 }
 
+export interface EmployeeRequest {
+  id: string
+  type: RequestType
+  requester: string
+  detail: string
+  amount: number // hanya untuk pengajuan uang, selain itu 0
+  status: RequestStatus
+  ownerNote: string
+  createdAt: string
+}
+
 interface State {
   services: Service[]
   customers: Customer[]
@@ -85,6 +97,7 @@ interface State {
   inventory: InventoryItem[]
   movements: StockMovement[]
   expenses: Expense[]
+  requests: EmployeeRequest[]
   /** Satu-satunya sumber pergerakan kas. Diisi oleh aksi di bawah, meniru trigger database. */
   cash: CashEntry[]
 }
@@ -156,6 +169,13 @@ const inventory: InventoryItem[] = [
 
 const seedExpenses: Expense[] = [
   { id: 'e1', description: 'Listrik token', category: 'Operasional', amount: 100000, method: 'cash', at: '2026-11-15T09:00:00' },
+  { id: 'e2', description: 'Kasbon: Rina', category: 'Kasbon', amount: 150000, method: 'cash', at: '2026-11-14T11:00:00' },
+]
+
+const seedRequests: EmployeeRequest[] = [
+  { id: 'r1', type: 'stock', requester: 'Rina', detail: 'Plastik 40, 200 pcs', amount: 0, status: 'pending', ownerNote: '', createdAt: '2026-11-16T09:30:00' },
+  { id: 'r2', type: 'shift_swap', requester: 'Dika', detail: 'Tukar shift Sabtu dengan Rina', amount: 0, status: 'approved', ownerNote: '', createdAt: '2026-11-15T18:45:00' },
+  { id: 'r3', type: 'cash_advance', requester: 'Rina', detail: 'Kasbon untuk keperluan keluarga', amount: 150000, status: 'paid', ownerNote: 'Potong gaji minggu depan', createdAt: '2026-11-14T08:00:00' },
 ]
 
 function paymentCash(order: Order, p: Payment): CashEntry {
@@ -189,6 +209,7 @@ let state: State = {
   inventory,
   movements: [],
   expenses: seedExpenses,
+  requests: seedRequests,
   cash: [
     {
       id: 'cash-opening',
@@ -421,4 +442,75 @@ export function addExpense(description: string, category: string, amount: number
     at: new Date().toISOString(),
   }
   emit({ ...state, expenses: [expense, ...state.expenses], cash: [...state.cash, expenseCash(expense)] })
+}
+
+function requireRequest(id: string): EmployeeRequest {
+  const r = state.requests.find((x) => x.id === id)
+  if (!r) throw new Error('Pengajuan tidak ditemukan.')
+  return r
+}
+
+function patchRequest(id: string, patch: Partial<EmployeeRequest>): EmployeeRequest[] {
+  return state.requests.map((r) => (r.id === id ? { ...r, ...patch } : r))
+}
+
+export function createRequest(type: RequestType, requester: string, detail: string, amount: number): EmployeeRequest {
+  const who = requester.trim()
+  const text = detail.trim()
+  if (!who) throw new Error('Nama pengaju wajib diisi.')
+  if (!text) throw new Error('Isi detail pengajuan.')
+  if (isMoneyRequest(type)) requirePositive(amount, 'Nominal')
+  const request: EmployeeRequest = {
+    id: `r${Date.now()}`,
+    type,
+    requester: who,
+    detail: text,
+    amount: isMoneyRequest(type) ? amount : 0,
+    status: 'pending',
+    ownerNote: '',
+    createdAt: new Date().toISOString(),
+  }
+  emit({ ...state, requests: [request, ...state.requests] })
+  return request
+}
+
+/** Keputusan owner. Menolak wajib disertai alasan. */
+export function decideRequest(id: string, decision: 'approve' | 'reject', note: string) {
+  const r = requireRequest(id)
+  if (r.status !== 'pending') throw new Error('Pengajuan ini sudah diputuskan.')
+  const clean = note.trim()
+  if (decision === 'reject' && !clean) throw new Error('Isi alasan penolakan.')
+  emit({
+    ...state,
+    requests: patchRequest(id, { status: decision === 'approve' ? 'approved' : 'rejected', ownerNote: clean }),
+  })
+}
+
+/** Bayar pengajuan uang: status Dibayar, pengeluaran, dan kas keluar dalam satu langkah. */
+export function payRequest(id: string, method: PaymentMethod) {
+  const r = requireRequest(id)
+  if (!isMoneyRequest(r.type)) throw new Error('Pengajuan ini tidak berdampak uang.')
+  if (r.status !== 'approved') throw new Error('Setujui pengajuan terlebih dahulu.')
+  const expense: Expense = {
+    id: `e${Date.now()}`,
+    description: `${r.type === 'cash_advance' ? 'Kasbon' : 'Pengajuan'}: ${r.requester}`,
+    category: 'Kasbon',
+    amount: r.amount,
+    method,
+    at: new Date().toISOString(),
+  }
+  emit({
+    ...state,
+    requests: patchRequest(id, { status: 'paid' }),
+    expenses: [expense, ...state.expenses],
+    cash: [...state.cash, expenseCash(expense)],
+  })
+}
+
+/** Tandai pengajuan non-uang sudah dilaksanakan. */
+export function completeRequest(id: string) {
+  const r = requireRequest(id)
+  if (isMoneyRequest(r.type)) throw new Error('Pengajuan uang diselesaikan lewat pembayaran.')
+  if (r.status !== 'approved') throw new Error('Setujui pengajuan terlebih dahulu.')
+  emit({ ...state, requests: patchRequest(id, { status: 'completed' }) })
 }

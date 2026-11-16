@@ -25,7 +25,7 @@ Arti kolom Status pada tabel di bawah:
 - **Sebagian:** ada sebagian yang jadi, sisanya belum (lihat kolom tugas).
 - **Belum:** belum dikerjakan.
 
-Ringkasan dari 55 tugas (Fase 0 sampai 3): 2 Selesai, 18 Tampilan saja atau Sebagian, 35 Belum. Pengujian otomatis saat ini 33 tes (aturan pesanan, kas, stok, validasi pelanggan dan layanan). Uji E2E dan uji di perangkat nyata belum ada.
+Ringkasan dari 55 tugas (Fase 0 sampai 3): 2 Selesai, 19 Tampilan saja atau Sebagian, 34 Belum.
 
 ---
 
@@ -109,7 +109,7 @@ Tujuan: karyawan dapat menjalankan alur harian dari web.
 | 2.7 | Laporan Pembayaran karyawan dan draf WhatsApp | PAY-06 | Belum |
 | 2.8 | Koreksi pembayaran oleh owner | PAY-04 | Belum |
 | 2.9 | Absensi selfie: kamera browser, unggah Storage, waktu server | ATT-01 | Belum |
-| 2.10 | Pengajuan: form per jenis (karyawan) dan Pusat Pengajuan (owner), label status yang benar | REQ-01 s.d. 04 | Belum |
+| 2.10 | Pengajuan: form per jenis (karyawan) dan Pusat Pengajuan (owner), label status yang benar | REQ-01 s.d. 04 | Tampilan saja |
 | 2.11 | Karyawan: tambah akun (Edge Function), ubah, aktif/nonaktif | EMP-01 | Belum |
 | 2.12 | Pengaturan toko, profil, ganti password | SET-01, AUTH-05 | Belum |
 | 2.13 | Uji RLS lintas toko dan lintas peran untuk semua tabel yang tersentuh | NFR-01 | Belum |
@@ -221,8 +221,11 @@ Keputusan kecil yang diambil saat membangun versi tampilan. Semuanya perlu dicek
 | Periode laporan | Memakai zona waktu perangkat. "Minggu ini" Senin sampai Minggu, "Bulan ini" tanggal 1 sampai akhir bulan. | PRD menetapkan WIB. Angka laporan harus dihitung server. |
 | Stok | Beli Stok mencatat mutasi, pengeluaran kategori Stok, dan kas keluar sekaligus. Pakai Stok tidak membuat kas. | Di backend, harus satu transaksi database |
 | Login | Mode pratinjau, isian apa pun diterima | Ganti dengan autentikasi backend. Mode pratinjau tidak boleh ikut ke produksi. |
-| Dashboard beranda | Angka statis dari `src/data/mock.ts`, belum dihitung dari data di store | Hubungkan ke data setelah backend ada (RPT-01, RPT-03) |
-| Pengujian | Hanya diuji di browser lewat teks dan struktur halaman, bukan tangkapan layar tiap halaman. Tata letak halaman Pelanggan, Layanan, Stok, dan Buku Kas belum dilihat secara visual. | Periksa visual di ponsel dan desktop |
+| Dashboard beranda | KPI, grafik mingguan, dan daftar dihitung di browser dari data di store (`src/lib/dashboard.ts`). Grafik hanya memuat pesanan yang ada di memori. | Ganti dengan agregat server (RPT-03). Angka tidak boleh dihitung dari daftar yang termuat saja. |
+| Pengujian | Hanya diuji di browser lewat teks dan struktur halaman, bukan tangkapan layar tiap halaman. Tata letak halaman Pelanggan, Layanan, Stok, Buku Kas, dan Pengajuan belum dilihat secara visual. | Periksa visual di ponsel dan desktop |
+| Saldo pembuka | Entri kategori "Saldo Awal" dihitung dalam saldo akhir, tetapi **tidak** dihitung sebagai pemasukan periode atau KPI pemasukan (`OPENING_CATEGORY` di `src/lib/finance.ts`). | Konfirmasi dengan owner. Sistem lama belum punya alur saldo pembuka. |
+| Pengajuan | Hanya kasbon yang berdampak uang: setelah disetujui tombolnya "Bayar" dan menghasilkan kas keluar. Jenis lain memakai "Tandai Dilaksanakan" tanpa kas. Menolak wajib disertai alasan. Status `completed` tampil sebagai "Dilaksanakan". | Dokumen lama berbeda: aplikasi Android menampilkan `completed` sebagai "Disetujui", sedangkan dokumen upgrade UI/UX 30 Okt memakai "Dilaksanakan". Perlu diputuskan satu istilah. Pengajuan stok juga belum otomatis menambah stok dan kas seperti di BLUEPRINT lama. |
+| Peran | Belum ada pemisahan peran. Semua halaman terbuka untuk sesi pratinjau (owner). Form pengajuan memakai isian nama pengaju. | Karyawan membuat pengajuan dari akunnya sendiri, hanya owner yang memutuskan (ditegakkan backend) |
 | Paket | Memakai npm (bukan pnpm) dan React Router (bukan TanStack Router). TypeScript 7 dan React Router 8 sesuai versi terbaru saat setup. | Kunci versi tetap lewat `package-lock.json` |
 
 ## Dokumen berikutnya

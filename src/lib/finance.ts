@@ -65,6 +65,10 @@ export interface CashSummary {
   byMethod: Record<PaymentMethod, { in: number; out: number }>
 }
 
+/** Kategori saldo pembuka. Dihitung dalam saldo, tetapi bukan pemasukan operasional. */
+export const OPENING_CATEGORY = 'Saldo Awal'
+
+/** Ringkasan operasional periode. Saldo pembuka tidak dihitung sebagai masuk. */
 export function summarize(entries: CashEntry[]): CashSummary {
   const result: CashSummary = {
     in: 0,
@@ -76,6 +80,7 @@ export function summarize(entries: CashEntry[]): CashSummary {
     },
   }
   for (const e of entries) {
+    if (e.category === OPENING_CATEGORY) continue
     result[e.direction] += e.amount
     result.byMethod[e.method][e.direction] += e.amount
   }
