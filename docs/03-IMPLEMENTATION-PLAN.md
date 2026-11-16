@@ -22,10 +22,10 @@ Arti kolom Status pada tabel di bawah:
 
 - **Selesai:** kode jadi, diuji, dan tidak bergantung pada backend.
 - **Tampilan saja:** halaman dan aturan hitung sudah jadi dan diuji dengan **data contoh di memori** (`src/data/store.ts`). Belum tersambung ke server, jadi belum memenuhi arti "satu fitur selesai" di prinsip nomor 3.
-- **Sebagian:** ada sebagian yang jadi, sisanya belum (lihat kolom tugas).
+- **Sebagian:** ada sebagian yang jadi, sisanya belum. Contoh yang belum ada: Contact Picker (1.2), filter periode, paginasi server, dan "Pesanan Saya" (1.5), kolom penerima (1.6), kolom khusus per jenis pengajuan (2.10), dan akun login karyawan (2.11). Status "Tampilan saja" hanya dipakai bila semua bagian yang tertulis pada tugas sudah ada.
 - **Belum:** belum dikerjakan.
 
-Ringkasan dari 55 tugas (Fase 0 sampai 3): 2 Selesai, 26 Tampilan saja atau Sebagian, 27 Belum.
+Ringkasan dari 55 tugas (Fase 0 sampai 3): 2 Selesai, 12 Tampilan saja, 14 Sebagian, 27 Belum.
 
 ---
 
@@ -74,11 +74,11 @@ Tujuan: karyawan dapat menjalankan alur harian dari web.
 | No | Tugas | Kebutuhan | Status |
 | --- | --- | --- | --- |
 | 1.1 | Layanan dan harga: daftar, tambah, ubah, aktif/nonaktif (owner), baca (karyawan) | SVC-01, 02 | Tampilan saja |
-| 1.2 | Pelanggan: daftar, cari, tambah, ubah, hapus lunak, normalisasi nomor, cegah duplikat, tambah cepat, Contact Picker | CUS-01, 02, 05 | Tampilan saja |
+| 1.2 | Pelanggan: daftar, cari, tambah, ubah, hapus lunak, normalisasi nomor, cegah duplikat, tambah cepat, Contact Picker | CUS-01, 02, 05 | Sebagian |
 | 1.3 | Form pesanan baru: Kiloan, Satuan, Gabung, keranjang, perkiraan total, pembayaran awal | ORD-01 | Tampilan saja |
 | 1.4 | Simpan lewat `create_laundry_order` dan tampilkan nomor nota/total dari server, dengan perlindungan klik ganda | ORD-02 | Belum |
-| 1.5 | Daftar pesanan: cari, filter status dan periode, paginasi server. Karyawan melihat "Pesanan Saya". | ORD-03 | Tampilan saja |
-| 1.6 | Detail pesanan: item, pelanggan, penerima, riwayat pembayaran, sisa tagihan | ORD-04 | Tampilan saja |
+| 1.5 | Daftar pesanan: cari, filter status dan periode, paginasi server. Karyawan melihat "Pesanan Saya". | ORD-03 | Sebagian |
+| 1.6 | Detail pesanan: item, pelanggan, penerima, riwayat pembayaran, sisa tagihan | ORD-04 | Sebagian |
 | 1.7 | Ubah status sesuai transisi server, termasuk pengambilan walau belum lunas | ORD-05, 07 | Tampilan saja |
 | 1.8 | Template WhatsApp "Siap Diambil" | ORD-06 | Tampilan saja |
 | 1.9 | Terima pembayaran lewat `record_order_payment`, metode Tunai/Transfer/QRIS | PAY-01, 02 | Tampilan saja |
@@ -109,8 +109,8 @@ Tujuan: karyawan dapat menjalankan alur harian dari web.
 | 2.7 | Laporan Pembayaran karyawan dan draf WhatsApp | PAY-06 | Tampilan saja |
 | 2.8 | Koreksi pembayaran oleh owner | PAY-04 | Tampilan saja |
 | 2.9 | Absensi selfie: kamera browser, unggah Storage, waktu server | ATT-01 | Belum |
-| 2.10 | Pengajuan: form per jenis (karyawan) dan Pusat Pengajuan (owner), label status yang benar | REQ-01 s.d. 04 | Tampilan saja |
-| 2.11 | Karyawan: tambah akun (Edge Function), ubah, aktif/nonaktif | EMP-01 | Tampilan saja |
+| 2.10 | Pengajuan: form per jenis (karyawan) dan Pusat Pengajuan (owner), label status yang benar | REQ-01 s.d. 04 | Sebagian |
+| 2.11 | Karyawan: tambah akun (Edge Function), ubah, aktif/nonaktif | EMP-01 | Sebagian |
 | 2.12 | Pengaturan toko, profil, ganti password | SET-01, AUTH-05 | Sebagian |
 | 2.13 | Uji RLS lintas toko dan lintas peran untuk semua tabel yang tersentuh | NFR-01 | Belum |
 | 2.14 | Bandingkan laporan web dan Android untuk periode yang sama | Gerbang | Belum |
@@ -232,6 +232,12 @@ Keputusan kecil yang diambil saat membangun versi tampilan. Semuanya perlu dicek
 | Ekspor CSV | Pesanan dan kas dapat diekspor dari halaman Laporan. Sel teks berawalan `= + - @` diberi apostrof agar tidak dijalankan sebagai rumus, dan sel dikutip sesuai standar CSV (diuji). | Tombol unduh belum dijalankan di browser (butuh izin unduhan). Ekspor pelanggan belum ada. Ekspor Buku Kas langsung dari halaman Buku Kas belum ada. |
 | Laporan Pembayaran | Merangkum pembayaran pelanggan per metode. Hybrid hanya keterangan (nota bertunai dan transfer) dan tidak dijumlahkan lagi. Draf WhatsApp bisa diubah sebelum dikirim. | Nomor tujuan sementara memakai telepon toko, pengganti nomor owner di profil. Dasar waktu memakai zona waktu perangkat, bukan WIB. |
 | Koreksi pembayaran | Hanya untuk sesi owner. Nominal, metode, dan tanggal dapat diubah. Jumlah semua pembayaran tidak boleh melebihi tagihan, tanggal masa depan ditolak, dan koreksi tanpa perubahan ditolak. Pembayaran, total dibayar, baris kas, dan catatan audit diperbarui sekaligus. Status bayar mengikuti (bisa turun dari Lunas ke DP). | Halaman Audit belum ada (3.12), catatan audit baru tampil di detail pesanan dan hilang saat dimuat ulang. Di backend harus satu transaksi database. Belum diputuskan apakah pesanan yang sudah Diambil boleh dikoreksi, dan efeknya pada poin pelanggan (poin belum dibuat). |
+| Uang dan desimal | Semua hitungan uang memakai **bilangan bulat** (jumlah per 0,1 kg dikali harga, lihat `src/lib/orders.ts`). Pada 16 Nov ditemukan bug: perhitungan desimal sempat menagih lebih Rp1.000 pada kombinasi tertentu (contoh: 34,2 kg x Rp 12.500 menghasilkan 427500.00000000006 lalu dibulatkan ke atas). Sudah diperbaiki dan dijaga uji properti 20.000 pesanan acak. | Backend wajib memakai aritmetika bilangan bulat atau tipe desimal tetap untuk uang, tidak boleh float. |
+| Nomor nota | Di data contoh dihitung dari urutan tertinggi pada tanggal lokal hari itu, dan tidak pernah kembar (diuji). | Di backend harus dibuat atomik di server (misalnya sequence per tanggal), tidak boleh dihitung di browser. Zona waktu tanggal nota perlu diputuskan (WIB). |
+| Data contoh | Tanggal data contoh relatif terhadap hari ini, jadi Beranda dan Laporan selalu terlihat terisi. | Hanya untuk pratinjau |
+| Header | Kolom cari di header membuka halaman Pesanan dengan kata kunci. Ikon lonceng menuju Pusat Pengajuan dan bertitik merah hanya bila ada pengajuan menunggu. | Notifikasi sungguhan (1.11) belum ada. Kartu "Segera: pasang di layar utama HP" menunggu PWA (0.11). |
+| Font | DM Sans dimuat dari Google Fonts lewat `index.html`. | Untuk server sendiri atau jaringan toko yang terbatas, font sebaiknya dihosting sendiri. Itu butuh menambah paket (mis. `@fontsource/dm-sans`) dan perlu persetujuan. |
+| CI | Workflow `.github/workflows/ci.yml` ada, tetapi hasilnya belum pernah terlihat. Repo private dan saya tidak punya akses masuk ke GitHub. | Periksa tab Actions di repo |
 | Paket | Memakai npm (bukan pnpm) dan React Router (bukan TanStack Router). TypeScript 7 dan React Router 8 sesuai versi terbaru saat setup. | Kunci versi tetap lewat `package-lock.json` |
 
 ## Dokumen berikutnya

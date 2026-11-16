@@ -6,8 +6,9 @@ import { PrintDialog } from '@/components/PrintDialog'
 import { buildDocument, docKindLabel, type DocKind } from '@/lib/receipt'
 import { Card, inputClass, orderStatusTone, paymentTone, primaryButton, SectionTitle, StatusChip } from '@/components/ui'
 import { addPayment, setOrderStatus, useStore } from '@/data/store'
-import { formatRupiah } from '@/lib/format'
+import { formatQty, formatRupiah } from '@/lib/format'
 import {
+  lineAmount,
   nextStatuses,
   orderStatusLabel,
   paymentMethodLabel,
@@ -106,10 +107,10 @@ export function OrderDetailPage() {
                   <span>
                     <span className="font-semibold">{i.name}</span>
                     <span className="block text-xs text-muted">
-                      {i.qty} {i.unit} × {formatRupiah(i.price)}
+                      {formatQty(i.qty)} {i.unit} × {formatRupiah(i.price)}
                     </span>
                   </span>
-                  <span className="font-semibold">{formatRupiah(i.qty * i.price)}</span>
+                  <span className="font-semibold">{formatRupiah(lineAmount(i.qty, i.price))}</span>
                 </li>
               ))}
             </ul>

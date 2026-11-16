@@ -149,6 +149,33 @@ const customers: Customer[] = [
   { id: 'c4', name: 'Bu Ratna', phone: '081200000004', active: true },
 ]
 
+/** Waktu contoh relatif terhadap hari ini (waktu lokal), agar data contoh selalu terlihat "baru". */
+function seedAt(daysAgo: number, hour: number, minute = 0): string {
+  const d = new Date()
+  d.setDate(d.getDate() - daysAgo)
+  d.setHours(hour, minute, 0, 0)
+  return d.toISOString()
+}
+
+const pad = (n: number, width = 2) => String(n).padStart(width, '0')
+
+/** Tanggal lokal YYYYMMDD untuk nomor nota. */
+function ymd(d: Date): string {
+  return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`
+}
+
+/** Nomor nota berikutnya pada tanggal itu: urutan tertinggi yang ada ditambah satu. */
+function nextOrderNumber(orders: { number: string }[], date: Date): string {
+  const prefix = `IDL-${ymd(date)}-`
+  let max = 0
+  for (const o of orders) {
+    if (!o.number.startsWith(prefix)) continue
+    const seq = Number(o.number.slice(prefix.length))
+    if (Number.isInteger(seq) && seq > max) max = seq
+  }
+  return `${prefix}${pad(max + 1, 4)}`
+}
+
 function seedOrder(
   n: number,
   customer: Customer,
@@ -159,7 +186,7 @@ function seedOrder(
 ): Order {
   return {
     id: `o${n}`,
-    number: `IDL-20261116-${String(n).padStart(4, '0')}`,
+    number: `IDL-${ymd(new Date(createdAt))}-${pad(n, 4)}`,
     customerId: customer.id,
     customerName: customer.name,
     customerPhone: customer.phone,
@@ -183,11 +210,11 @@ const line = (s: Service, qty: number): OrderItem => ({
 })
 
 const seedOrders: Order[] = [
-  seedOrder(12, customers[0], [line(services[0], 3.5)], 'received', 28000, '2026-11-16T08:10:00'),
-  seedOrder(11, customers[1], [line(services[3], 2)], 'processing', 30000, '2026-11-16T07:40:00'),
-  seedOrder(10, customers[2], [line(services[0], 5), line(services[4], 1)], 'processing', 0, '2026-11-16T07:05:00'),
-  seedOrder(9, customers[3], [line(services[0], 4)], 'ready', 32000, '2026-11-15T16:20:00'),
-  seedOrder(8, customers[0], [line(services[5], 2)], 'picked_up', 70000, '2026-11-14T10:00:00'),
+  seedOrder(12, customers[0], [line(services[0], 3.5)], 'received', 28000, seedAt(0, 8, 10)),
+  seedOrder(11, customers[1], [line(services[3], 2)], 'processing', 30000, seedAt(0, 7, 40)),
+  seedOrder(10, customers[2], [line(services[0], 5), line(services[4], 1)], 'processing', 0, seedAt(0, 7, 5)),
+  seedOrder(9, customers[3], [line(services[0], 4)], 'ready', 32000, seedAt(1, 16, 20)),
+  seedOrder(8, customers[0], [line(services[5], 2)], 'picked_up', 70000, seedAt(2, 10, 0)),
 ]
 
 const inventory: InventoryItem[] = [
@@ -199,14 +226,14 @@ const inventory: InventoryItem[] = [
 ]
 
 const seedExpenses: Expense[] = [
-  { id: 'e1', description: 'Listrik token', category: 'Operasional', amount: 100000, method: 'cash', at: '2026-11-15T09:00:00' },
-  { id: 'e2', description: 'Kasbon: Rina', category: 'Kasbon', amount: 150000, method: 'cash', at: '2026-11-14T11:00:00' },
+  { id: 'e1', description: 'Listrik token', category: 'Operasional', amount: 100000, method: 'cash', at: seedAt(1, 9, 0) },
+  { id: 'e2', description: 'Kasbon: Rina', category: 'Kasbon', amount: 150000, method: 'cash', at: seedAt(2, 11, 0) },
 ]
 
 const seedRequests: EmployeeRequest[] = [
-  { id: 'r1', type: 'stock', requester: 'Rina', detail: 'Plastik 40, 200 pcs', amount: 0, status: 'pending', ownerNote: '', createdAt: '2026-11-16T09:30:00' },
-  { id: 'r2', type: 'shift_swap', requester: 'Dika', detail: 'Tukar shift Sabtu dengan Rina', amount: 0, status: 'approved', ownerNote: '', createdAt: '2026-11-15T18:45:00' },
-  { id: 'r3', type: 'cash_advance', requester: 'Rina', detail: 'Kasbon untuk keperluan keluarga', amount: 150000, status: 'paid', ownerNote: 'Potong gaji minggu depan', createdAt: '2026-11-14T08:00:00' },
+  { id: 'r1', type: 'stock', requester: 'Rina', detail: 'Plastik 40, 200 pcs', amount: 0, status: 'pending', ownerNote: '', createdAt: seedAt(0, 9, 30) },
+  { id: 'r2', type: 'shift_swap', requester: 'Dika', detail: 'Tukar shift Sabtu dengan Rina', amount: 0, status: 'approved', ownerNote: '', createdAt: seedAt(1, 18, 45) },
+  { id: 'r3', type: 'cash_advance', requester: 'Rina', detail: 'Kasbon untuk keperluan keluarga', amount: 150000, status: 'paid', ownerNote: 'Potong gaji minggu depan', createdAt: seedAt(2, 8, 0) },
 ]
 
 function paymentCash(order: Order, p: Payment): CashEntry {
@@ -262,7 +289,7 @@ let state: State = {
   cash: [
     {
       id: 'cash-opening',
-      at: '2026-11-01T08:00:00',
+      at: seedAt(20, 8, 0),
       direction: 'in',
       amount: 500000,
       method: 'cash',
@@ -314,12 +341,17 @@ export function createOrder(input: NewOrderInput): Order {
   if (input.items.length === 0) throw new Error('Tambahkan minimal satu layanan.')
 
   const total = orderTotal(input.items, input.skipMinKg)
-  const n = state.orders.length + 1
-  const now = new Date().toISOString()
-  const paid = Math.min(input.initialPayment?.amount ?? 0, total)
+  const nowDate = new Date()
+  const now = nowDate.toISOString()
+  const uid = `${nowDate.getTime()}-${state.orders.length}`
+  if (input.initialPayment) {
+    requirePositive(input.initialPayment.amount, 'Nominal pembayaran')
+    if (input.initialPayment.amount > total) throw new Error('Pembayaran awal melebihi total pesanan.')
+  }
+  const paid = input.initialPayment?.amount ?? 0
   const order: Order = {
-    id: `o${n}-${Date.now()}`,
-    number: `IDL-${now.slice(0, 10).replaceAll('-', '')}-${String(n).padStart(4, '0')}`,
+    id: `o${uid}`,
+    number: nextOrderNumber(state.orders, nowDate),
     customerId: customer.id,
     customerName: customer.name,
     customerPhone: customer.phone,
@@ -332,7 +364,7 @@ export function createOrder(input: NewOrderInput): Order {
     skipMinKg: input.skipMinKg,
     payments:
       paid > 0 && input.initialPayment
-        ? [{ id: `p${n}-${Date.now()}`, amount: paid, method: input.initialPayment.method, at: now }]
+        ? [{ id: `p${uid}`, amount: paid, method: input.initialPayment.method, at: now }]
         : [],
   }
   emit({
@@ -625,11 +657,14 @@ export function correctPayment(orderId: string, paymentId: string, input: Paymen
   requirePositive(input.amount, 'Nominal')
   const when = new Date(input.at)
   if (Number.isNaN(when.getTime())) throw new Error('Tanggal pembayaran tidak valid.')
-  if (when.getTime() > Date.now() + 60_000) throw new Error('Tanggal pembayaran tidak boleh di masa depan.')
 
   const othersPaid = order.paid - payment.amount
   if (othersPaid + input.amount > order.total) throw new Error('Total pembayaran melebihi tagihan pesanan.')
   const nextAt = when.toISOString()
+  const dateChanged = nextAt !== new Date(payment.at).toISOString()
+  if (dateChanged && when.getTime() > Date.now() + 60_000) {
+    throw new Error('Tanggal pembayaran tidak boleh di masa depan.')
+  }
   if (input.amount === payment.amount && input.method === payment.method && nextAt === new Date(payment.at).toISOString()) {
     throw new Error('Tidak ada perubahan.')
   }

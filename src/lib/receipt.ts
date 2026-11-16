@@ -3,8 +3,8 @@
 // untuk 80 mm. Baris yang sama nanti dapat dikirim sebagai ESC/POS bila jalur
 // cetak langsung ke printer dipilih (lihat docs/04-BACKEND.md bagian 6).
 
-import { formatRupiah } from '@/lib/format'
-import { paymentStatus, paymentStatusLabel, subtotal, type Unit } from '@/lib/orders'
+import { formatQty, formatRupiah } from '@/lib/format'
+import { lineAmount, paymentStatus, paymentStatusLabel, subtotal, type Unit } from '@/lib/orders'
 
 export type PaperWidth = 58 | 80
 export type DocKind = 'receipt' | 'label' | 'pickup'
@@ -98,7 +98,7 @@ function header(shop: ShopInfo, cols: number): Line[] {
   ]
 }
 
-const qtyText = (qty: number, unit: Unit) => `${String(qty).replace('.', ',')} ${unit}`
+const qtyText = (qty: number, unit: Unit) => `${formatQty(qty)} ${unit}`
 
 function summaryOf(order: ReceiptOrder): string {
   return order.items.map((i) => `${qtyText(i.qty, i.unit)} ${i.name}`).join(', ')
@@ -115,7 +115,7 @@ export function buildReceipt(order: ReceiptOrder, shop: ShopInfo): Line[] {
 
   let listed = 0
   for (const item of order.items) {
-    const lineTotal = item.qty * item.price
+    const lineTotal = lineAmount(item.qty, item.price)
     listed += lineTotal
     lines.push(...plain(item.name, cols, { bold: true }))
     lines.push({ text: padLine(`  ${qtyText(item.qty, item.unit)} x ${formatRupiah(item.price)}`, formatRupiah(lineTotal), cols) })

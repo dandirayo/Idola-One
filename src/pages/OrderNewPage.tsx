@@ -3,8 +3,8 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { Card, inputClass, primaryButton, SectionTitle } from '@/components/ui'
 import { addCustomer, createOrder, useStore, type OrderItem } from '@/data/store'
-import { formatRupiah } from '@/lib/format'
-import { MIN_KG, orderTotal, paymentMethodLabel, subtotal, type PaymentMethod } from '@/lib/orders'
+import { formatQty, formatRupiah } from '@/lib/format'
+import { lineAmount, MIN_KG, orderTotal, paymentMethodLabel, subtotal, type PaymentMethod } from '@/lib/orders'
 
 type PayChoice = 'none' | 'half' | 'full'
 
@@ -188,10 +188,10 @@ export function OrderNewPage() {
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold">{i.name}</p>
                       <p className="text-xs text-muted">
-                        {i.qty} {i.unit} × {formatRupiah(i.price)}
+                        {formatQty(i.qty)} {i.unit} × {formatRupiah(i.price)}
                       </p>
                     </div>
-                    <p className="text-sm font-semibold">{formatRupiah(i.qty * i.price)}</p>
+                    <p className="text-sm font-semibold">{formatRupiah(lineAmount(i.qty, i.price))}</p>
                     <button
                       type="button"
                       aria-label={`Hapus ${i.name}`}

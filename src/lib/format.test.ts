@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { formatRupiah, roundUpToThousand } from './format'
+import { formatQty, formatRupiah, roundUpToThousand } from './format'
+
+describe('formatQty', () => {
+  it('memakai koma desimal dan membuang nol yang tidak perlu', () => {
+    expect(formatQty(3.5)).toBe('3,5')
+    expect(formatQty(2)).toBe('2')
+    expect(formatQty(0.1 + 0.2)).toBe('0,3')
+  })
+})
 
 describe('formatRupiah', () => {
   it('memakai pemisah ribuan titik', () => {

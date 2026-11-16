@@ -6,18 +6,16 @@ import { DashboardPage } from '@/pages/DashboardPage'
 import { EmployeesPage } from '@/pages/EmployeesPage'
 import { InventoryPage } from '@/pages/InventoryPage'
 import { LoginPage } from '@/pages/LoginPage'
+import { NotFoundPage } from '@/pages/NotFoundPage'
 import { OrderDetailPage } from '@/pages/OrderDetailPage'
 import { OrderNewPage } from '@/pages/OrderNewPage'
 import { OrdersPage } from '@/pages/OrdersPage'
 import { PaymentReportPage } from '@/pages/PaymentReportPage'
-import { PlaceholderPage } from '@/pages/PlaceholderPage'
 import { ReportsPage } from '@/pages/ReportsPage'
 import { RequestNewPage } from '@/pages/RequestNewPage'
 import { RequestsPage } from '@/pages/RequestsPage'
 import { ServicesPage } from '@/pages/ServicesPage'
 import { SettingsPage } from '@/pages/SettingsPage'
-
-const soon = (title: string, phase: string) => <PlaceholderPage title={title} phase={phase} />
 
 export const router = createBrowserRouter([
   { path: '/sign-in', element: <LoginPage /> },
@@ -40,7 +38,7 @@ export const router = createBrowserRouter([
       { path: 'requests/new', element: <RequestNewPage /> },
       { path: 'employees', element: <EmployeesPage /> },
       { path: 'settings/shop', element: <SettingsPage /> },
-      { path: '*', element: soon('Halaman tidak ditemukan', '-') },
+      { path: '*', element: <NotFoundPage /> },
     ],
   },
 ])

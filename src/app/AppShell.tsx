@@ -17,7 +17,7 @@ import {
   X,
 } from 'lucide-react'
 import { useState, type ComponentType } from 'react'
-import { Navigate, NavLink, Outlet, useNavigate } from 'react-router'
+import { Link, Navigate, NavLink, Outlet, useNavigate } from 'react-router'
 import { useStore } from '@/data/store'
 import { useAuth } from '@/lib/auth'
 
@@ -86,8 +86,8 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         <span className="mb-6 grid size-10 place-items-center rounded-full bg-sidebar text-lime">
           <Download className="size-5" aria-hidden />
         </span>
-        <p className="text-sm font-bold">Pasang di layar utama HP</p>
-        <p className="mt-0.5 text-xs text-sidebar/70">Buka seperti aplikasi, tanpa instal APK.</p>
+        <p className="text-sm font-bold">Segera: pasang di layar utama HP</p>
+        <p className="mt-0.5 text-xs text-sidebar/70">Tersedia setelah aplikasi web dapat dipasang (PWA).</p>
       </div>
     </div>
   )
@@ -97,6 +97,9 @@ export function AppShell() {
   const { session, signOut } = useAuth()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
+  const [search, setSearch] = useState('')
+  const requests = useStore((s) => s.requests)
+  const pending = requests.filter((r) => r.status === 'pending').length
 
   if (!session) return <Navigate to="/sign-in" replace />
 
@@ -139,23 +142,35 @@ export function AppShell() {
             <Menu className="size-5" aria-hidden />
           </button>
           <div className="flex-1" />
-          <label className="relative hidden w-64 sm:block">
-            <span className="sr-only">Cari</span>
-            <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden />
-            <input
-              type="search"
-              placeholder="Cari pesanan atau pelanggan"
-              className="h-11 w-full rounded-full border border-line bg-surface pl-10 pr-4 text-sm outline-none placeholder:text-muted focus:border-ink"
-            />
-          </label>
-          <button
-            type="button"
-            aria-label="Notifikasi"
+          <form
+            role="search"
+            className="relative hidden w-64 sm:block"
+            onSubmit={(e) => {
+              e.preventDefault()
+              const q = search.trim()
+              navigate(q ? `/orders?q=${encodeURIComponent(q)}` : '/orders')
+            }}
+          >
+            <label>
+              <span className="sr-only">Cari nomor nota atau pelanggan, tekan Enter</span>
+              <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden />
+              <input
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Cari pesanan atau pelanggan"
+                className="h-11 w-full rounded-full border border-line bg-surface pl-10 pr-4 text-sm outline-none placeholder:text-muted focus:border-ink"
+              />
+            </label>
+          </form>
+          <Link
+            to="/requests/review"
+            aria-label={pending > 0 ? `Pengajuan menunggu keputusan: ${pending}` : 'Pengajuan, tidak ada yang menunggu'}
             className="relative grid size-11 place-items-center rounded-full bg-surface shadow-card"
           >
             <Bell className="size-5" aria-hidden />
-            <span className="absolute right-2.5 top-2.5 size-2 rounded-full bg-danger" />
-          </button>
+            {pending > 0 && <span className="absolute right-2.5 top-2.5 size-2 rounded-full bg-danger" />}
+          </Link>
           <button
             type="button"
             onClick={() => {

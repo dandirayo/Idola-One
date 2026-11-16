@@ -22,7 +22,7 @@ import { Card, IconChip, orderStatusTone, paymentTone, SectionTitle, StatusChip,
 import { useStore } from '@/data/store'
 import { useAuth } from '@/lib/auth'
 import { computeKpis, orderProgress, weekOverWeekChange, weeklyOrderCounts } from '@/lib/dashboard'
-import { formatRupiah } from '@/lib/format'
+import { formatQty, formatRupiah } from '@/lib/format'
 import { orderStatusLabel, paymentStatus, paymentStatusLabel } from '@/lib/orders'
 import { requestStatusLabel, requestTypeLabel, type RequestStatus } from '@/lib/requests'
 
@@ -163,7 +163,7 @@ export function DashboardPage() {
                     <div className="min-w-0">
                       <p className="truncate font-semibold">{o.customerName}</p>
                       <p className="truncate text-xs text-muted">
-                        {o.items.map((it) => `${it.qty} ${it.unit} ${it.name}`).join(', ')}
+                        {o.items.map((it) => `${formatQty(it.qty)} ${it.unit} ${it.name}`).join(', ')}
                       </p>
                     </div>
                   </div>

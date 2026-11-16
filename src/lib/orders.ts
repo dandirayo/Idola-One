@@ -1,8 +1,6 @@
 // Aturan bisnis pesanan di sisi tampilan. Nilai di sini hanya PERKIRAAN.
 // Setelah backend ada, total, nomor nota, dan status final selalu dari server.
 
-import { roundUpToThousand } from '@/lib/format'
-
 export type Unit = 'kg' | 'pcs'
 export type OrderStatus = 'received' | 'processing' | 'ready' | 'picked_up' | 'cancelled'
 export type PaymentStatus = 'unpaid' | 'partial' | 'paid'
@@ -36,30 +34,50 @@ export const paymentMethodLabel: Record<PaymentMethod, string> = {
   qris: 'QRIS',
 }
 
+/** Berat atau jumlah dalam sepersepuluh (0,1 kg atau 0,1 pcs) sebagai bilangan bulat. */
+const toTenths = (qty: number): number => Math.round(qty * 10)
+
 /**
- * Subtotal semua baris. Bila total berat kiloan kurang dari 3 kg dan minimum
- * tidak dilewati, selisihnya ditagihkan pada baris kiloan pertama.
+ * Jumlah semua baris dalam sepersepuluh Rupiah (bilangan bulat). Semua hitungan
+ * uang memakai bilangan bulat agar tidak terkena galat desimal, misalnya
+ * 34,2 x 12.500 pada desimal menghasilkan 427500.00000000006 dan membuat
+ * pembulatan ke atas naik Rp1.000 secara keliru.
+ *
+ * Bila total berat kiloan kurang dari 3 kg dan minimum tidak dilewati,
+ * selisihnya ditagihkan pada baris kiloan pertama.
  */
-export function subtotal(lines: LineInput[], skipMinKg = false): number {
-  const kgLines = lines.filter((l) => l.unit === 'kg' && l.qty > 0)
-  const totalKg = kgLines.reduce((sum, l) => sum + l.qty, 0)
-  const shortfall = !skipMinKg && totalKg > 0 && totalKg < MIN_KG ? MIN_KG - totalKg : 0
+function sumInTenthRupiah(lines: LineInput[], skipMinKg: boolean): number {
+  const kgTenths = lines.filter((l) => l.unit === 'kg' && l.qty > 0).reduce((sum, l) => sum + toTenths(l.qty), 0)
+  const minTenths = MIN_KG * 10
+  const shortfall = !skipMinKg && kgTenths > 0 && kgTenths < minTenths ? minTenths - kgTenths : 0
 
   let extraApplied = false
-  return lines.reduce((sum, l) => {
-    if (l.qty <= 0) return sum
-    let qty = l.qty
+  let sum = 0
+  for (const l of lines) {
+    if (l.qty <= 0) continue
+    let tenths = toTenths(l.qty)
     if (l.unit === 'kg' && shortfall > 0 && !extraApplied) {
-      qty += shortfall
+      tenths += shortfall
       extraApplied = true
     }
-    return sum + qty * l.price
-  }, 0)
+    sum += tenths * l.price
+  }
+  return sum
 }
 
-/** Total akhir: subtotal dibulatkan ke atas ke kelipatan Rp1.000. */
+/** Nilai satu baris (jumlah x harga) dalam Rupiah utuh, bebas galat desimal. */
+export function lineAmount(qty: number, price: number): number {
+  return Math.round((toTenths(qty) * price) / 10)
+}
+
+/** Subtotal semua baris dalam Rupiah utuh, sebelum pembulatan ke atas. */
+export function subtotal(lines: LineInput[], skipMinKg = false): number {
+  return Math.round(sumInTenthRupiah(lines, skipMinKg) / 10)
+}
+
+/** Total akhir: dibulatkan ke atas ke kelipatan Rp1.000 (dihitung dari jumlah bilangan bulat). */
 export function orderTotal(lines: LineInput[], skipMinKg = false): number {
-  return roundUpToThousand(subtotal(lines, skipMinKg))
+  return Math.ceil(sumInTenthRupiah(lines, skipMinKg) / 10000) * 1000
 }
 
 export function paymentStatus(total: number, paid: number): PaymentStatus {

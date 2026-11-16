@@ -9,6 +9,11 @@ export function formatRupiah(value: number): string {
   return rupiah.format(value).replace(/\u00a0/g, ' ')
 }
 
+/** Jumlah atau berat dengan koma desimal (format Indonesia), contoh: 3.5 -> "3,5". */
+export function formatQty(qty: number): string {
+  return String(Math.round(qty * 10) / 10).replace('.', ',')
+}
+
 /**
  * Pembulatan ke atas ke kelipatan Rp1.000, sama dengan aturan di server.
  * Hanya untuk perkiraan di layar. Total final selalu dari server.

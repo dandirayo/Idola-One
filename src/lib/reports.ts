@@ -3,7 +3,7 @@
 
 import { inRange, summarize, OPENING_CATEGORY, type CashEntry, type Range } from '@/lib/finance'
 import { formatRupiah } from '@/lib/format'
-import { normalizePhone, type OrderStatus, type PaymentMethod, type Unit } from '@/lib/orders'
+import { lineAmount, normalizePhone, type OrderStatus, type PaymentMethod, type Unit } from '@/lib/orders'
 
 export interface ReportOrder {
   number: string
@@ -67,7 +67,7 @@ export function orderReport(orders: ReportOrder[], range: Range): OrderReport {
       const key = `${i.unit}:${i.name}`
       const row = services.get(key) ?? { name: i.name, unit: i.unit, qty: 0, value: 0 }
       row.qty += i.qty
-      row.value += i.qty * i.price
+      row.value += lineAmount(i.qty, i.price)
       services.set(key, row)
     }
   }

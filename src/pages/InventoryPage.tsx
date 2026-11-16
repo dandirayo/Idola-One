@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Card, inputClass, primaryButton, SectionTitle, StatusChip } from '@/components/ui'
 import { adjustStock, buyStock, consumeStock, useStore, type InventoryItem } from '@/data/store'
+import { formatQty } from '@/lib/format'
 import { paymentMethodLabel, type PaymentMethod } from '@/lib/orders'
 
 type Mode = 'buy' | 'use' | 'adjust'
@@ -151,7 +152,7 @@ export function InventoryPage() {
                 <p className="text-xs text-muted">Minimum {i.min} {i.unit}</p>
               </div>
               <p className="w-28 text-right font-semibold">
-                {i.stock} {i.unit}
+                {formatQty(i.stock)} {i.unit}
               </p>
               {isLow && <StatusChip label="Menipis" tone="peach" />}
               <div className="flex flex-wrap gap-2">
@@ -193,7 +194,7 @@ export function InventoryPage() {
                 </span>
                 <span className="font-semibold">
                   {m.type === 'OUT' ? '−' : m.qty > 0 ? '+' : ''}
-                  {m.qty}
+                  {formatQty(m.qty)}
                 </span>
               </li>
             ))}

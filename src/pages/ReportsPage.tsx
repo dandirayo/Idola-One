@@ -5,7 +5,7 @@ import { Card, SectionTitle } from '@/components/ui'
 import { useStore } from '@/data/store'
 import { inRange, periodLabel, periodRange, type Period } from '@/lib/finance'
 import { downloadCsv } from '@/lib/download'
-import { formatRupiah } from '@/lib/format'
+import { formatQty, formatRupiah } from '@/lib/format'
 import { orderStatusLabel, paymentMethodLabel, type OrderStatus, type PaymentMethod } from '@/lib/orders'
 import { cashCsv, cashReport, orderReport, ordersCsv } from '@/lib/reports'
 
@@ -21,8 +21,6 @@ function Stat({ label, value, hint }: { label: string; value: string; hint?: str
     </Card>
   )
 }
-
-const fmtQty = (n: number) => String(Math.round(n * 10) / 10).replace('.', ',')
 
 export function ReportsPage() {
   const orders = useStore((s) => s.orders)
@@ -114,7 +112,7 @@ export function ReportsPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Stat label="Jumlah pesanan" value={String(orderRep.count)} hint="Tanpa yang dibatalkan" />
             <Stat label="Nilai tagihan" value={formatRupiah(orderRep.value)} />
-            <Stat label="Volume" value={`${fmtQty(orderRep.kg)} kg · ${fmtQty(orderRep.pcs)} pcs`} />
+            <Stat label="Volume" value={`${formatQty(orderRep.kg)} kg · ${formatQty(orderRep.pcs)} pcs`} />
             <Stat label="Sisa tagihan" value={formatRupiah(orderRep.outstanding)} />
           </div>
 
@@ -139,7 +137,7 @@ export function ReportsPage() {
                   {orderRep.byService.map((r) => (
                     <li key={`${r.unit}:${r.name}`} className="flex justify-between gap-3">
                       <span className="min-w-0 truncate">
-                        {r.name} <span className="text-muted">· {fmtQty(r.qty)} {r.unit}</span>
+                        {r.name} <span className="text-muted">· {formatQty(r.qty)} {r.unit}</span>
                       </span>
                       <span className="font-semibold">{formatRupiah(r.value)}</span>
                     </li>

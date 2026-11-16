@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  lineAmount,
   nextStatuses,
   normalizePhone,
   orderTotal,
@@ -31,6 +32,79 @@ describe('subtotal dan orderTotal', () => {
 
   it('mengabaikan baris dengan jumlah nol', () => {
     expect(subtotal([{ unit: 'pcs', qty: 0, price: 30000 }])).toBe(0)
+  })
+})
+
+/** Pembangkit angka acak deterministik agar uji bisa diulang. */
+function mulberry32(seed: number) {
+  return () => {
+    seed |= 0
+    seed = (seed + 0x6d2b79f5) | 0
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+/** Acuan: seluruh hitungan memakai bilangan bulat (per 0,1 kg dan Rupiah x 10), tanpa desimal. */
+function referenceTotal(lines: LineInputLike[], skipMinKg: boolean): number {
+  const tenthsKg = lines.filter((l) => l.unit === 'kg').reduce((s, l) => s + Math.round(l.qty * 10), 0)
+  const shortfall = !skipMinKg && tenthsKg > 0 && tenthsKg < 30 ? 30 - tenthsKg : 0
+  let extra = false
+  let sum = 0 // dalam sepersepuluh Rupiah
+  for (const l of lines) {
+    let t = l.unit === 'kg' ? Math.round(l.qty * 10) : l.qty * 10
+    if (l.unit === 'kg' && shortfall > 0 && !extra) {
+      t += shortfall
+      extra = true
+    }
+    sum += t * l.price
+  }
+  return Math.ceil(sum / 10000) * 1000
+}
+
+type LineInputLike = { unit: 'kg' | 'pcs'; qty: number; price: number }
+
+describe('regresi galat desimal', () => {
+  it('34,2 kg x Rp 12.500 tidak membuat total naik Rp1.000 secara keliru', () => {
+    // Pada desimal: 34.2 * 12500 = 427500.00000000006, lalu dibulatkan ke atas menjadi 505.000
+    const lines = [
+      { unit: 'pcs' as const, qty: 1, price: 9000 },
+      { unit: 'kg' as const, qty: 34.2, price: 12500 },
+      { unit: 'pcs' as const, qty: 1, price: 35000 },
+      { unit: 'kg' as const, qty: 6.5, price: 5000 },
+    ]
+    expect(subtotal(lines)).toBe(504000)
+    expect(orderTotal(lines)).toBe(504000)
+  })
+
+  it('lineAmount bebas galat desimal', () => {
+    expect(lineAmount(34.2, 12500)).toBe(427500)
+    expect(lineAmount(3.3, 8000)).toBe(26400)
+    expect(lineAmount(2, 30000)).toBe(60000)
+  })
+})
+
+describe('orderTotal tahan galat desimal', () => {
+  it('sama dengan hitungan bilangan bulat pada 20.000 pesanan acak', () => {
+    const rand = mulberry32(20261116)
+    const prices = [4000, 5000, 6000, 7000, 7250, 8000, 8500, 9000, 12500, 15000, 30000, 35000]
+    for (let n = 0; n < 20000; n++) {
+      const count = 1 + Math.floor(rand() * 4)
+      const lines: LineInputLike[] = []
+      for (let i = 0; i < count; i++) {
+        const kg = rand() < 0.6
+        lines.push({
+          unit: kg ? 'kg' : 'pcs',
+          qty: kg ? (1 + Math.floor(rand() * 400)) / 10 : 1 + Math.floor(rand() * 6),
+          price: prices[Math.floor(rand() * prices.length)],
+        })
+      }
+      const skip = rand() < 0.2
+      const got = orderTotal(lines, skip)
+      const want = referenceTotal(lines, skip)
+      expect(got, JSON.stringify({ lines, skip })).toBe(want)
+    }
   })
 })
 

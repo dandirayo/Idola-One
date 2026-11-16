@@ -280,6 +280,8 @@ Event Realtime hanya **pemicu query ulang**. Angka dan status final selalu dari 
 
 ## 13. Peta halaman per peran
 
+> Peta ini adalah **rancangan target**. Halaman yang sudah ada dan statusnya dicatat di [03-IMPLEMENTATION-PLAN.md](03-IMPLEMENTATION-PLAN.md). Saat ini hanya sisi Owner yang dibuat (belum ada pemisahan peran), dan route seperti `/orders/me`, `/attendance/me`, `/shifts/me`, dan `/pos/*` belum ada.
+
 ### Owner
 
 | Route | Halaman | Kebutuhan |

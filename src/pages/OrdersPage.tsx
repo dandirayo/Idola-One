@@ -1,9 +1,9 @@
 import { Plus, Search } from 'lucide-react'
-import { useMemo, useState } from 'react'
-import { Link } from 'react-router'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useSearchParams } from 'react-router'
 import { Card, orderStatusTone, paymentTone, StatusChip } from '@/components/ui'
 import { useStore } from '@/data/store'
-import { formatRupiah } from '@/lib/format'
+import { formatQty, formatRupiah } from '@/lib/format'
 import {
   orderStatusLabel,
   paymentStatus,
@@ -26,9 +26,17 @@ const dateFormat = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'sh
 
 export function OrdersPage() {
   const orders = useStore((s) => s.orders)
-  const [query, setQuery] = useState('')
+  const [params] = useSearchParams()
+  const urlQuery = params.get('q') ?? ''
+  const [query, setQuery] = useState(urlQuery)
   const [status, setStatus] = useState<OrderStatus | 'all'>('all')
   const [page, setPage] = useState(0)
+
+  // Pencarian dari kolom di header mengisi kolom cari halaman ini
+  useEffect(() => {
+    setQuery(urlQuery)
+    setPage(0)
+  }, [urlQuery])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -117,7 +125,7 @@ export function OrdersPage() {
                     </p>
                   </div>
                   <p className="text-sm text-muted">
-                    {o.items.map((i) => `${i.qty} ${i.unit} ${i.name}`).join(', ')}
+                    {o.items.map((i) => `${formatQty(i.qty)} ${i.unit} ${i.name}`).join(', ')}
                   </p>
                   <p className="w-28 text-right font-semibold">{formatRupiah(o.total)}</p>
                   <div className="flex gap-2">
