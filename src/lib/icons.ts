@@ -26,6 +26,7 @@ import {
   ShoppingCart,
   Store,
   Tag,
+  Trash2,
   UserCog,
   Users,
   Wallet,
@@ -50,6 +51,7 @@ export const concept = {
   payout: Banknote,
   reports: BarChart3,
   audit: ShieldCheck,
+  trash: Trash2, // menu Sampah dan tombol Hapus
   business: Store,
   switchBusiness: Repeat,
   settings: Settings,
@@ -83,6 +85,7 @@ export const routeIcons: Record<string, LucideIcon> = {
   '/reports': concept.reports,
   '/reports/payments': concept.receivable,
   '/audit': concept.audit,
+  '/trash': concept.trash,
   '/businesses/manage': concept.business,
   '/settings/shop': concept.settings,
   '/pos': concept.dashboard,

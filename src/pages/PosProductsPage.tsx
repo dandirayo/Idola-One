@@ -1,3 +1,4 @@
+import { DataList } from '@/components/DataList'
 import { ArrowDown, ArrowUp, Pencil, Plus } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { DeleteButton } from '@/components/ConfirmDialog'
@@ -40,6 +41,28 @@ export function PosProductsPage() {
       setError(err instanceof Error ? err.message : 'Gagal menyimpan produk.')
     }
   }
+
+  const actions = (p: PosProduct) => (
+    <>
+{isOwner && (
+                <>
+                  <button type="button" disabled={products.findIndex((x) => x.id === p.id) === 0} onClick={() => movePosProduct(p.id, 'up')} aria-label={`Naikkan ${p.name}`} className="icon-btn icon-btn-sm">
+                    <ArrowUp className="size-4" aria-hidden />
+                  </button>
+                  <button type="button" disabled={products.findIndex((x) => x.id === p.id) === products.length - 1} onClick={() => movePosProduct(p.id, 'down')} aria-label={`Turunkan ${p.name}`} className="icon-btn icon-btn-sm">
+                    <ArrowDown className="size-4" aria-hidden />
+                  </button>
+                  <button type="button" onClick={() => open(p)} aria-label={`Ubah ${p.name}`} className="icon-btn icon-btn-sm">
+                    <Pencil className="size-4" aria-hidden />
+                  </button>
+                  <button type="button" onClick={() => setPosProductActive(p.id, !p.active)} className="btn btn-secondary btn-sm">
+                    {p.active ? 'Nonaktifkan' : 'Aktifkan'}
+                  </button>
+                  <DeleteButton label={`Hapus ${p.name}`} title={`Hapus produk ${p.name}?`} impacts={['Penjualan lama tetap tersimpan lengkap dengan nama dan harganya.']} onConfirm={() => deletePosProduct(p.id)} />
+                </>
+              )}
+    </>
+  )
 
   return (
     <div className="space-y-5">
@@ -88,34 +111,27 @@ export function PosProductsPage() {
           <p className="font-semibold">Belum ada produk.</p>
         </Card>
       ) : (
-        <ul className="space-y-3">
-          {products.map((p, i) => (
-            <li key={p.id} className="flex flex-wrap items-center gap-3 rounded-card bg-surface p-4 shadow-card">
+        <DataList
+          id="pos-products"
+          items={products}
+          rowKey={(p) => p.id}
+          actions={actions}
+          columns={[
+            { key: 'name', label: 'Produk', primary: true, sort: (p) => p.name, render: (p) => p.name },
+            { key: 'price', label: 'Harga', align: 'right', compact: true, sort: (p) => p.price, render: (p) => formatRupiah(p.price) },
+            { key: 'status', label: 'Status', compact: true, render: (p) => <StatusChip label={p.active ? 'Aktif' : 'Nonaktif'} tone={p.active ? 'lime' : 'peach'} /> },
+          ]}
+          renderNormal={(p) => (
+<li className="flex flex-wrap items-center gap-3 rounded-card bg-surface p-4 shadow-card">
               <div className="min-w-0 flex-1 basis-40">
                 <p className="truncate font-semibold">{p.name}</p>
                 <p className="text-xs text-muted">{formatRupiah(p.price)}</p>
               </div>
               {!p.active && <StatusChip label="Nonaktif" tone="peach" />}
-              {isOwner && (
-                <>
-                  <button type="button" disabled={i === 0} onClick={() => movePosProduct(p.id, 'up')} aria-label={`Naikkan ${p.name}`} className="icon-btn icon-btn-sm">
-                    <ArrowUp className="size-4" aria-hidden />
-                  </button>
-                  <button type="button" disabled={i === products.length - 1} onClick={() => movePosProduct(p.id, 'down')} aria-label={`Turunkan ${p.name}`} className="icon-btn icon-btn-sm">
-                    <ArrowDown className="size-4" aria-hidden />
-                  </button>
-                  <button type="button" onClick={() => open(p)} aria-label={`Ubah ${p.name}`} className="icon-btn icon-btn-sm">
-                    <Pencil className="size-4" aria-hidden />
-                  </button>
-                  <button type="button" onClick={() => setPosProductActive(p.id, !p.active)} className="btn btn-secondary btn-sm">
-                    {p.active ? 'Nonaktifkan' : 'Aktifkan'}
-                  </button>
-                  <DeleteButton label={`Hapus ${p.name}`} title={`Hapus produk ${p.name}?`} impacts={['Penjualan lama tetap tersimpan lengkap dengan nama dan harganya.']} onConfirm={() => deletePosProduct(p.id)} />
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
+              {actions(p)}
+</li>
+          )}
+        />
       )}
     </div>
   )

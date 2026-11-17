@@ -3,6 +3,7 @@
 //
 // Pemakaian: node scripts/audit-shots.mjs <nama-folder> [ukuran,ukuran] [awalan-halaman]
 //   contoh : node scripts/audit-shots.mjs 2026-11-17-awal
+//            VIEW=table node scripts/audit-shots.mjs tabel desktop 02   (mode tampilan daftar)
 //            node scripts/audit-shots.mjs 2026-11-17-akhir mobile 0
 // Butuh server pengembangan di http://localhost:5173 (npm run dev).
 // Masuk otomatis lewat ?as=...&biz=..., hanya aktif di mode pengembangan.
@@ -129,6 +130,12 @@ const waitEvent = (method, timeout = 15000) =>
 
 await send('Page.enable')
 await send('Runtime.enable')
+// VIEW=table|compact|grid memaksa mode tampilan daftar (kunci idola-one:view:*) pada semua halaman.
+if (process.env.VIEW) {
+  await send('Page.addScriptToEvaluateOnNewDocument', {
+    source: `(() => { const g = Storage.prototype.getItem; Storage.prototype.getItem = function (k) { return String(k).startsWith('idola-one:view:') ? ${JSON.stringify(process.env.VIEW)} : g.call(this, k) } })()`,
+  })
+}
 
 const report = []
 for (const size of SIZES) {

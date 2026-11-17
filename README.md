@@ -12,7 +12,7 @@ Yang sudah ada, menurut peran dan usaha yang dipilih:
 - **Karyawan laundry:** Beranda karyawan, Pesanan, Pelanggan, Layanan (lihat saja), Stok (pakai), Absensi selfie, Jadwal Saya, Pengajuan Saya (termasuk Lupa Absen), dan Laporan Pembayaran.
 - **Usaha minuman (POS):** Ringkasan dan hari berjualan, Kasir, dan Produk.
 
-Yang belum terbukti: kamera sungguhan, cetak ke printer fisik, unduhan CSV, dan hasil CI di GitHub. Owner juga bisa menghapus atau membatalkan data (dengan konfirmasi, alasan wajib untuk uang, kas dibalik, dan jejak Audit). Rincian status tiap tugas ada di [Implementation Plan](docs/03-IMPLEMENTATION-PLAN.md).
+Yang belum terbukti: kamera sungguhan, cetak ke printer fisik, unduhan CSV, dan hasil CI di GitHub. Owner juga bisa menghapus atau membatalkan data (dengan konfirmasi, alasan wajib untuk uang, kas dibalik, dan jejak Audit); yang dihapus masuk **Sampah** dan bisa dipulihkan. Daftar utama punya empat mode tampilan (Normal, Tabel, List kecil, Grid detail). Data pratinjau tersimpan di `localStorage` browser (bukan database bersama) dan bisa direset di Pengaturan. Rincian status tiap tugas ada di [Implementation Plan](docs/03-IMPLEMENTATION-PLAN.md).
 
 ## Menjalankan secara lokal
 

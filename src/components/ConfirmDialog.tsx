@@ -12,6 +12,8 @@ interface DialogProps {
   /** Teks saran bila ditolak, misalnya "Nonaktifkan saja." */
   blockedHint?: string
   reasonRequired?: boolean
+  /** Tampilkan catatan bahwa item masuk Sampah dan bisa dipulihkan. Mati untuk hapus permanen dan reset. */
+  restorable?: boolean
   confirmLabel?: string
   /** Melempar Error bila gagal; pesannya ditampilkan di dialog. */
   onConfirm: (reason: string) => void
@@ -25,6 +27,7 @@ export function ConfirmDialog({
   blockedBy = [],
   blockedHint = 'Nonaktifkan saja bila tidak dipakai lagi.',
   reasonRequired = false,
+  restorable = true,
   confirmLabel = 'Hapus',
   onConfirm,
   onClose,
@@ -89,6 +92,7 @@ export function ConfirmDialog({
                 ))}
               </ul>
             )}
+            {restorable && <p className="mt-2 text-sm text-muted">Bisa dipulihkan dari menu Sampah.</p>}
             {reasonRequired && (
               <label className="mt-3 block text-sm font-semibold">
                 Alasan (wajib, tercatat di Audit)

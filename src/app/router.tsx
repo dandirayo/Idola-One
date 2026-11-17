@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router'
 import { AppShell } from '@/app/AppShell'
 import { AttendancePage } from '@/pages/AttendancePage'
 import { AuditPage } from '@/pages/AuditPage'
+import { TrashPage } from '@/pages/TrashPage'
 import { BusinessManagePage } from '@/pages/BusinessManagePage'
 import { BusinessSelectorPage } from '@/pages/BusinessSelectorPage'
 import { CashbookPage } from '@/pages/CashbookPage'
@@ -62,6 +63,7 @@ export const router = createBrowserRouter([
       { path: 'payroll', element: <PayrollPage /> },
       { path: 'projects', element: <ProjectsPage /> },
       { path: 'audit', element: <AuditPage /> },
+      { path: 'trash', element: <TrashPage /> },
       { path: 'notifications', element: <NotificationsPage /> },
       { path: 'businesses/manage', element: <BusinessManagePage /> },
       { path: 'settings/shop', element: <SettingsPage /> },

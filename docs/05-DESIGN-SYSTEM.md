@@ -72,6 +72,7 @@ Dilarang: tinggi tombol selain 36, 44, atau 48 px, dan sudut di luar skala di at
 | `TimeField` | Pilihan jam 24 jam (jam dan menit per 5), pengganti `input type=time` yang mengikuti locale perangkat |
 | `ConfirmDialog`, `DeleteButton` | Dialog konfirmasi hapus atau batal dan tombol ikon Hapus (lihat [06-ADMIN-CRUD.md](06-ADMIN-CRUD.md)) |
 | `LogoMark` | Logo |
+| `DataList`, `ViewSwitch` | Daftar dengan empat mode tampilan (lihat bagian 6a) |
 | `.chip-check` (kelas) | Kotak centang berbentuk chip, untuk pilihan ganda seperti akses karyawan |
 | Bilah mode pratinjau | Satu bilah di atas konten (`AppShell`) menggantikan keterangan "data contoh" di tiap halaman. Hilang saat backend tersambung. |
 
@@ -86,6 +87,21 @@ Dilarang: tinggi tombol selain 36, 44, atau 48 px, dan sudut di luar skala di at
 Kartu ringkasan (KPI) memakai dua kolom di ponsel. Pada detail pesanan, kartu Tagihan dan Status naik ke atas di ponsel karena itu aksi terpenting.
 
 Setiap halaman wajib bebas dari gulir horizontal pada 375, 768, dan 1280 px.
+
+## 6a. Mode tampilan daftar
+
+Daftar utama memakai `src/components/DataList.tsx`. Pemilih tampilan (`ViewSwitch`, kelas `seg` dengan ikon) menawarkan empat mode, dan pilihan diingat per daftar di `localStorage` (`idola-one:view:<id>`).
+
+| Mode | Isi |
+|---|---|
+| Normal | Baris kartu seperti sebelumnya (bawaan) |
+| Tabel | Judul kolom, klik judul untuk mengurutkan (`aria-sort`), kolom `hideBelow` disembunyikan di layar sempit, tabel digulir di dalam kartu, kolom aksi menempel di kanan mulai tablet |
+| List kecil | Satu baris padat (min. 44 px): kolom utama, dua kolom bertanda `compact`, dan aksi |
+| Grid detail | Kartu 1, 2, 3 kolom (ponsel, tablet, desktop) berisi pasangan label dan nilai, aksi di bawah |
+
+Definisi kolom (`Column`: `key`, `label`, `render`, `sort`, `align`, `primary`, `compact`, `hideBelow`) hidup di tiap halaman. Sudah diterapkan di Pesanan, Pelanggan, Layanan, Stok, Tim, Produk POS, Buku Kas (transaksi), Audit, dan Sampah. Proyek, Pengajuan, Gaji dan Insentif, Absensi, Kelola Usaha, dan Notifikasi masih Normal karena barisnya bisa dibuka atau berisi bagian bersarang.
+
+Foto audit mode tertentu: `VIEW=table node scripts/audit-shots.mjs <folder>` (juga `compact`, `grid`).
 
 ## 7. Audit visual
 

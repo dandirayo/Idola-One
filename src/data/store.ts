@@ -3,6 +3,7 @@
 // backend sendiri tanpa mengubah halaman yang memakainya.
 
 import { useSyncExternalStore } from 'react'
+import { loadState, scheduleSave } from './persist'
 import type { CashEntry } from '@/lib/finance'
 import type { ShopInfo } from '@/lib/receipt'
 import type { BusinessKind } from '@/lib/access'
@@ -270,6 +271,18 @@ export interface IncentiveRow {
   expenseId?: string
 }
 
+/** Isi Sampah: baris yang dihapus dan baris yang berubah akibat satu tindakan hapus atau batal. */
+export interface TrashItem {
+  id: string
+  kind: string // jenis yang tampil, misalnya Pesanan atau Pelanggan
+  label: string
+  deletedAt: string
+  actor: string
+  reason: string
+  removed: Record<string, unknown[]>
+  changed: Record<string, { before: unknown; after: unknown }[]>
+}
+
 export interface State {
   services: Service[]
   customers: Customer[]
@@ -294,6 +307,7 @@ export interface State {
   projectPayments: ProjectPaymentRow[]
   payrolls: PayrollRow[]
   incentives: IncentiveRow[]
+  trash: TrashItem[]
   /** Satu-satunya sumber pergerakan kas. Diisi oleh aksi di bawah, meniru trigger database. */
   cash: CashEntry[]
 }
@@ -541,7 +555,7 @@ export function projectPaymentCash(p: ProjectPaymentRow, name: string): CashEntr
   }
 }
 
-let state: State = {
+const seedState: State = {
   services,
   customers,
   orders: seedOrders,
@@ -565,6 +579,7 @@ let state: State = {
   projectPayments: seedProjectPayments,
   payrolls: [],
   incentives: [],
+  trash: [],
   cash: [
     {
       id: 'cash-opening',
@@ -581,10 +596,14 @@ let state: State = {
   ],
 }
 
+// Data tersimpan di browser (bila ada) menggantikan data contoh. Lihat persist.ts.
+let state: State = loadState(seedState)
+
 const listeners = new Set<() => void>()
 
 function emit(next: State) {
   state = next
+  scheduleSave(() => state)
   listeners.forEach((l) => l())
 }
 
@@ -594,6 +613,9 @@ export function update(fn: (s: State) => State) {
 }
 
 let actorName = 'Sistem'
+export function getActor(): string {
+  return actorName
+}
 /** Nama pengguna yang sedang bertindak. Dicatat pada jejak audit. */
 export function setActor(name: string) {
   actorName = name

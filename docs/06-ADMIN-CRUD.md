@@ -1,6 +1,6 @@
 # Rencana Ubah dan Hapus untuk Admin (Owner)
 
-**Versi dokumen:** 0.2 (sebagian besar sudah dikerjakan, lihat bagian 9)
+**Versi dokumen:** 0.3 (sebagian besar sudah dikerjakan, lihat bagian 9 dan 10)
 **Tanggal:** 17 November 2026
 **Keputusan owner:** owner berperan sebagai admin dan boleh mengubah serta menghapus apa pun, termasuk pesanan. Setiap pembatalan atau penghapusan **data uang** wajib disertai alasan.
 
@@ -107,6 +107,16 @@ Logika ada di `src/data/admin.ts` (diuji di `src/data/admin.test.ts`, termasuk u
 | Isi Audit "sebelum" pada hapus pesanan dan proyek | Masih teks JSON mentah, perlu dirapikan |
 
 Perbaikan yang ditemukan lewat uji: ID pembayaran, pesanan, pelanggan, layanan, karyawan, dan pengeluaran dulu dibuat dari jam (dan jumlah data), sehingga bisa kembar. Kini semuanya memakai `uid()`.
+
+## 10. Sampah (recycle bin)
+
+Diputuskan pada 17 November 2026: semua yang dihapus atau dibatalkan masuk Sampah dan bisa dipulihkan. Ini menggantikan jawaban nomor 4 di bawah ("tanpa tombol urungkan").
+
+- **Cara kerja:** `applyWithTrash` (`src/data/trash.ts`) membandingkan data sebelum dan sesudah tiap tindakan, lalu menyimpan baris yang hilang dan baris yang berubah sebagai satu item `State.trash`. Fungsi di `src/data/admin.ts` hanya mengganti `update` dengan `applyWithTrash`.
+- **Pulihkan:** memasukkan kembali baris (kas dan insentif ikut kembali, jadi saldo seimbang) dan mengembalikan baris yang berubah. Ditolak bila ID sudah ada lagi, data sudah berubah sejak itu, atau induknya hilang (pesanan butuh pelanggan, insentif butuh pesanan, dan seterusnya).
+- **Hapus permanen** dari halaman Sampah (`/trash`, khusus owner) dengan konfirmasi; tercatat di Audit.
+- **Tidak masuk Sampah:** notifikasi dan Audit. Tidak ada penghapusan otomatis (urusan backend).
+- **Tes:** `src/data/trash.test.ts`, termasuk uji acak 300 langkah (buat, bayar, batal, hapus, pulihkan) untuk keseimbangan kas.
 
 ## 8. Pertanyaan terbuka
 

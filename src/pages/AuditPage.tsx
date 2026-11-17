@@ -1,5 +1,6 @@
 import { Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { DataList } from '@/components/DataList'
 import { Card, Hint } from '@/components/ui'
 import { useStore } from '@/data/store'
 
@@ -77,9 +78,21 @@ export function AuditPage() {
           {audit.length === 0 && <p className="mt-1 text-sm text-muted">Lakukan koreksi pembayaran atau ubah harga layanan untuk melihat contohnya.</p>}
         </Card>
       ) : (
-        <ol className="space-y-3">
-          {visible.map((a) => (
-            <li key={a.id} className="rounded-card bg-surface p-4 shadow-card">
+        <DataList
+          id="audit"
+          items={visible}
+          rowKey={(a) => a.id}
+          columns={[
+            { key: 'action', label: 'Aksi', primary: true, sort: (a) => a.action, render: (a) => a.action },
+            { key: 'entity', label: 'Jenis', compact: true, sort: (a) => a.entity, render: (a) => a.entity },
+            { key: 'ref', label: 'Rujukan', hideBelow: 'sm', sort: (a) => a.ref, render: (a) => a.ref },
+            { key: 'at', label: 'Waktu', compact: true, sort: (a) => a.at, render: (a) => dateTime.format(new Date(a.at)) },
+            { key: 'actor', label: 'Pelaku', hideBelow: 'md', sort: (a) => a.actor, render: (a) => a.actor },
+            { key: 'before', label: 'Sebelum', hideBelow: 'lg', render: (a) => <span className="inline-block min-w-56 max-w-md whitespace-normal">{a.before}</span> },
+            { key: 'after', label: 'Sesudah', hideBelow: 'lg', render: (a) => <span className="inline-block min-w-56 max-w-md whitespace-normal">{a.after}</span> },
+          ]}
+          renderNormal={(a) => (
+            <li className="rounded-card bg-surface p-4 shadow-card">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="font-semibold">
                   {a.action} <span className="font-normal text-muted">· {a.entity}</span>
@@ -100,8 +113,8 @@ export function AuditPage() {
                 </p>
               </div>
             </li>
-          ))}
-        </ol>
+          )}
+        />
       )}
 
       {pages > 1 && (

@@ -1,3 +1,4 @@
+import { DataList, useViewMode, ViewSwitch } from '@/components/DataList'
 import { Pencil, Plus } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useAuth } from '@/lib/auth'
@@ -11,6 +12,7 @@ import type { Unit } from '@/lib/orders'
 const unitLabel: Record<Unit, string> = { kg: 'Kiloan (per kg)', pcs: 'Satuan (per pcs)' }
 
 export function ServicesPage() {
+  const view = useViewMode('services')
   const services = useStore((s) => s.services)
   const { session } = useAuth()
   const isOwner = session?.role === 'owner'
@@ -41,6 +43,31 @@ export function ServicesPage() {
       setError(err instanceof Error ? err.message : 'Gagal menyimpan layanan.')
     }
   }
+
+  const actions = (s: Service) => (
+    <>
+{isOwner && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => open(s)}
+                          aria-label={`Ubah ${s.name}`}
+                          className="icon-btn icon-btn-sm"
+                        >
+                          <Pencil className="size-4" aria-hidden />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setServiceActive(s.id, !s.active)}
+                          className="btn btn-secondary btn-sm"
+                        >
+                          {s.active ? 'Nonaktifkan' : 'Aktifkan'}
+                        </button>
+                        <DeleteButton label={`Hapus ${s.name}`} title={`Hapus layanan ${s.name}?`} blockedBy={serviceUsage(s.id).reasons} onConfirm={() => deleteService(s.id)} />
+                      </>
+                    )}
+    </>
+  )
 
   return (
     <div className="space-y-5">
@@ -110,6 +137,10 @@ export function ServicesPage() {
         </Card>
       )}
 
+      <div className="flex justify-end">
+        <ViewSwitch mode={view[0]} onChange={view[1]} />
+      </div>
+
       {(['kg', 'pcs'] as Unit[]).map((u) => {
         const list = services.filter((s) => s.unit === u && (isOwner || s.active))
         return (
@@ -122,9 +153,20 @@ export function ServicesPage() {
                 <p className="text-sm text-muted">Belum ada layanan.</p>
               </Card>
             ) : (
-              <ul className="space-y-3">
-                {list.map((s) => (
-                  <li key={s.id} className="flex flex-wrap items-center gap-3 rounded-card bg-surface p-4 shadow-card">
+              <DataList
+                id="services"
+                items={list}
+                rowKey={(s) => s.id}
+                actions={actions}
+                view={view}
+                showSwitch={false}
+                columns={[
+            { key: 'name', label: 'Layanan', primary: true, sort: (s) => s.name, render: (s) => s.name },
+            { key: 'price', label: 'Harga', align: 'right', compact: true, sort: (s) => s.price, render: (s) => `${formatRupiah(s.price)} / ${s.unit}` },
+            { key: 'status', label: 'Status', compact: true, render: (s) => <StatusChip label={s.active ? 'Aktif' : 'Nonaktif'} tone={s.active ? 'lime' : 'peach'} /> },
+                ]}
+                renderNormal={(s) => (
+<li className="flex flex-wrap items-center gap-3 rounded-card bg-surface p-4 shadow-card">
                     <div className="min-w-0 flex-1 basis-40">
                       <p className="truncate font-semibold">{s.name}</p>
                       <p className="text-xs text-muted">
@@ -132,29 +174,10 @@ export function ServicesPage() {
                       </p>
                     </div>
                     {!s.active && <StatusChip label="Nonaktif" tone="peach" />}
-                    {isOwner && (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => open(s)}
-                          aria-label={`Ubah ${s.name}`}
-                          className="icon-btn icon-btn-sm"
-                        >
-                          <Pencil className="size-4" aria-hidden />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setServiceActive(s.id, !s.active)}
-                          className="btn btn-secondary btn-sm"
-                        >
-                          {s.active ? 'Nonaktifkan' : 'Aktifkan'}
-                        </button>
-                        <DeleteButton label={`Hapus ${s.name}`} title={`Hapus layanan ${s.name}?`} blockedBy={serviceUsage(s.id).reasons} onConfirm={() => deleteService(s.id)} />
-                      </>
-                    )}
-                  </li>
-                ))}
-              </ul>
+                    {actions(s)}
+</li>
+                )}
+              />
             )}
           </section>
         )

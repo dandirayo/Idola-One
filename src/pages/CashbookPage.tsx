@@ -1,10 +1,11 @@
+import { DataList } from '@/components/DataList'
 import { useMemo, useState, type FormEvent } from 'react'
 import { CashRowActions } from '@/components/CashRowActions'
 import { useAuth } from '@/lib/auth'
 import { ManualCashForm } from '@/components/ManualCashForm'
 import { Card, Hint, inputClass, primaryButton, SectionTitle } from '@/components/ui'
 import { addExpense, useStore } from '@/data/store'
-import { balance, inRange, periodLabel, periodRange, summarize, type Period } from '@/lib/finance'
+import { balance, inRange, type CashEntry, periodLabel, periodRange, summarize, type Period } from '@/lib/finance'
 import { formatRupiah } from '@/lib/format'
 import { paymentMethodLabel, type PaymentMethod } from '@/lib/orders'
 
@@ -46,6 +47,12 @@ export function CashbookPage() {
       setError(err instanceof Error ? err.message : 'Gagal mencatat pengeluaran.')
     }
   }
+
+  const actions = (e: CashEntry) => (
+    <>
+{isOwner && <CashRowActions entry={e} />}
+    </>
+  )
 
   return (
     <div className="space-y-5">
@@ -176,9 +183,21 @@ export function CashbookPage() {
             <p className="text-sm text-muted">Belum ada transaksi pada {periodLabel[period].toLowerCase()}.</p>
           </Card>
         ) : (
-          <ul className="space-y-2">
-            {rows.map((e) => (
-              <li key={e.id} className="flex items-center gap-3 rounded-2xl bg-surface p-3 shadow-card">
+          <DataList
+            id="cashbook"
+            items={rows}
+            rowKey={(e) => e.id}
+            actions={actions}
+            normalClassName="space-y-2"
+            columns={[
+            { key: 'desc', label: 'Keterangan', primary: true, sort: (e) => e.description, render: (e) => e.description },
+            { key: 'at', label: 'Waktu', hideBelow: 'sm', sort: (e) => e.at, render: (e) => dateTime.format(new Date(e.at)) },
+            { key: 'category', label: 'Kategori', hideBelow: 'md', sort: (e) => e.category, render: (e) => `${e.category}${e.manual ? ' (manual)' : ''}` },
+            { key: 'method', label: 'Metode', hideBelow: 'md', render: (e) => paymentMethodLabel[e.method] },
+            { key: 'amount', label: 'Jumlah', align: 'right', compact: true, sort: (e) => (e.direction === 'in' ? e.amount : -e.amount), render: (e) => <span className={e.direction === 'in' ? 'font-bold text-success' : 'font-bold text-danger'}>{e.direction === 'in' ? '+' : '−'}{formatRupiah(e.amount)}</span> },
+            ]}
+            renderNormal={(e) => (
+<li className="flex items-center gap-3 rounded-2xl bg-surface p-3 shadow-card">
                 <span
                   className={`grid size-9 shrink-0 place-items-center rounded-full text-sm font-bold ${
                     e.direction === 'in' ? 'bg-lime-soft text-success' : 'bg-peach text-danger'
@@ -197,10 +216,10 @@ export function CashbookPage() {
                   {e.direction === 'in' ? '+' : '−'}
                   {formatRupiah(e.amount)}
                 </span>
-                {isOwner && <CashRowActions entry={e} />}
-              </li>
-            ))}
-          </ul>
+                {actions(e)}
+</li>
+            )}
+          />
         )}
         {entries.length > INITIAL_ROWS && (
           <button

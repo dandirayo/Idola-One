@@ -1,3 +1,4 @@
+import { DataList } from '@/components/DataList'
 import { Pencil, Plus } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { DeleteButton } from '@/components/ConfirmDialog'
@@ -39,6 +40,27 @@ export function EmployeesPage() {
       setError(err instanceof Error ? err.message : 'Gagal menyimpan karyawan.')
     }
   }
+
+  const actions = (e: Employee) => (
+    <>
+<button
+                type="button"
+                onClick={() => open(e)}
+                aria-label={`Ubah ${e.name}`}
+                className="icon-btn icon-btn-sm"
+              >
+                <Pencil className="size-4" aria-hidden />
+              </button>
+              <button
+                type="button"
+                onClick={() => setEmployeeActive(e.id, !e.active)}
+                className="btn btn-secondary btn-sm"
+              >
+                {e.active ? 'Nonaktifkan' : 'Aktifkan'}
+              </button>
+              <DeleteButton label={`Hapus ${e.name}`} title={`Hapus karyawan ${e.name}?`} blockedBy={employeeUsage(e.id).reasons} onConfirm={() => deleteEmployee(e.id)} />
+    </>
+  )
 
   return (
     <div className="space-y-5">
@@ -108,9 +130,19 @@ export function EmployeesPage() {
           <p className="font-semibold">Belum ada karyawan.</p>
         </Card>
       ) : (
-        <ul className="space-y-3">
-          {visible.map((e) => (
-            <li key={e.id} className="flex flex-wrap items-center gap-3 rounded-card bg-surface p-4 shadow-card">
+        <DataList
+          id="employees"
+          items={visible}
+          rowKey={(e) => e.id}
+          actions={actions}
+          columns={[
+            { key: 'name', label: 'Nama', primary: true, sort: (e) => e.name, render: (e) => e.name },
+            { key: 'position', label: 'Jabatan', compact: true, sort: (e) => e.position, render: (e) => e.position },
+            { key: 'salary', label: 'Gaji / minggu', align: 'right', compact: true, sort: (e) => e.weeklySalary, render: (e) => formatRupiah(e.weeklySalary) },
+            { key: 'status', label: 'Status', hideBelow: 'sm', render: (e) => <StatusChip label={e.active ? 'Aktif' : 'Nonaktif'} tone={e.active ? 'lime' : 'peach'} /> },
+          ]}
+          renderNormal={(e) => (
+<li className="flex flex-wrap items-center gap-3 rounded-card bg-surface p-4 shadow-card">
               <span className="grid size-10 shrink-0 place-items-center rounded-full bg-lilac font-bold">
                 {e.name.charAt(0)}
               </span>
@@ -121,25 +153,10 @@ export function EmployeesPage() {
                 </p>
               </div>
               {!e.active && <StatusChip label="Nonaktif" tone="peach" />}
-              <button
-                type="button"
-                onClick={() => open(e)}
-                aria-label={`Ubah ${e.name}`}
-                className="icon-btn icon-btn-sm"
-              >
-                <Pencil className="size-4" aria-hidden />
-              </button>
-              <button
-                type="button"
-                onClick={() => setEmployeeActive(e.id, !e.active)}
-                className="btn btn-secondary btn-sm"
-              >
-                {e.active ? 'Nonaktifkan' : 'Aktifkan'}
-              </button>
-              <DeleteButton label={`Hapus ${e.name}`} title={`Hapus karyawan ${e.name}?`} blockedBy={employeeUsage(e.id).reasons} onConfirm={() => deleteEmployee(e.id)} />
-            </li>
-          ))}
-        </ul>
+              {actions(e)}
+</li>
+          )}
+        />
       )}
     </div>
   )

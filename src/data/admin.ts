@@ -6,6 +6,7 @@
 
 import { formatRupiah } from '@/lib/format'
 import { paymentMethodLabel } from '@/lib/orders'
+import { applyWithTrash } from './trash'
 import { getState, makeAudit, requirePositive, uid, update, type AuditEntry, type Expense, type State } from './store'
 
 export const MIN_REASON = 5
@@ -84,7 +85,7 @@ export function deleteCustomer(id: string) {
   const c = getState().customers.find((x) => x.id === id)
   if (!c) throw new Error('Pelanggan tidak ditemukan.')
   guard(customerUsage(id), `Pelanggan ${c.name}`)
-  update((s) => ({
+  applyWithTrash({ kind: 'Pelanggan', label: c.name }, (s) => ({
     ...s,
     customers: s.customers.filter((x) => x.id !== id),
     audit: [audit('Pelanggan', id, c.name, 'Hapus pelanggan', `${c.name} · ${c.phone}`, '-'), ...s.audit],
@@ -95,7 +96,7 @@ export function deleteService(id: string) {
   const sv = getState().services.find((x) => x.id === id)
   if (!sv) throw new Error('Layanan tidak ditemukan.')
   guard(serviceUsage(id), `Layanan ${sv.name}`)
-  update((s) => ({
+  applyWithTrash({ kind: 'Layanan', label: sv.name }, (s) => ({
     ...s,
     services: s.services.filter((x) => x.id !== id),
     audit: [audit('Layanan', id, sv.name, 'Hapus layanan', `${sv.name} · ${formatRupiah(sv.price)}/${sv.unit}`, '-'), ...s.audit],
@@ -106,7 +107,7 @@ export function deleteEmployee(id: string) {
   const e = getState().employees.find((x) => x.id === id)
   if (!e) throw new Error('Karyawan tidak ditemukan.')
   guard(employeeUsage(id), `Karyawan ${e.name}`)
-  update((s) => ({
+  applyWithTrash({ kind: 'Karyawan', label: e.name }, (s) => ({
     ...s,
     employees: s.employees.filter((x) => x.id !== id),
     audit: [audit('Karyawan', id, e.name, 'Hapus karyawan', `${e.name} · ${e.position}`, '-'), ...s.audit],
@@ -157,7 +158,7 @@ export function deleteInventoryItem(id: string) {
   const item = getState().inventory.find((i) => i.id === id)
   if (!item) throw new Error('Barang tidak ditemukan.')
   guard(inventoryUsage(id), `Barang ${item.name}`)
-  update((s) => ({
+  applyWithTrash({ kind: 'Barang stok', label: item.name }, (s) => ({
     ...s,
     inventory: s.inventory.filter((i) => i.id !== id),
     audit: [audit('Stok', id, item.name, 'Hapus barang', `${item.name} · ${item.unit}`, '-'), ...s.audit],
@@ -168,7 +169,7 @@ export function deleteInventoryItem(id: string) {
 export function deletePosProduct(id: string) {
   const p = getState().posProducts.find((x) => x.id === id)
   if (!p) throw new Error('Produk tidak ditemukan.')
-  update((s) => ({
+  applyWithTrash({ kind: 'Produk POS', label: p.name }, (s) => ({
     ...s,
     posProducts: s.posProducts.filter((x) => x.id !== id),
     audit: [audit('Produk POS', id, p.name, 'Hapus produk', `${p.name} · ${formatRupiah(p.price)}`, '-'), ...s.audit],
@@ -194,7 +195,7 @@ export function deleteBusiness(id: string) {
   const b = getState().businesses.find((x) => x.id === id)
   if (!b) throw new Error('Usaha tidak ditemukan.')
   guard(businessUsage(id), `Usaha ${b.name}`)
-  update((s) => ({
+  applyWithTrash({ kind: 'Usaha', label: b.name }, (s) => ({
     ...s,
     businesses: s.businesses.filter((x) => x.id !== id),
     members: s.members.filter((m) => m.businessId !== id),
@@ -224,12 +225,12 @@ export function deleteOrder(orderId: string, reason: string) {
   const order = getState().orders.find((o) => o.id === orderId)
   if (!order) throw new Error('Pesanan tidak ditemukan.')
   const paymentCashIds = new Set(order.payments.map((p) => `cash-${p.id}`))
-  update((s) => ({
+  applyWithTrash({ kind: 'Pesanan', label: order.number, reason: why }, (s) => ({
     ...s,
     orders: s.orders.filter((o) => o.id !== orderId),
     cash: s.cash.filter((c) => !paymentCashIds.has(c.id)),
     incentives: s.incentives.filter((i) => i.orderId !== orderId || i.status === 'paid'),
-    audit: [audit('Pesanan', orderId, order.number, 'Hapus pesanan', JSON.stringify(order), `Dihapus. Alasan: ${why}`), ...s.audit],
+    audit: [audit('Pesanan', orderId, order.number, 'Hapus pesanan', `${order.customerName} · ${order.items.map((i) => `${i.qty} ${i.unit} ${i.name}`).join(', ')} · total ${formatRupiah(order.total)} · dibayar ${formatRupiah(order.paid)}`, `Dipindah ke Sampah. Alasan: ${why}`), ...s.audit],
   }))
 }
 
@@ -239,7 +240,7 @@ export function cancelPayment(orderId: string, paymentId: string, reason: string
   const order = getState().orders.find((o) => o.id === orderId)
   const payment = order?.payments.find((p) => p.id === paymentId)
   if (!order || !payment) throw new Error('Pembayaran tidak ditemukan.')
-  update((s) => ({
+  applyWithTrash({ kind: 'Pembayaran', label: `${order.number} · ${formatRupiah(payment.amount)}`, reason: why }, (s) => ({
     ...s,
     orders: s.orders.map((o) =>
       o.id === orderId ? { ...o, paid: o.paid - payment.amount, payments: o.payments.filter((p) => p.id !== paymentId) } : o,
@@ -270,10 +271,10 @@ export interface CashFields {
 export function deleteExpense(expenseId: string, reason: string) {
   const why = requireReason(reason)
   const e = requireOrdinaryExpense(getState().expenses.find((x) => x.id === expenseId))
-  update((s) => ({
+  applyWithTrash({ kind: 'Pengeluaran', label: e.description, reason: why }, (s) => ({
     ...s,
     ...dropExpense(s, expenseId),
-    audit: [audit('Pengeluaran', expenseId, e.description, 'Hapus pengeluaran', `${formatRupiah(e.amount)} · ${e.category}`, `Dihapus. Alasan: ${why}`), ...s.audit],
+    audit: [audit('Pengeluaran', expenseId, e.description, 'Hapus pengeluaran', `${formatRupiah(e.amount)} · ${e.category}`, `Dipindah ke Sampah. Alasan: ${why}`), ...s.audit],
   }))
 }
 
@@ -300,10 +301,10 @@ export function deleteManualCash(cashId: string, reason: string) {
   const why = requireReason(reason)
   const c = getState().cash.find((x) => x.id === cashId)
   if (!c?.manual) throw new Error('Hanya kas manual yang bisa dihapus di sini.')
-  update((s) => ({
+  applyWithTrash({ kind: 'Kas manual', label: c.description, reason: why }, (s) => ({
     ...s,
     cash: s.cash.filter((x) => x.id !== cashId),
-    audit: [audit('Kas', cashId, c.description, 'Hapus kas manual', `${c.direction === 'in' ? 'Masuk' : 'Keluar'} ${formatRupiah(c.amount)} · ${c.category}`, `Dihapus. Alasan: ${why}`), ...s.audit],
+    audit: [audit('Kas', cashId, c.description, 'Hapus kas manual', `${c.direction === 'in' ? 'Masuk' : 'Keluar'} ${formatRupiah(c.amount)} · ${c.category}`, `Dipindah ke Sampah. Alasan: ${why}`), ...s.audit],
   }))
 }
 
@@ -337,7 +338,7 @@ export function cancelPayroll(payrollId: string, reason: string) {
   const p = getState().payrolls.find((x) => x.id === payrollId)
   if (!p) throw new Error('Pembayaran gaji tidak ditemukan.')
   const src = findSourceExpense(getState(), p.expenseId, 'Gaji', p.amount, `(minggu ${p.weekStart})`)
-  update((s) => ({
+  applyWithTrash({ kind: 'Gaji', label: `${p.employeeName} · ${p.weekStart}`, reason: why }, (s) => ({
     ...s,
     payrolls: s.payrolls.filter((x) => x.id !== payrollId),
     ...(src ? dropExpense(s, src.id) : {}),
@@ -352,7 +353,7 @@ export function cancelIncentivePayment(incentiveId: string, reason: string) {
   if (!inc) throw new Error('Insentif tidak ditemukan.')
   if (inc.status !== 'paid') throw new Error('Insentif ini belum dibayar.')
   const src = findSourceExpense(getState(), inc.expenseId, 'Insentif', inc.amount, `${inc.itemName} (${inc.orderNumber})`)
-  update((s) => ({
+  applyWithTrash({ kind: 'Insentif', label: `${inc.itemName} · ${inc.orderNumber}`, reason: why }, (s) => ({
     ...s,
     incentives: s.incentives.map((x) => {
       if (x.id !== incentiveId) return x
@@ -371,11 +372,11 @@ export function deleteProjectPayment(paymentId: string, reason: string) {
   const pay = getState().projectPayments.find((x) => x.id === paymentId)
   if (!pay) throw new Error('Pembayaran proyek tidak ditemukan.')
   const project = getState().projects.find((x) => x.id === pay.projectId)
-  update((s) => ({
+  applyWithTrash({ kind: 'Pembayaran proyek', label: `${project?.name ?? '-'} · ${formatRupiah(pay.amount)}`, reason: why }, (s) => ({
     ...s,
     projectPayments: s.projectPayments.filter((x) => x.id !== paymentId),
     cash: s.cash.filter((c) => c.id !== `cash-${paymentId}`),
-    audit: [audit('Proyek', pay.projectId, project?.name ?? '-', 'Hapus pembayaran termin', `${formatRupiah(pay.amount)} · ${paymentMethodLabel[pay.method]}`, `Dihapus. Alasan: ${why}`), ...s.audit],
+    audit: [audit('Proyek', pay.projectId, project?.name ?? '-', 'Hapus pembayaran termin', `${formatRupiah(pay.amount)} · ${paymentMethodLabel[pay.method]}`, `Dipindah ke Sampah. Alasan: ${why}`), ...s.audit],
   }))
 }
 
@@ -387,13 +388,13 @@ export function deleteProject(projectId: string, reason: string) {
   const p = getState().projects.find((x) => x.id === projectId)
   if (!p) throw new Error('Proyek tidak ditemukan.')
   const payIds = new Set(getState().projectPayments.filter((x) => x.projectId === projectId).map((x) => `cash-${x.id}`))
-  update((s) => ({
+  applyWithTrash({ kind: 'Proyek', label: p.name, reason: why }, (s) => ({
     ...s,
     projects: s.projects.filter((x) => x.id !== projectId),
     projectBatches: s.projectBatches.filter((b) => b.projectId !== projectId),
     projectPayments: s.projectPayments.filter((x) => x.projectId !== projectId),
     cash: s.cash.filter((c) => !payIds.has(c.id)),
-    audit: [audit('Proyek', projectId, p.name, 'Hapus proyek', JSON.stringify(p), `Dihapus. Alasan: ${why}`), ...s.audit],
+    audit: [audit('Proyek', projectId, p.name, 'Hapus proyek', `${p.customerName} · target ${p.targetPcs} pcs · ${formatRupiah(p.rate)}/${p.rateType}`, `Dipindah ke Sampah. Alasan: ${why}`), ...s.audit],
   }))
 }
 
@@ -411,7 +412,7 @@ export function deleteProjectBatch(batchId: string) {
       : Math.round(rest.reduce((n, b) => n + b.kg, 0) * project.rate)
   const paid = s0.projectPayments.filter((p) => p.projectId === project.id).reduce((n, p) => n + p.amount, 0)
   if (billedAfter < paid) throw new Error('Batch tidak bisa dihapus: tagihan jadi lebih kecil dari yang sudah dibayar.')
-  update((s) => ({
+  applyWithTrash({ kind: 'Batch proyek', label: `${project.name} · ${batch.date}` }, (s) => ({
     ...s,
     projectBatches: s.projectBatches.filter((b) => b.id !== batchId),
     audit: [audit('Proyek', project.id, project.name, 'Hapus batch', `${batch.date} · ${batch.pcs} pcs · ${batch.kg} kg`, '-'), ...s.audit],
@@ -423,11 +424,11 @@ export function deleteAttendance(attendanceId: string, reason: string) {
   const a = getState().attendance.find((x) => x.id === attendanceId)
   if (!a) throw new Error('Absensi tidak ditemukan.')
   const emp = getState().employees.find((e) => e.id === a.employeeId)
-  update((s) => ({
+  applyWithTrash({ kind: 'Absensi', label: `${emp?.name ?? '-'} · ${a.date}`, reason: why }, (s) => ({
     ...s,
     attendance: s.attendance.filter((x) => x.id !== attendanceId),
     audit: [
-      audit('Absensi', attendanceId, `${emp?.name ?? '-'} · ${a.date}`, 'Hapus absensi', `Masuk ${a.checkIn}${a.checkOut ? ` · pulang ${a.checkOut}` : ''} · telat ${a.lateMinutes} menit`, `Dihapus. Alasan: ${why}`),
+      audit('Absensi', attendanceId, `${emp?.name ?? '-'} · ${a.date}`, 'Hapus absensi', `Masuk ${a.checkIn}${a.checkOut ? ` · pulang ${a.checkOut}` : ''} · telat ${a.lateMinutes} menit`, `Dipindah ke Sampah. Alasan: ${why}`),
       ...s.audit,
     ],
   }))
@@ -438,10 +439,10 @@ export function deleteRequest(requestId: string) {
   const r = getState().requests.find((x) => x.id === requestId)
   if (!r) throw new Error('Pengajuan tidak ditemukan.')
   if (r.status === 'paid') throw new Error('Pengajuan yang sudah dibayar tidak dihapus. Batalkan pembayarannya lebih dulu.')
-  update((s) => ({
+  applyWithTrash({ kind: 'Pengajuan', label: `${r.requester} · ${r.detail}` }, (s) => ({
     ...s,
     requests: s.requests.filter((x) => x.id !== requestId),
-    audit: [audit('Pengajuan', requestId, `${r.requester} · ${r.detail}`, 'Hapus pengajuan', JSON.stringify(r), '-'), ...s.audit],
+    audit: [audit('Pengajuan', requestId, `${r.requester} · ${r.detail}`, 'Hapus pengajuan', `${r.type} · ${r.detail}${r.amount ? ` · ${formatRupiah(r.amount)}` : ''}`, 'Dipindah ke Sampah'), ...s.audit],
   }))
 }
 
@@ -454,7 +455,7 @@ export function cancelRequestPayment(requestId: string, reason: string) {
   const src = getState().expenses.find(
     (e) => e.category === 'Kasbon' && e.amount === r.amount && e.description.endsWith(`: ${r.requester}`),
   )
-  update((s) => ({
+  applyWithTrash({ kind: 'Pembayaran pengajuan', label: `${r.requester} · ${formatRupiah(r.amount)}`, reason: why }, (s) => ({
     ...s,
     requests: s.requests.map((x) => (x.id === requestId ? { ...x, status: 'approved' as const } : x)),
     ...(src ? dropExpense(s, src.id) : {}),

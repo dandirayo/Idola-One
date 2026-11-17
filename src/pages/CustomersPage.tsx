@@ -1,6 +1,7 @@
 import { Pencil, Plus, Search } from 'lucide-react'
 import { useMemo, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
+import { DataList } from '@/components/DataList'
 import { DeleteButton } from '@/components/ConfirmDialog'
 import { customerUsage, deleteCustomer } from '@/data/admin'
 import { Card, Hint, inputClass, primaryButton, StatusChip } from '@/components/ui'
@@ -51,6 +52,23 @@ export function CustomersPage() {
       setError(err instanceof Error ? err.message : 'Gagal menyimpan pelanggan.')
     }
   }
+
+  const actions = (c: Customer) => (
+    <>
+      <button type="button" onClick={() => open(c)} aria-label={`Ubah ${c.name}`} className="icon-btn icon-btn-sm">
+        <Pencil className="size-4" aria-hidden />
+      </button>
+      <button type="button" onClick={() => setCustomerActive(c.id, !c.active)} className="btn btn-secondary btn-sm">
+        {c.active ? 'Nonaktifkan' : 'Aktifkan'}
+      </button>
+      <DeleteButton
+        label={`Hapus ${c.name}`}
+        title={`Hapus pelanggan ${c.name}?`}
+        blockedBy={customerUsage(c.id).reasons}
+        onConfirm={() => deleteCustomer(c.id)}
+      />
+    </>
+  )
 
   return (
     <div className="space-y-5">
@@ -126,12 +144,31 @@ export function CustomersPage() {
           <p className="font-semibold">Tidak ada pelanggan yang cocok.</p>
         </Card>
       ) : (
-        <ul className="space-y-3">
-          {visible.map((c) => (
-            <li key={c.id} className="flex flex-wrap items-center gap-3 rounded-card bg-surface p-4 shadow-card">
-              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-lilac font-bold">
-                {c.name.charAt(0)}
-              </span>
+        <DataList
+          id="customers"
+          items={visible}
+          rowKey={(c) => c.id}
+          actions={actions}
+          columns={[
+            {
+              key: 'name',
+              label: 'Nama',
+              primary: true,
+              sort: (c) => c.name,
+              render: (c) => (
+                <Link to={`/customers/${c.id}`} className="hover:underline">
+                  {c.name}
+                </Link>
+              ),
+            },
+            { key: 'phone', label: 'WhatsApp', compact: true, render: (c) => c.phone },
+            { key: 'orders', label: 'Pesanan', align: 'right', compact: true, sort: (c) => orderCount.get(c.id) ?? 0, render: (c) => `${orderCount.get(c.id) ?? 0} pesanan` },
+            { key: 'points', label: 'Poin', align: 'right', hideBelow: 'sm', sort: (c) => customerPoints(orders, c.id).balance, render: (c) => customerPoints(orders, c.id).balance },
+            { key: 'status', label: 'Status', hideBelow: 'sm', sort: (c) => (c.active ? 1 : 0), render: (c) => <StatusChip label={c.active ? 'Aktif' : 'Nonaktif'} tone={c.active ? 'lime' : 'peach'} /> },
+          ]}
+          renderNormal={(c) => (
+            <li className="flex flex-wrap items-center gap-3 rounded-card bg-surface p-4 shadow-card">
+              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-lilac font-bold">{c.name.charAt(0)}</span>
               <div className="min-w-0 flex-1 basis-40">
                 <Link to={`/customers/${c.id}`} className="block truncate font-semibold hover:underline">
                   {c.name}
@@ -141,25 +178,10 @@ export function CustomersPage() {
                 </p>
               </div>
               {!c.active && <StatusChip label="Nonaktif" tone="peach" />}
-              <button
-                type="button"
-                onClick={() => open(c)}
-                aria-label={`Ubah ${c.name}`}
-                className="icon-btn icon-btn-sm"
-              >
-                <Pencil className="size-4" aria-hidden />
-              </button>
-              <button
-                type="button"
-                onClick={() => setCustomerActive(c.id, !c.active)}
-                className="btn btn-secondary btn-sm"
-              >
-                {c.active ? 'Nonaktifkan' : 'Aktifkan'}
-              </button>
-              <DeleteButton label={`Hapus ${c.name}`} title={`Hapus pelanggan ${c.name}?`} blockedBy={customerUsage(c.id).reasons} onConfirm={() => deleteCustomer(c.id)} />
+              {actions(c)}
             </li>
-          ))}
-        </ul>
+          )}
+        />
       )}
     </div>
   )

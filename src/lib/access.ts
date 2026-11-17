@@ -55,6 +55,7 @@ const allowed: Record<string, string[]> = {
     '/payroll',
     '/projects',
     '/audit',
+    '/trash',
     '/settings',
     '/businesses/manage',
     ...common,
@@ -104,6 +105,7 @@ const laundryOwnerNav: NavEntry[] = [
   { to: '/payroll', label: 'Gaji & Insentif', group: 'Keuangan' },
   { to: '/reports', label: 'Laporan', group: 'Keuangan' },
   { to: '/audit', label: 'Audit', group: 'Kontrol' },
+  { to: '/trash', label: 'Sampah', group: 'Kontrol' },
   { to: '/businesses/manage', label: 'Kelola Usaha', group: 'Kontrol' },
   { to: '/settings/shop', label: 'Pengaturan', group: 'Kontrol' },
 ]

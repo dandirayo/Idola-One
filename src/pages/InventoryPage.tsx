@@ -1,3 +1,4 @@
+import { DataList } from '@/components/DataList'
 import { Pencil, Plus } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { DeleteButton } from '@/components/ConfirmDialog'
@@ -86,6 +87,37 @@ export function InventoryPage() {
 
   const low = inventory.filter((i) => i.stock <= i.min).length
   const itemName = (id: string) => inventory.find((i) => i.id === id)?.name ?? id
+
+  const actions = (i: InventoryItem) => (
+    <>
+<div className="flex flex-wrap gap-2">
+                {modes.map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => open(i, m)}
+                    aria-label={`${modeLabel[m]} ${i.name}`}
+                    className="btn btn-secondary btn-sm"
+                  >
+                    {modeLabel[m]}
+                  </button>
+                ))}
+                {isOwner && (
+                  <>
+                    <button type="button" onClick={() => openMaster(i)} aria-label={`Ubah ${i.name}`} className="icon-btn icon-btn-sm">
+                      <Pencil className="size-4" aria-hidden />
+                    </button>
+                    <DeleteButton
+                      label={`Hapus ${i.name}`}
+                      title={`Hapus barang ${i.name}?`}
+                      blockedBy={inventoryUsage(i.id).reasons}
+                      onConfirm={() => deleteInventoryItem(i.id)}
+                    />
+                  </>
+                )}
+              </div>
+    </>
+  )
 
   return (
     <div className="space-y-5">
@@ -215,11 +247,19 @@ export function InventoryPage() {
         </Card>
       )}
 
-      <ul className="space-y-3">
-        {inventory.map((i) => {
-          const isLow = i.stock <= i.min
-          return (
-            <li key={i.id} className="flex flex-wrap items-center gap-3 rounded-card bg-surface p-4 shadow-card">
+      <DataList
+        id="inventory"
+        items={inventory}
+        rowKey={(i) => i.id}
+        actions={actions}
+        columns={[
+            { key: 'name', label: 'Barang', primary: true, sort: (i) => i.name, render: (i) => i.name },
+            { key: 'stock', label: 'Stok', align: 'right', compact: true, sort: (i) => i.stock, render: (i) => `${formatQty(i.stock)} ${i.unit}` },
+            { key: 'min', label: 'Minimum', align: 'right', hideBelow: 'sm', sort: (i) => i.min, render: (i) => `${i.min} ${i.unit}` },
+            { key: 'state', label: 'Kondisi', compact: true, sort: (i) => i.stock - i.min, render: (i) => (i.stock <= i.min ? <StatusChip label="Menipis" tone="peach" /> : <StatusChip label="Aman" tone="lime" />) },
+        ]}
+        renderNormal={(i) => (
+<li className="flex flex-wrap items-center gap-3 rounded-card bg-surface p-4 shadow-card">
               <div className="min-w-0 flex-1 basis-40">
                 <p className="truncate font-semibold">{i.name}</p>
                 <p className="text-xs text-muted">Minimum {i.min} {i.unit}</p>
@@ -227,37 +267,11 @@ export function InventoryPage() {
               <p className="w-28 text-right font-semibold">
                 {formatQty(i.stock)} {i.unit}
               </p>
-              {isLow && <StatusChip label="Menipis" tone="peach" />}
-              <div className="flex flex-wrap gap-2">
-                {modes.map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => open(i, m)}
-                    aria-label={`${modeLabel[m]} ${i.name}`}
-                    className="btn btn-secondary btn-sm"
-                  >
-                    {modeLabel[m]}
-                  </button>
-                ))}
-                {isOwner && (
-                  <>
-                    <button type="button" onClick={() => openMaster(i)} aria-label={`Ubah ${i.name}`} className="icon-btn icon-btn-sm">
-                      <Pencil className="size-4" aria-hidden />
-                    </button>
-                    <DeleteButton
-                      label={`Hapus ${i.name}`}
-                      title={`Hapus barang ${i.name}?`}
-                      blockedBy={inventoryUsage(i.id).reasons}
-                      onConfirm={() => deleteInventoryItem(i.id)}
-                    />
-                  </>
-                )}
-              </div>
-            </li>
-          )
-        })}
-      </ul>
+              {i.stock <= i.min && <StatusChip label="Menipis" tone="peach" />}
+              {actions(i)}
+</li>
+        )}
+      />
 
       <section aria-labelledby="mv-title">
         <h2 id="mv-title" className="mb-3 text-lg font-bold">

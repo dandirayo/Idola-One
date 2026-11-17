@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from 'react'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { PrintDialog } from '@/components/PrintDialog'
+import { resetSavedData } from '@/data/persist'
 import { Card, Hint, inputClass, primaryButton, SectionTitle } from '@/components/ui'
 import { updateShop, useStore } from '@/data/store'
 import { buildTestPage, COLUMNS, type PaperWidth } from '@/lib/receipt'
@@ -15,6 +17,7 @@ export function SettingsPage() {
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
   const [testOpen, setTestOpen] = useState(false)
+  const [resetOpen, setResetOpen] = useState(false)
 
   function submit(e: FormEvent) {
     e.preventDefault()
@@ -110,6 +113,27 @@ export function SettingsPage() {
           </p>
         </Card>
       </div>
+
+      <Card>
+        <SectionTitle>Data pratinjau</SectionTitle>
+        <p className="text-sm text-muted">
+          Selama backend belum ada, data tersimpan di browser ini saja (tidak dibagi ke perangkat lain). Reset mengembalikan semua data ke data contoh awal.
+        </p>
+        <button type="button" onClick={() => setResetOpen(true)} className="btn btn-danger mt-4">
+          Reset data contoh
+        </button>
+      </Card>
+
+      {resetOpen && (
+        <ConfirmDialog
+          title="Reset semua data ke data contoh?"
+          impacts={['Semua perubahan, termasuk isi Sampah, hilang dari browser ini.', 'Tidak bisa dipulihkan.']}
+          confirmLabel="Reset"
+          restorable={false}
+          onConfirm={() => resetSavedData()}
+          onClose={() => setResetOpen(false)}
+        />
+      )}
 
       {testOpen && (
         <PrintDialog

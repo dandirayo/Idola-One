@@ -85,7 +85,8 @@ describe('hapus pesanan', () => {
     expect(cash()).toBe(before)
     expect(getState().orders.some((x) => x.id === o.id)).toBe(false)
     expect(lastAudit().action).toBe('Hapus pesanan')
-    expect(lastAudit().before).toContain(o.number)
+    expect(lastAudit().ref).toBe(o.number)
+    expect(lastAudit().before).toContain('total Rp')
     expect(lastAudit().after).toContain('Salah input pelanggan')
   })
 

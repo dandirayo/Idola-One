@@ -394,6 +394,60 @@
     border-radius: 9999px;
   }
 
+  /* ---------- Tabel data (mode tampilan Tabel) ---------- */
+  .scroll-x {
+    position: relative;
+    overflow-x: auto;
+  }
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+  .data-table th {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--color-muted);
+    white-space: nowrap;
+    border-bottom: 1px solid var(--color-line);
+  }
+  .data-table th button {
+    font: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+    cursor: pointer;
+  }
+  .data-table th button:hover {
+    color: var(--color-ink);
+  }
+  .data-table td {
+    padding: 0.625rem 1rem;
+    vertical-align: middle;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--color-line);
+  }
+  /* Kolom aksi menempel di kanan saat tabel digulir (tablet ke atas). Di ponsel ikut bergulir
+     supaya kolom data tetap terlihat; untuk aksi cepat di ponsel pakai List kecil atau Grid detail. */
+  @media (min-width: 640px) {
+    .data-table th.col-actions,
+    .data-table td.col-actions {
+      position: sticky;
+      right: 0;
+      background: var(--color-surface);
+    }
+  }
+  .data-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+  @media (hover: hover) {
+    .data-table tbody tr:hover td {
+      background: var(--color-canvas);
+    }
+  }
+
   /* ---------- Chip pilihan (kotak centang) ---------- */
   .chip-check {
     display: inline-flex;

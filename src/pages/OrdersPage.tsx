@@ -2,7 +2,8 @@ import { Plus, Search } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { Card, Hint, orderStatusTone, paymentTone, StatusChip } from '@/components/ui'
-import { useStore } from '@/data/store'
+import { DataList, type Column } from '@/components/DataList'
+import { useStore, type Order } from '@/data/store'
 import { formatQty, formatRupiah } from '@/lib/format'
 import {
   orderStatusLabel,
@@ -21,6 +22,34 @@ const filters: { value: OrderStatus | 'all'; label: string }[] = [
 ]
 
 const PAGE_SIZE = 10
+
+const columns: Column<Order>[] = [
+  {
+    key: 'customer',
+    label: 'Pelanggan',
+    primary: true,
+    sort: (o) => o.customerName,
+    render: (o) => (
+      <Link to={`/orders/${o.id}`} className="hover:underline">
+        {o.customerName}
+      </Link>
+    ),
+  },
+  { key: 'number', label: 'Nota', sort: (o) => o.number, hideBelow: 'md', render: (o) => o.number },
+  { key: 'date', label: 'Tanggal', sort: (o) => o.createdAt, hideBelow: 'lg', render: (o) => dateFormat.format(new Date(o.createdAt)) },
+  { key: 'items', label: 'Layanan', hideBelow: 'lg', render: (o) => <span className="inline-block min-w-48 whitespace-normal">{o.items.map((i) => `${formatQty(i.qty)} ${i.unit} ${i.name}`).join(', ')}</span> },
+  { key: 'total', label: 'Total', align: 'right', compact: true, sort: (o) => o.total, render: (o) => formatRupiah(o.total) },
+  { key: 'status', label: 'Status', compact: true, sort: (o) => o.status, render: (o) => <StatusChip label={orderStatusLabel[o.status]} tone={orderStatusTone[o.status]} /> },
+  {
+    key: 'pay',
+    label: 'Bayar',
+    sort: (o) => o.paid / (o.total || 1),
+    render: (o) => {
+      const pay = paymentStatus(o.total, o.paid)
+      return <StatusChip label={paymentStatusLabel[pay]} tone={paymentTone[pay]} />
+    },
+  },
+]
 
 const dateFormat = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
@@ -105,11 +134,15 @@ export function OrdersPage() {
           <p className="mt-1 text-sm text-muted">Ubah kata kunci atau filter status.</p>
         </Card>
       ) : (
-        <ul className="space-y-3">
-          {visible.map((o) => {
+        <DataList
+          id="orders"
+          items={visible}
+          rowKey={(o) => o.id}
+          columns={columns}
+          renderNormal={(o) => {
             const pay = paymentStatus(o.total, o.paid)
             return (
-              <li key={o.id}>
+              <li>
                 <Link
                   to={`/orders/${o.id}`}
                   className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-card bg-surface p-4 shadow-card card-hover"
@@ -131,8 +164,8 @@ export function OrdersPage() {
                 </Link>
               </li>
             )
-          })}
-        </ul>
+          }}
+        />
       )}
 
       {pages > 1 && (
