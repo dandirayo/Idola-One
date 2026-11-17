@@ -1,3 +1,5 @@
+import { DeleteButton } from '@/components/ConfirmDialog'
+import { deleteAttendance } from '@/data/admin'
 import { useMemo, useState } from 'react'
 import { Card, Hint, StatusChip } from '@/components/ui'
 import { useStore } from '@/data/store'
@@ -115,6 +117,13 @@ export function AttendancePage() {
                   {r.photoIn && <img src={r.photoIn} alt={`Selfie masuk ${name(r.employeeId)}`} className="size-12 rounded-lg object-cover" />}
                   {r.photoOut && <img src={r.photoOut} alt={`Selfie pulang ${name(r.employeeId)}`} className="size-12 rounded-lg object-cover" />}
                 </div>
+                <DeleteButton
+                  label={`Hapus absensi ${name(r.employeeId)} ${r.date}`}
+                  title={`Hapus absensi ${name(r.employeeId)} tanggal ${r.date}?`}
+                  impacts={['Catatan masuk, pulang, dan foto dihapus. Salinannya disimpan di Audit.']}
+                  reasonRequired
+                  onConfirm={(reason) => deleteAttendance(r.id, reason)}
+                />
                 {r.note && <p className="basis-full text-xs text-muted">{r.note}</p>}
               </li>
             )

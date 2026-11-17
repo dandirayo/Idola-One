@@ -42,6 +42,26 @@ function write(key: string, value: unknown) {
   }
 }
 
+const PREVIEW_PEOPLE: Record<string, Session> = {
+  owner: { name: 'Dandi', role: 'owner' },
+  em1: { name: 'Rina', role: 'employee', employeeId: 'em1' },
+  em2: { name: 'Dika', role: 'employee', employeeId: 'em2' },
+  em3: { name: 'Sari', role: 'employee', employeeId: 'em3' },
+}
+
+/**
+ * Hanya mode pengembangan: `?as=owner|em1|em2|em3&biz=b1|b2` masuk otomatis.
+ * Dipakai untuk audit visual dan uji otomatis. Tidak aktif pada build produksi
+ * karena `import.meta.env.DEV` bernilai false di sana.
+ */
+function previewFromUrl(): { session: Session; businessId: string } | null {
+  if (!import.meta.env.DEV) return null
+  const params = new URLSearchParams(window.location.search)
+  const person = PREVIEW_PEOPLE[params.get('as') ?? '']
+  if (!person) return null
+  return { session: person, businessId: params.get('biz') ?? 'b1' }
+}
+
 /** Sesi lama (tanpa peran valid) dianggap tidak ada. */
 function readSession(): Session | null {
   const s = read<Session>(SESSION_KEY)
@@ -53,8 +73,10 @@ function readSession(): Session | null {
  * Akan diganti autentikasi backend sendiri (lihat docs/04-BACKEND.md).
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(readSession)
-  const [businessId, setBusinessId] = useState<string | null>(() => (session ? read<string>(BUSINESS_KEY) : null))
+  const [session, setSession] = useState<Session | null>(() => previewFromUrl()?.session ?? readSession())
+  const [businessId, setBusinessId] = useState<string | null>(
+    () => previewFromUrl()?.businessId ?? (session ? read<string>(BUSINESS_KEY) : null),
+  )
 
   useEffect(() => {
     setActor(session?.name ?? 'Sistem')

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
-import { Card, inputClass, primaryButton } from '@/components/ui'
+import { Card, inputClass, primaryButton, TimeField } from '@/components/ui'
 import { createRequest, type RequestPayload } from '@/data/store'
 import { useAuth } from '@/lib/auth'
 import { dateKey } from '@/lib/shifts'
@@ -83,7 +83,7 @@ export function RequestNewPage() {
               onChange={(e) => setDetail(e.target.value)}
               rows={3}
               placeholder={placeholders[type]}
-              className="mt-1.5 w-full rounded-xl border border-line bg-canvas p-3.5 text-sm outline-none placeholder:text-muted focus:border-ink"
+              className="field field-area mt-1.5"
             />
           </label>
 
@@ -95,11 +95,11 @@ export function RequestNewPage() {
               </label>
               <label className="block text-sm font-semibold">
                 Jam masuk
-                <input type="time" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} className={`${inputClass} mt-1.5`} />
+                <TimeField value={checkIn} onChange={setCheckIn} />
               </label>
               <label className="block text-sm font-semibold">
                 Jam pulang (opsional)
-                <input type="time" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} className={`${inputClass} mt-1.5`} />
+                <TimeField value={checkOut} onChange={setCheckOut} />
               </label>
             </div>
           )}

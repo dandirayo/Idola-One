@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from 'react'
+import { DeleteButton } from '@/components/ConfirmDialog'
+import { businessUsage, deleteBusiness } from '@/data/admin'
 import { Card, Hint, inputClass, primaryButton, SectionTitle, StatusChip } from '@/components/ui'
 import { addBeverageBusiness, setBusinessActive, setMember } from '@/data/business'
 import { useStore } from '@/data/store'
@@ -72,6 +74,7 @@ export function BusinessManagePage() {
               >
                 {b.active ? 'Nonaktifkan' : 'Aktifkan'}
               </button>
+              <DeleteButton label={`Hapus ${b.name}`} title={`Hapus usaha ${b.name}?`} blockedBy={businessUsage(b.id).reasons} impacts={['Akses karyawan dan produk usaha ini ikut terhapus.']} onConfirm={() => deleteBusiness(b.id)} />
             </div>
 
             <fieldset className="mt-3">
@@ -80,10 +83,7 @@ export function BusinessManagePage() {
                 {employees.map((e) => {
                   const on = isMember(b.id, e.id)
                   return (
-                    <label
-                      key={e.id}
-                      className={`flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-sm ${on ? 'border-ink bg-lime-soft' : 'border-line'}`}
-                    >
+                    <label key={e.id} className="chip-check">
                       <input type="checkbox" checked={on} onChange={(ev) => run(() => setMember(b.id, e.id, ev.target.checked))} />
                       {e.name}
                     </label>

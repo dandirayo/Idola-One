@@ -36,9 +36,10 @@ export function payWeeklySalary(
   }
 
   const at = now.toISOString()
-  const row: PayrollRow = { id: uid('pay'), employeeId, employeeName: employee.name, weekStart, amount, method, at }
+  const expenseId = uid('e')
+  const row: PayrollRow = { id: uid('pay'), employeeId, employeeName: employee.name, weekStart, amount, method, at, expenseId }
   const expense: Expense = {
-    id: uid('e'),
+    id: expenseId,
     description: `Gaji ${employee.name} (minggu ${weekStart})`,
     category: 'Gaji',
     amount,
@@ -65,8 +66,9 @@ export function payIncentive(incentiveId: string, method: PaymentMethod, now: Da
   const employee = s0.employees.find((e) => e.id === inc.employeeId)
   const name = employee?.name ?? 'Karyawan'
   const at = now.toISOString()
+  const expenseId = uid('e')
   const expense: Expense = {
-    id: uid('e'),
+    id: expenseId,
     description: `Insentif ${name}: ${inc.itemName} (${inc.orderNumber})`,
     category: 'Insentif',
     amount: inc.amount,
@@ -75,7 +77,7 @@ export function payIncentive(incentiveId: string, method: PaymentMethod, now: Da
   }
   update((s) => ({
     ...s,
-    incentives: s.incentives.map((i) => (i.id === incentiveId ? { ...i, status: 'paid' as const, paidAt: at } : i)),
+    incentives: s.incentives.map((i) => (i.id === incentiveId ? { ...i, status: 'paid' as const, paidAt: at, expenseId } : i)),
     expenses: [expense, ...s.expenses],
     cash: [...s.cash, expenseCash(expense)],
     audit: [makeAudit('Gaji', incentiveId, `${name} · ${inc.itemName}`, 'Bayar insentif', 'Belum dibayar', `Dibayar ${formatRupiah(inc.amount)}`), ...s.audit],

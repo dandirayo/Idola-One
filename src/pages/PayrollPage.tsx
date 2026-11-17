@@ -1,6 +1,8 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useState } from 'react'
 import { Card, Hint, StatusChip } from '@/components/ui'
+import { DeleteButton } from '@/components/ConfirmDialog'
+import { cancelIncentivePayment, cancelPayroll } from '@/data/admin'
 import { payIncentive, payWeeklySalary } from '@/data/payroll'
 import { useStore } from '@/data/store'
 import { formatQty, formatRupiah } from '@/lib/format'
@@ -121,12 +123,22 @@ export function PayrollPage() {
                       </p>
                     </div>
                     {paid ? (
-                      <span className="text-right text-sm">
-                        <StatusChip label="Dibayar" tone="lime" />
-                        <span className="block text-xs text-muted">
-                          {formatRupiah(paid.amount)} · {dateTime.format(new Date(paid.at))}
+                      <>
+                        <span className="text-right text-sm">
+                          <StatusChip label="Dibayar" tone="lime" />
+                          <span className="block text-xs text-muted">
+                            {formatRupiah(paid.amount)} · {dateTime.format(new Date(paid.at))}
+                          </span>
                         </span>
-                      </span>
+                        <DeleteButton
+                          label={`Batalkan gaji ${e.name}`}
+                          title={`Batalkan gaji ${e.name} minggu ini?`}
+                          impacts={[`Kas keluar ${formatRupiah(paid.amount)} dibalik.`, 'Minggu ini bisa dibayar ulang.']}
+                          reasonRequired
+                          confirmLabel="Batalkan Gaji"
+                          onConfirm={(reason) => cancelPayroll(paid.id, reason)}
+                        />
+                      </>
                     ) : (
                       <button
                         type="button"
@@ -195,7 +207,17 @@ export function PayrollPage() {
                     <span>
                       {name(i.employeeId)} · {i.itemName} ({i.orderNumber})
                     </span>
-                    <span className="font-semibold">{formatRupiah(i.amount)}</span>
+                    <span className="flex items-center gap-2">
+                      <span className="font-semibold">{formatRupiah(i.amount)}</span>
+                      <DeleteButton
+                        label={`Batalkan insentif ${i.itemName} ${i.orderNumber}`}
+                        title="Batalkan pembayaran insentif?"
+                        impacts={[`Kas keluar ${formatRupiah(i.amount)} dibalik.`, 'Insentif kembali menjadi hak yang belum dibayar.']}
+                        reasonRequired
+                        confirmLabel="Batalkan Pembayaran"
+                        onConfirm={(reason) => cancelIncentivePayment(i.id, reason)}
+                      />
+                    </span>
                   </li>
                 ))}
               </ul>

@@ -142,3 +142,33 @@ export function StatusChip({ label, tone }: { label: string; tone: Tone }) {
     </span>
   )
 }
+
+const HOURS = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'))
+const MINUTES = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0'))
+
+// Input jam 24 jam yang tampil sama di semua browser (input type=time mengikuti locale perangkat).
+export function TimeField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const [hh = '00', mm = '00'] = value.split(':')
+  const minutes = MINUTES.includes(mm) ? MINUTES : [...MINUTES, mm].sort()
+  return (
+    <span className="mt-1.5 flex items-center gap-2">
+      <select aria-label="Jam" value={hh} onChange={(e) => onChange(`${e.target.value}:${mm}`)} className={inputClass}>
+        {HOURS.map((h) => (
+          <option key={h} value={h}>
+            {h}
+          </option>
+        ))}
+      </select>
+      <span aria-hidden className="font-bold">
+        :
+      </span>
+      <select aria-label="Menit" value={mm} onChange={(e) => onChange(`${hh}:${e.target.value}`)} className={inputClass}>
+        {minutes.map((m) => (
+          <option key={m} value={m}>
+            {m}
+          </option>
+        ))}
+      </select>
+    </span>
+  )
+}

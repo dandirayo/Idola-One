@@ -1,4 +1,5 @@
-import { Bell, Camera, ClipboardList, Inbox, Package, Plus, Users, Wallet, type LucideIcon } from 'lucide-react'
+import { Plus, type LucideIcon } from 'lucide-react'
+import { concept } from '@/lib/icons'
 import { Link } from 'react-router'
 import { Card, Hint, SectionTitle, StatusChip } from '@/components/ui'
 import { useStore } from '@/data/store'
@@ -44,7 +45,7 @@ export function EmployeeHomePage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold sm:text-3xl">Halo, {session.name} 👋</h1>
+      <h1 className="text-2xl font-bold sm:text-3xl">Halo, {session.name}</h1>
 
       <Hint>Pratinjau dengan data contoh.</Hint>
 
@@ -79,11 +80,11 @@ export function EmployeeHomePage() {
         </SectionTitle>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           <Action to="/orders/new" icon={Plus} label="Pesanan Baru" />
-          <Action to="/customers" icon={Users} label="Pelanggan" />
-          <Action to="/orders" icon={ClipboardList} label="Pesanan" />
-          <Action to="/inventory" icon={Package} label="Pakai Stok" />
-          <Action to="/attendance/me" icon={Camera} label="Absensi" />
-          <Action to="/reports/payments" icon={Wallet} label="Laporan Pembayaran" />
+          <Action to="/customers" icon={concept.customers} label="Pelanggan" />
+          <Action to="/orders" icon={concept.orders} label="Pesanan" />
+          <Action to="/inventory" icon={concept.stock} label="Pakai Stok" />
+          <Action to="/attendance/me" icon={concept.attendance} label="Absensi" />
+          <Action to="/reports/payments" icon={concept.receivable} label="Laporan Pembayaran" />
         </div>
       </section>
 
@@ -105,7 +106,7 @@ export function EmployeeHomePage() {
             </li>
             <li className="flex justify-between">
               <Link to="/notifications" className="inline-flex items-center gap-1 hover:underline">
-                <Bell className="size-3.5" aria-hidden /> Notifikasi belum dibaca
+                <concept.notifications className="size-3.5" aria-hidden /> Notifikasi belum dibaca
               </Link>
               <span className="font-semibold">{unread}</span>
             </li>
@@ -116,7 +117,7 @@ export function EmployeeHomePage() {
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-lg font-bold">Pengajuan saya</h2>
             <Link to="/requests/me" className="inline-flex items-center gap-1 text-sm font-medium text-muted hover:text-ink">
-              <Inbox className="size-4" aria-hidden /> {pendingMine} menunggu
+              <concept.requests className="size-4" aria-hidden /> {pendingMine} menunggu
             </Link>
           </div>
           {mine.length === 0 ? (

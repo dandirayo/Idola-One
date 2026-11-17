@@ -1,5 +1,7 @@
 import { Pencil, Plus } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
+import { DeleteButton } from '@/components/ConfirmDialog'
+import { deleteEmployee, employeeUsage } from '@/data/admin'
 import { Card, Hint, inputClass, primaryButton, StatusChip } from '@/components/ui'
 import { addEmployee, setEmployeeActive, updateEmployee, useStore, type Employee } from '@/data/store'
 import { formatRupiah } from '@/lib/format'
@@ -134,6 +136,7 @@ export function EmployeesPage() {
               >
                 {e.active ? 'Nonaktifkan' : 'Aktifkan'}
               </button>
+              <DeleteButton label={`Hapus ${e.name}`} title={`Hapus karyawan ${e.name}?`} blockedBy={employeeUsage(e.id).reasons} onConfirm={() => deleteEmployee(e.id)} />
             </li>
           ))}
         </ul>

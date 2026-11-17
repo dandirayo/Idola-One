@@ -1,6 +1,8 @@
 import { Pencil, Plus, Search } from 'lucide-react'
 import { useMemo, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
+import { DeleteButton } from '@/components/ConfirmDialog'
+import { customerUsage, deleteCustomer } from '@/data/admin'
 import { Card, Hint, inputClass, primaryButton, StatusChip } from '@/components/ui'
 import { customerPoints } from '@/lib/points'
 import { addCustomer, setCustomerActive, updateCustomer, useStore, type Customer } from '@/data/store'
@@ -154,6 +156,7 @@ export function CustomersPage() {
               >
                 {c.active ? 'Nonaktifkan' : 'Aktifkan'}
               </button>
+              <DeleteButton label={`Hapus ${c.name}`} title={`Hapus pelanggan ${c.name}?`} blockedBy={customerUsage(c.id).reasons} onConfirm={() => deleteCustomer(c.id)} />
             </li>
           ))}
         </ul>

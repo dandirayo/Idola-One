@@ -6,3 +6,6 @@ dist
 !.env.example
 .DS_Store
 *.tsbuildinfo
+
+# Screenshot audit visual disimpan lokal untuk dibandingkan antar audit
+audit/screenshots/

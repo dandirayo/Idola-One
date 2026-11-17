@@ -261,7 +261,7 @@ export function OrderNewPage() {
               value={note}
               onChange={(e) => setNote(e.target.value)}
               rows={2}
-              className="w-full rounded-xl border border-line bg-canvas p-3.5 text-sm outline-none focus:border-ink"
+              className="field field-area"
             />
           </Card>
         </div>

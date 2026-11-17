@@ -2,6 +2,8 @@ import { Plus } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { Card, Hint, inputClass, StatusChip } from '@/components/ui'
+import { DeleteButton } from '@/components/ConfirmDialog'
+import { cancelRequestPayment, deleteRequest } from '@/data/admin'
 import { completeRequest, decideRequest, payRequest, useStore, type EmployeeRequest } from '@/data/store'
 import { formatRupiah } from '@/lib/format'
 import { paymentMethodLabel, type PaymentMethod } from '@/lib/orders'
@@ -120,6 +122,23 @@ function RequestCard({ request: r }: { request: EmployeeRequest }) {
         </div>
         {isMoneyRequest(r.type) && <p className="font-bold">{formatRupiah(r.amount)}</p>}
         <StatusChip label={requestStatusLabel[r.status]} tone={statusTone[r.status]} />
+        {r.status === 'paid' ? (
+          <DeleteButton
+            label={`Batalkan pembayaran ${r.requester}`}
+            title="Batalkan pembayaran pengajuan?"
+            impacts={[`Kas keluar ${formatRupiah(r.amount)} dibalik.`, 'Pengajuan kembali ke Disetujui.']}
+            reasonRequired
+            confirmLabel="Batalkan Pembayaran"
+            onConfirm={(reason) => cancelRequestPayment(r.id, reason)}
+          />
+        ) : (
+          <DeleteButton
+            label={`Hapus pengajuan ${r.requester}`}
+            title="Hapus pengajuan ini?"
+            impacts={['Pengajuan dihapus dari daftar. Salinannya disimpan di Audit.']}
+            onConfirm={() => deleteRequest(r.id)}
+          />
+        )}
       </div>
 
       {r.ownerNote && (

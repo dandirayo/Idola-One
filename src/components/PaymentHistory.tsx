@@ -1,5 +1,7 @@
 import { Pencil } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
+import { DeleteButton } from '@/components/ConfirmDialog'
+import { cancelPayment } from '@/data/admin'
 import { Card, inputClass, SectionTitle } from '@/components/ui'
 import { correctPayment, useStore, type Order, type Payment } from '@/data/store'
 import { useAuth } from '@/lib/auth'
@@ -77,6 +79,16 @@ export function PaymentHistory({ order }: { order: Order }) {
                     >
                       <Pencil className="size-4" aria-hidden />
                     </button>
+                  )}
+                  {isOwner && (
+                    <DeleteButton
+                      label={`Batalkan pembayaran ${formatRupiah(p.amount)}`}
+                      title={`Batalkan pembayaran ${formatRupiah(p.amount)}?`}
+                      impacts={[`Kas masuk ${formatRupiah(p.amount)} dibalik di Buku Kas.`, 'Status bayar pesanan dihitung ulang.']}
+                      reasonRequired
+                      confirmLabel="Batalkan Pembayaran"
+                      onConfirm={(reason) => cancelPayment(order.id, p.id, reason)}
+                    />
                   )}
                 </span>
               </div>

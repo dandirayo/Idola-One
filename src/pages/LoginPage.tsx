@@ -1,3 +1,4 @@
+import { LogoMark } from '@/components/LogoMark'
 import { useState, type FormEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router'
 import { useStore } from '@/data/store'
@@ -28,7 +29,7 @@ export function LoginPage() {
     <div className="grid min-h-screen place-items-center bg-lilac/60 p-4">
       <form onSubmit={onSubmit} className="w-full max-w-sm rounded-[1.75rem] bg-surface p-7 shadow-card">
         <div className="mb-6 flex items-center gap-2.5">
-          <span className="grid size-10 place-items-center rounded-xl bg-sidebar text-sm font-extrabold text-lime">I1</span>
+          <LogoMark variant="dark" className="size-10" />
           <span className="text-xl font-bold">Idola One</span>
         </div>
         <h1 className="text-2xl font-bold">Masuk</h1>

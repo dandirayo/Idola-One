@@ -1,5 +1,7 @@
 import { ArrowDown, ArrowUp, Pencil, Plus } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
+import { DeleteButton } from '@/components/ConfirmDialog'
+import { deletePosProduct } from '@/data/admin'
 import { Card, Hint, inputClass, primaryButton, StatusChip } from '@/components/ui'
 import { addPosProduct, movePosProduct, setPosProductActive, updatePosProduct } from '@/data/pos'
 import { useStore, type PosProduct } from '@/data/store'
@@ -108,6 +110,7 @@ export function PosProductsPage() {
                   <button type="button" onClick={() => setPosProductActive(p.id, !p.active)} className="btn btn-secondary btn-sm">
                     {p.active ? 'Nonaktifkan' : 'Aktifkan'}
                   </button>
+                  <DeleteButton label={`Hapus ${p.name}`} title={`Hapus produk ${p.name}?`} impacts={['Penjualan lama tetap tersimpan lengkap dengan nama dan harganya.']} onConfirm={() => deletePosProduct(p.id)} />
                 </>
               )}
             </li>

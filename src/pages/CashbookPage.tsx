@@ -1,4 +1,6 @@
 import { useMemo, useState, type FormEvent } from 'react'
+import { CashRowActions } from '@/components/CashRowActions'
+import { useAuth } from '@/lib/auth'
 import { ManualCashForm } from '@/components/ManualCashForm'
 import { Card, Hint, inputClass, primaryButton, SectionTitle } from '@/components/ui'
 import { addExpense, useStore } from '@/data/store'
@@ -12,6 +14,7 @@ const INITIAL_ROWS = 10
 
 export function CashbookPage() {
   const cash = useStore((s) => s.cash)
+  const isOwner = useAuth().session?.role === 'owner'
 
   const [period, setPeriod] = useState<Period>('today')
   const [showAll, setShowAll] = useState(false)
@@ -194,6 +197,7 @@ export function CashbookPage() {
                   {e.direction === 'in' ? '+' : '−'}
                   {formatRupiah(e.amount)}
                 </span>
+                {isOwner && <CashRowActions entry={e} />}
               </li>
             ))}
           </ul>

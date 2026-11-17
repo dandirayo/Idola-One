@@ -1,18 +1,5 @@
-import {
-  ArrowUpRight,
-  ChevronRight,
-  ClipboardList,
-  Hourglass,
-  Inbox,
-  Package,
-  Plus,
-  Shirt,
-  Sparkles,
-  Users,
-  Wallet,
-  WashingMachine,
-  type LucideIcon,
-} from 'lucide-react'
+import { ArrowUpRight, ChevronRight, Plus, type LucideIcon } from 'lucide-react'
+import { concept } from '@/lib/icons'
 import { useMemo, type ComponentType } from 'react'
 import { Link } from 'react-router'
 import { BarChart } from '@/components/BarChart'
@@ -27,7 +14,13 @@ import { orderStatusLabel, paymentStatus, paymentStatusLabel } from '@/lib/order
 import { requestStatusLabel, requestTypeLabel, type RequestStatus } from '@/lib/requests'
 
 const recentTones: Tone[] = ['peach', 'lime', 'lilac']
-const recentIcons: LucideIcon[] = [WashingMachine, Shirt, Sparkles]
+// Ikon mengikuti isi pesanan: kiloan, satuan, atau campuran.
+function orderIcon(items: { unit: string }[]): LucideIcon {
+  const kilo = items.some((it) => it.unit === 'kg')
+  const piece = items.some((it) => it.unit !== 'kg')
+  if (kilo && piece) return concept.mixed
+  return piece ? concept.pieces : concept.laundry
+}
 
 const requestTone: Record<RequestStatus, Tone> = {
   pending: 'lilac',
@@ -56,9 +49,9 @@ function Kpi({
   hint?: string
 }) {
   return (
-    <Link to={to} className="flex items-center gap-3 rounded-card bg-surface p-4 shadow-card card-hover">
+    <Link to={to} className="flex flex-col items-start gap-3 rounded-card bg-surface p-4 shadow-card card-hover sm:flex-row sm:items-center">
       <IconChip icon={icon} tone={tone} />
-      <span className="min-w-0">
+      <span className="w-full min-w-0">
         <span className="block truncate text-xs text-muted">{label}</span>
         <span className="block truncate text-lg font-bold">{value}</span>
         {hint && <span className="block truncate text-xs text-muted">{hint}</span>}
@@ -93,51 +86,51 @@ export function DashboardPage() {
       title: 'Siap diambil',
       subtitle: readyCount > 0 ? `${readyCount} pesanan · kabari pelanggan` : 'Tidak ada',
       tone: 'peach',
-      icon: ClipboardList,
+      icon: concept.orders,
     },
     {
       to: '/orders',
       title: 'Tagihan belum lunas',
       subtitle: kpis.unpaidCount > 0 ? `${kpis.unpaidCount} pesanan · ${formatRupiah(kpis.unpaidTotal)}` : 'Tidak ada',
       tone: 'lime',
-      icon: Wallet,
+      icon: concept.receivable,
     },
     {
       to: '/inventory',
       title: 'Stok menipis',
       subtitle: lowNames.length > 0 ? lowNames.join(', ') : 'Semua stok aman',
       tone: 'cream',
-      icon: Package,
+      icon: concept.stock,
     },
     {
       to: '/requests/review',
       title: 'Pengajuan menunggu',
       subtitle: pendingRequests > 0 ? `${pendingRequests} pengajuan` : 'Tidak ada',
       tone: 'lilac',
-      icon: Inbox,
+      icon: concept.requests,
     },
   ]
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_21rem]">
+    <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_21rem]">
       <div className="min-w-0 space-y-6">
-        <h1 className="text-2xl font-bold sm:text-3xl">Selamat datang kembali, {session?.name} 👋</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl">Selamat datang kembali, {session?.name}</h1>
 
 
-        <section aria-label="Ringkasan" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Kpi to="/orders" icon={ClipboardList} tone="peach" label="Pesanan hari ini" value={String(kpis.ordersToday)} />
-          <Kpi to="/orders" icon={Hourglass} tone="lilac" label="Pesanan baru" value={String(kpis.newOrders)} hint="Status Diterima" />
-          <Kpi to="/cashbook" icon={Wallet} tone="lime" label="Pemasukan bulan ini" value={formatRupiah(kpis.incomeThisMonth)} />
+        <section aria-label="Ringkasan" className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+          <Kpi to="/orders" icon={concept.orders} tone="peach" label="Pesanan hari ini" value={String(kpis.ordersToday)} />
+          <Kpi to="/orders" icon={concept.waiting} tone="lilac" label="Pesanan baru" value={String(kpis.newOrders)} hint="Status Diterima" />
+          <Kpi to="/cashbook" icon={concept.cash} tone="lime" label="Pemasukan bulan ini" value={formatRupiah(kpis.incomeThisMonth)} />
           <Kpi
             to="/orders"
-            icon={Wallet}
+            icon={concept.receivable}
             tone="cream"
             label="Belum lunas"
             value={formatRupiah(kpis.unpaidTotal)}
             hint={`${kpis.unpaidCount} pesanan`}
           />
-          <Kpi to="/inventory" icon={Package} tone="peach" label="Stok menipis" value={String(kpis.lowStock)} />
-          <Kpi to="/customers" icon={Users} tone="lilac" label="Pelanggan aktif" value={String(activeCustomers)} />
+          <Kpi to="/inventory" icon={concept.stock} tone="peach" label="Stok menipis" value={String(kpis.lowStock)} />
+          <Kpi to="/customers" icon={concept.customers} tone="lilac" label="Pelanggan aktif" value={String(activeCustomers)} />
         </section>
 
         <section aria-labelledby="recent-title">
@@ -156,7 +149,7 @@ export function DashboardPage() {
               return (
                 <Link key={o.id} to={`/orders/${o.id}`} className="block rounded-card bg-surface p-4 shadow-card card-hover">
                   <div className="flex items-center gap-3">
-                    <IconChip icon={recentIcons[i]} tone={recentTones[i]} />
+                    <IconChip icon={orderIcon(o.items)} tone={recentTones[i]} />
                     <div className="min-w-0">
                       <p className="truncate font-semibold">{o.customerName}</p>
                       <p className="truncate text-xs text-muted">
@@ -202,7 +195,7 @@ export function DashboardPage() {
                   </span>
                 </p>
               </div>
-              <span className="rounded-full border border-line px-3 py-1.5 text-xs font-medium">Mingguan</span>
+              <span className="text-xs font-semibold text-muted">7 hari terakhir</span>
             </div>
             <BarChart data={weekly} />
           </Card>
@@ -252,7 +245,7 @@ export function DashboardPage() {
                   to={`/orders/${o.id}`}
                   className="flex items-center gap-4 rounded-card bg-surface p-4 shadow-card card-hover"
                 >
-                  <IconChip icon={WashingMachine} tone={orderStatusTone[o.status]} />
+                  <IconChip icon={concept.laundry} tone={orderStatusTone[o.status]} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold">{o.items.map((it) => it.name).join(', ')}</p>
                     <p className="truncate text-xs text-muted">
@@ -271,8 +264,8 @@ export function DashboardPage() {
         </section>
       </div>
 
-      <aside className="min-w-0 space-y-6">
-        <div className="relative overflow-hidden rounded-card bg-sidebar p-5 text-white">
+      <aside className="grid min-w-0 gap-6 md:grid-cols-2 2xl:grid-cols-1 2xl:content-start">
+        <div className="relative overflow-hidden rounded-card bg-sidebar p-5 text-white md:col-span-2 2xl:col-span-1">
           <p className="text-xs font-semibold text-lime">Pesanan Baru</p>
           <h2 className="mt-1 text-xl font-bold">Terima cucian pelanggan</h2>
           <p className="mt-1 max-w-[14rem] text-sm text-white/70">Kiloan, satuan, atau gabung. Total dihitung otomatis.</p>
@@ -282,10 +275,10 @@ export function DashboardPage() {
           >
             Buat Pesanan
           </Link>
-          <WashingMachine className="absolute -bottom-4 -right-3 size-28 text-white/10" aria-hidden />
+          <concept.laundry className="absolute -bottom-4 -right-3 size-28 text-white/10" aria-hidden />
         </div>
 
-        <Card>
+        <Card className="self-start">
           <MiniCalendar />
         </Card>
 
@@ -310,7 +303,7 @@ export function DashboardPage() {
                 to="/requests/review"
                 className="flex items-center gap-3 rounded-card bg-surface p-4 shadow-card card-hover"
               >
-                <IconChip icon={Sparkles} tone={requestTone[r.status]} />
+                <IconChip icon={concept.requests} tone={requestTone[r.status]} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold">
                     {requestTypeLabel[r.type]} · {r.requester}

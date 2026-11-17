@@ -1,4 +1,7 @@
+import { Pencil, Plus } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
+import { DeleteButton } from '@/components/ConfirmDialog'
+import { addInventoryItem, deleteInventoryItem, inventoryUsage, updateInventoryItem } from '@/data/admin'
 import { Card, Hint, inputClass, primaryButton, SectionTitle, StatusChip } from '@/components/ui'
 import { adjustStock, buyStock, consumeStock, useStore, type InventoryItem } from '@/data/store'
 import { useAuth } from '@/lib/auth'
@@ -30,6 +33,33 @@ export function InventoryPage() {
   const [method, setMethod] = useState<PaymentMethod>('cash')
   const [note, setNote] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const isOwner = session?.role === 'owner'
+  const [master, setMaster] = useState<InventoryItem | 'new' | null>(null)
+  const [mName, setMName] = useState('')
+  const [mUnit, setMUnit] = useState('')
+  const [mMin, setMMin] = useState('')
+  const [mError, setMError] = useState<string | null>(null)
+
+  function openMaster(item: InventoryItem | 'new') {
+    setMaster(item)
+    setMName(item === 'new' ? '' : item.name)
+    setMUnit(item === 'new' ? '' : item.unit)
+    setMMin(item === 'new' ? '' : String(item.min))
+    setMError(null)
+  }
+
+  function submitMaster(e: FormEvent) {
+    e.preventDefault()
+    setMError(null)
+    try {
+      const min = toNumber(mMin || '0')
+      if (master === 'new') addInventoryItem(mName, mUnit, min)
+      else if (master) updateInventoryItem(master.id, mName, mUnit, min)
+      setMaster(null)
+    } catch (err) {
+      setMError(err instanceof Error ? err.message : 'Gagal menyimpan barang.')
+    }
+  }
 
   function open(item: InventoryItem, mode: Mode) {
     setTarget({ item, mode })
@@ -59,14 +89,56 @@ export function InventoryPage() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold sm:text-3xl">Stok</h1>
-        <p className="mt-1 text-sm text-muted">
-          {low > 0 ? `${low} barang menipis` : 'Semua stok aman'} · {inventory.length} barang
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold sm:text-3xl">Stok</h1>
+          <p className="mt-1 text-sm text-muted">
+            {low > 0 ? `${low} barang menipis` : 'Semua stok aman'} · {inventory.length} barang
+          </p>
+        </div>
+        {isOwner && (
+          <button type="button" onClick={() => openMaster('new')} className="btn btn-accent">
+            <Plus className="size-4" aria-hidden />
+            Tambah Barang
+          </button>
+        )}
       </div>
 
       <Hint>Perubahan hanya tersimpan sementara dan hilang saat halaman dimuat ulang.</Hint>
+
+      {master && (
+        <Card>
+          <SectionTitle>{master === 'new' ? 'Barang baru' : `Ubah ${master.name}`}</SectionTitle>
+          <form onSubmit={submitMaster} noValidate className="grid gap-3 sm:grid-cols-3 sm:items-end">
+            <label className="block text-sm font-semibold">
+              Nama
+              <input value={mName} onChange={(e) => setMName(e.target.value)} className={`${inputClass} mt-1.5`} />
+            </label>
+            <label className="block text-sm font-semibold">
+              Satuan
+              <input value={mUnit} onChange={(e) => setMUnit(e.target.value)} placeholder="pcs, kg, liter" className={`${inputClass} mt-1.5`} />
+            </label>
+            <label className="block text-sm font-semibold">
+              Batas minimum
+              <input inputMode="decimal" value={mMin} onChange={(e) => setMMin(e.target.value)} className={`${inputClass} mt-1.5`} />
+            </label>
+            <div className="flex gap-2 sm:col-span-3">
+              <button type="submit" className={primaryButton}>
+                Simpan
+              </button>
+              <button type="button" onClick={() => setMaster(null)} className="btn btn-secondary">
+                Batal
+              </button>
+            </div>
+          </form>
+          {master === 'new' && <p className="mt-2 text-xs text-muted">Stok awal 0. Isi lewat Beli Stok atau Koreksi.</p>}
+          {mError && (
+            <p role="alert" className="mt-3 text-sm font-medium text-danger">
+              {mError}
+            </p>
+          )}
+        </Card>
+      )}
 
       {target && (
         <Card>
@@ -168,6 +240,19 @@ export function InventoryPage() {
                     {modeLabel[m]}
                   </button>
                 ))}
+                {isOwner && (
+                  <>
+                    <button type="button" onClick={() => openMaster(i)} aria-label={`Ubah ${i.name}`} className="icon-btn icon-btn-sm">
+                      <Pencil className="size-4" aria-hidden />
+                    </button>
+                    <DeleteButton
+                      label={`Hapus ${i.name}`}
+                      title={`Hapus barang ${i.name}?`}
+                      blockedBy={inventoryUsage(i.id).reasons}
+                      onConfirm={() => deleteInventoryItem(i.id)}
+                    />
+                  </>
+                )}
               </div>
             </li>
           )

@@ -1,6 +1,8 @@
 import { ArrowLeft, MessageCircle } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
-import { Link, useParams } from 'react-router'
+import { Link, useNavigate, useParams } from 'react-router'
+import { DeleteButton } from '@/components/ConfirmDialog'
+import { deleteOrder } from '@/data/admin'
 import { KiloEditor } from '@/components/KiloEditor'
 import { OrderIncentives } from '@/components/OrderIncentives'
 import { PaymentHistory } from '@/components/PaymentHistory'
@@ -39,6 +41,7 @@ export function OrderDetailPage() {
   const order = orders.find((o) => o.id === orderId)
   const [printKind, setPrintKind] = useState<DocKind | null>(null)
   const { session } = useAuth()
+  const navigate = useNavigate()
 
   const [amount, setAmount] = useState('')
   const [method, setMethod] = useState<PaymentMethod>('cash')
@@ -123,10 +126,28 @@ export function OrderDetailPage() {
 
           <PaymentHistory order={order} />
           <OrderIncentives order={order} />
+          <Card>
+            <SectionTitle>Cetak</SectionTitle>
+            <p className="mb-3 text-xs text-muted">
+              Tiap dokumen dicetak satu per satu agar kertas bisa dipotong dan dibagikan sendiri-sendiri.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {(['receipt', 'label', 'pickup'] as DocKind[]).map((k) => (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => setPrintKind(k)}
+                  className="btn btn-secondary"
+                >
+                  {docKindLabel[k]}
+                </button>
+              ))}
+            </div>
+          </Card>
           {session?.role === 'owner' && <KiloEditor order={order} />}
         </div>
 
-        <aside className="space-y-5">
+        <aside className="order-first space-y-5 lg:order-none">
           <Card>
             <SectionTitle>Tagihan</SectionTitle>
             <dl className="space-y-1.5 text-sm">
@@ -229,28 +250,32 @@ export function OrderDetailPage() {
                 Kabari via WhatsApp
               </a>
             )}
+            {session?.role === 'owner' && (
+              <DeleteButton
+                label={`Hapus pesanan ${order.number}`}
+                className="btn btn-danger mt-2 w-full"
+                title={`Hapus pesanan ${order.number}?`}
+                impacts={[
+                  order.payments.length > 0
+                    ? `${order.payments.length} pembayaran dibatalkan dan kas masuk ${formatRupiah(order.paid)} dibalik.`
+                    : 'Belum ada pembayaran, kas tidak berubah.',
+                  'Hak insentif yang belum dibayar ikut dihapus.',
+                  'Poin pelanggan dari pesanan ini hilang.',
+                  'Salinan lengkap pesanan disimpan di Audit.',
+                ]}
+                reasonRequired
+                confirmLabel="Hapus Pesanan"
+                onConfirm={(reason) => {
+                  deleteOrder(order.id, reason)
+                  navigate('/orders')
+                }}
+              >
+                Hapus Pesanan
+              </DeleteButton>
+            )}
             {order.status === 'ready' && remaining > 0 && (
               <p className="mt-2 text-xs text-muted">Boleh diambil walau belum lunas. Sisa tetap tercatat.</p>
             )}
-          </Card>
-
-          <Card>
-            <SectionTitle>Cetak</SectionTitle>
-            <p className="mb-3 text-xs text-muted">
-              Tiap dokumen dicetak satu per satu agar kertas bisa dipotong dan dibagikan sendiri-sendiri.
-            </p>
-            <div className="flex flex-col gap-2">
-              {(['receipt', 'label', 'pickup'] as DocKind[]).map((k) => (
-                <button
-                  key={k}
-                  type="button"
-                  onClick={() => setPrintKind(k)}
-                  className="btn btn-secondary"
-                >
-                  {docKindLabel[k]}
-                </button>
-              ))}
-            </div>
           </Card>
         </aside>
       </div>

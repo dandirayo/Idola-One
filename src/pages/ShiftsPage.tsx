@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Card, Hint, inputClass, primaryButton, SectionTitle } from '@/components/ui'
+import { Card, Hint, inputClass, primaryButton, SectionTitle, TimeField } from '@/components/ui'
 import { setShift } from '@/data/attendance'
 import { useStore } from '@/data/store'
 import { shiftPresets, slotLabel, weekdayNames, type ShiftSlot } from '@/lib/shifts'
@@ -136,11 +136,11 @@ export function ShiftsPage() {
           </label>
           <label className="block text-sm font-semibold">
             Mulai
-            <input type="time" value={start} onChange={(e) => setStart(e.target.value)} className={`${inputClass} mt-1.5`} />
+            <TimeField value={start} onChange={setStart} />
           </label>
           <label className="block text-sm font-semibold">
             Selesai
-            <input type="time" value={end} onChange={(e) => setEnd(e.target.value)} className={`${inputClass} mt-1.5`} />
+            <TimeField value={end} onChange={setEnd} />
           </label>
           <button type="submit" className={primaryButton}>
             Simpan

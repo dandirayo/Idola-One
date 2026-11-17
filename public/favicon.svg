@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-label="Idola One">
+  <rect width="48" height="48" rx="14" fill="#1E1E2D"/>
+  <circle cx="24" cy="24" r="14" fill="none" stroke="#D9F36B" stroke-width="4"/>
+  <rect x="21.5" y="16" width="5" height="16" rx="2.5" fill="#D9F36B"/>
+</svg>

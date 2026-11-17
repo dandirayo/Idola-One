@@ -35,7 +35,7 @@ export function BarChart({ data }: { data: Point[] }) {
             >
               {selected && (
                 <span
-                  className="absolute z-10 -translate-y-full whitespace-nowrap rounded-lg bg-sidebar px-2.5 py-1.5 text-xs font-semibold text-white"
+                  className="absolute left-1/2 z-10 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-lg bg-sidebar px-2.5 py-1.5 text-xs font-semibold text-white"
                   style={{ bottom: `calc(${(d.count / top) * 100}% + 0.25rem)` }}
                 >
                   {d.count} pesanan

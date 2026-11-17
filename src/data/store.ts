@@ -250,6 +250,8 @@ export interface PayrollRow {
   amount: number
   method: PaymentMethod
   at: string
+  /** Pengeluaran yang dibuat saat gaji dibayar. */
+  expenseId?: string
 }
 
 export interface IncentiveRow {
@@ -264,6 +266,8 @@ export interface IncentiveRow {
   status: 'earned' | 'paid'
   createdAt: string
   paidAt?: string
+  /** Pengeluaran yang dibuat saat insentif dibayar. */
+  expenseId?: string
 }
 
 export interface State {
@@ -670,14 +674,14 @@ export function createOrder(input: NewOrderInput): Order {
   const total = orderTotal(items, input.skipMinKg)
   const nowDate = new Date()
   const now = nowDate.toISOString()
-  const uid = `${nowDate.getTime()}-${state.orders.length}`
+  const stamp = uid('')
   if (input.initialPayment) {
     requirePositive(input.initialPayment.amount, 'Nominal pembayaran')
     if (input.initialPayment.amount > total) throw new Error('Pembayaran awal melebihi total pesanan.')
   }
   const paid = input.initialPayment?.amount ?? 0
   const order: Order = {
-    id: `o${uid}`,
+    id: `o${stamp}`,
     number: nextOrderNumber(state.orders, nowDate),
     customerId: customer.id,
     customerName: customer.name,
@@ -691,7 +695,7 @@ export function createOrder(input: NewOrderInput): Order {
     skipMinKg: input.skipMinKg,
     payments:
       paid > 0 && input.initialPayment
-        ? [{ id: `p${uid}`, amount: paid, method: input.initialPayment.method, at: now }]
+        ? [{ id: `p${stamp}`, amount: paid, method: input.initialPayment.method, at: now }]
         : [],
   }
   emit({
@@ -715,7 +719,7 @@ function validateCustomer(name: string, phone: string, selfId?: string) {
 
 export function addCustomer(name: string, phone: string): Customer {
   const valid = validateCustomer(name, phone)
-  const customer: Customer = { id: `c${Date.now()}`, ...valid, active: true }
+  const customer: Customer = { id: uid('c'), ...valid, active: true }
   emit({ ...state, customers: [...state.customers, customer] })
   return customer
 }
@@ -739,7 +743,7 @@ function validateService(name: string, price: number) {
 
 export function addService(name: string, unit: Unit, price: number): Service {
   const valid = validateService(name, price)
-  const service: Service = { id: `s${Date.now()}`, ...valid, unit, active: true }
+  const service: Service = { id: uid('s'), ...valid, unit, active: true }
   emit({ ...state, services: [...state.services, service] })
   return service
 }
@@ -820,7 +824,7 @@ export function addPayment(id: string, amount: number, method: PaymentMethod) {
   const remaining = order.total - order.paid
   if (amount <= 0) throw new Error('Nominal harus lebih dari nol.')
   if (amount > remaining) throw new Error('Nominal melebihi sisa tagihan.')
-  const payment: Payment = { id: `p${Date.now()}`, amount, method, at: new Date().toISOString() }
+  const payment: Payment = { id: uid('p'), amount, method, at: new Date().toISOString() }
   emit({
     ...state,
     orders: state.orders.map((o) =>
@@ -853,7 +857,7 @@ export function buyStock(itemId: string, qty: number, amount: number, method: Pa
   requirePositive(qty, 'Jumlah')
   requirePositive(amount, 'Nominal')
   const expense: Expense = {
-    id: `e${Date.now()}`,
+    id: uid('e'),
     description: `Beli ${item.name} (${qty} ${item.unit})${note ? ` · ${note}` : ''}`,
     category: 'Stok',
     amount,
@@ -910,7 +914,7 @@ export function addExpense(description: string, category: string, amount: number
   if (!clean) throw new Error('Deskripsi pengeluaran wajib diisi.')
   requirePositive(amount, 'Nominal')
   const expense: Expense = {
-    id: `e${Date.now()}`,
+    id: uid('e'),
     description: clean,
     category: category.trim() || 'Operasional',
     amount,
@@ -1086,7 +1090,7 @@ function validateEmployee(name: string, position: string, weeklySalary: number) 
 
 export function addEmployee(name: string, position: string, weeklySalary: number): Employee {
   const valid = validateEmployee(name, position, weeklySalary)
-  const employee: Employee = { id: `em${Date.now()}`, ...valid, active: true }
+  const employee: Employee = { id: uid('em'), ...valid, active: true }
   emit({ ...state, employees: [...state.employees, employee] })
   return employee
 }

@@ -1,6 +1,8 @@
 import { Pencil, Plus } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useAuth } from '@/lib/auth'
+import { DeleteButton } from '@/components/ConfirmDialog'
+import { deleteService, serviceUsage } from '@/data/admin'
 import { Card, Hint, inputClass, primaryButton, StatusChip } from '@/components/ui'
 import { addService, setServiceActive, updateService, useStore, type Service } from '@/data/store'
 import { formatRupiah } from '@/lib/format'
@@ -147,6 +149,7 @@ export function ServicesPage() {
                         >
                           {s.active ? 'Nonaktifkan' : 'Aktifkan'}
                         </button>
+                        <DeleteButton label={`Hapus ${s.name}`} title={`Hapus layanan ${s.name}?`} blockedBy={serviceUsage(s.id).reasons} onConfirm={() => deleteService(s.id)} />
                       </>
                     )}
                   </li>

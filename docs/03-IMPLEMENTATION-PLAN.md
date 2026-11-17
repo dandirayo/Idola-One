@@ -14,7 +14,7 @@ Penanda tugas:
 - `[DB]` = membutuhkan migration database baru. Wajib diuji di staging lebih dulu.
 - Tugas bertanda **gerbang** harus lulus sebelum fase berikutnya dimulai.
 
-## Status pekerjaan (diperbarui 16 November 2026)
+## Status pekerjaan (diperbarui 17 November 2026)
 
 **Posisi sekarang:** Fase 2 baru dimulai, **hanya di sisi tampilan**. Fase 0 dan Fase 1 belum bisa ditutup karena gerbangnya membutuhkan backend, login sungguhan, dan uji di perangkat.
 
@@ -25,14 +25,14 @@ Arti kolom Status pada tabel di bawah:
 - **Sebagian:** ada sebagian yang jadi, sisanya belum. Contoh yang belum ada: login sungguhan (0.10), Realtime pada notifikasi (1.11), unggah foto ke Storage dan uji kamera sungguhan (2.9), paginasi server pada Audit (3.12), Contact Picker (1.2), filter periode, paginasi server, dan "Pesanan Saya" (1.5), kolom penerima (1.6), kolom khusus per jenis pengajuan (2.10), dan akun login karyawan (2.11). Status "Tampilan saja" hanya dipakai bila semua bagian yang tertulis pada tugas sudah ada.
 - **Belum:** belum dikerjakan.
 
-Ringkasan dari 55 tugas (Fase 0 sampai 3): 2 Selesai, 21 Tampilan saja, 17 Sebagian, 15 Belum.
+Ringkasan dari 57 tugas (Fase 0 sampai 3): 3 Selesai, 22 Tampilan saja, 17 Sebagian, 15 Belum. Dua tugas baru (3.16 dan 3.17) ditambahkan pada 17 November 2026.
 
 ---
 
 ## Prinsip pelaksanaan
 
 1. **Database produksi tidak diubah saat pengembangan.** Pengembangan memakai server uji dengan salinan data. Produksi hanya menerima migration yang sudah lulus uji.
-2. **Hanya menambah.** Tidak mengubah atau menghapus data, ID, snapshot harga, atau tanggal transaksi lama.
+2. **Hanya menambah pada migration.** Migration tidak mengubah atau menghapus data, ID, snapshot harga, atau tanggal transaksi lama. Penghapusan oleh owner di aplikasi (tugas 3.16) berbeda: selalu dikonfirmasi, data uang wajib beralasan, kas dibalik, dan salinannya tersimpan di Audit.
 3. **Satu fitur selesai = kode, uji, dan alur terverifikasi** (bukan hanya tampilan jadi).
 4. **Kunci versi dependency** di lockfile dan tidak menaikkan versi di tengah fase tanpa alasan.
 5. **Masa paralel:** Android tetap berjalan sampai Fase 4. Web dan Android menulis ke database lewat RPC yang sama.
@@ -142,6 +142,8 @@ Tujuan: karyawan dapat menjalankan alur harian dari web.
 | 3.13 | Ekspor CSV pesanan, kas, pelanggan | RPT-05 | Sebagian |
 | 3.14 | `[DB]` Web Push (tabel langganan, pengirim) | NTF-03 | Belum |
 | 3.15 | Uji E2E tambahan: POS, pengajuan, proyek | NFR-12 | Belum |
+| 3.16 | Ubah dan hapus oleh owner (admin): hapus data master, pesanan, pembayaran, kas, gaji, insentif, proyek, absensi, pengajuan, dengan dialog konfirmasi, alasan wajib untuk uang, kas dibalik, dan jejak Audit. Rincian di [06-ADMIN-CRUD.md](06-ADMIN-CRUD.md). | UI-03 | Tampilan saja |
+| 3.17 | Sistem desain dan audit visual: kelas tombol, field, kartu, dan menu seragam, peta ikon, logo, bilah mode pratinjau, skrip foto dan ukur. Rincian di [05-DESIGN-SYSTEM.md](05-DESIGN-SYSTEM.md). | NFR-UI | Selesai |
 
 **Gerbang Fase 3:**
 
@@ -247,10 +249,12 @@ Keputusan kecil yang diambil saat membangun versi tampilan. Semuanya perlu dicek
 | Ubah layanan kiloan | Khusus owner, hanya saat Diterima atau Diproses. Harga dihitung ulang dari katalog saat ini, item satuan tidak berubah, dan total baru tidak boleh lebih kecil dari yang sudah dibayar. Tercatat di Audit. | Aturan sistem lama (migration `owner_edit_kilo_order_service`) belum dibandingkan. Perlu dicek apakah boleh pada status lain. |
 | Kas manual dan Audit | Kas manual (masuk atau keluar) ditandai "manual" dan kategori "Saldo Awal" dicadangkan. Audit menjadi jejak umum (pesanan, kas, layanan, gaji dan insentif, proyek, akses usaha, pembayaran kasbon) dengan nama pelaku. | Audit hanya di memori sesi dan belum paginasi server. Perubahan status pesanan biasa dan pembelian stok belum diaudit. |
 | Notifikasi | Dalam aplikasi: pengajuan baru (ke owner), keputusan pengajuan (ke pengaju), pesanan Siap Diambil, stok melewati batas minimum, insentif dibayar. Tautan hanya ke route internal (diuji). | Push ke ponsel (Web Push) dan Realtime lintas perangkat belum ada. |
+| Hapus oleh owner | Owner boleh menghapus pesanan apa pun, termasuk yang sudah Diambil dan lunas. Pembayarannya dibatalkan dan kas dibalik, hak insentif yang belum dibayar ikut hilang, salinan pesanan disimpan di Audit. Pengeluaran otomatis (stok, gaji, insentif, kasbon) hanya bisa dibatalkan dari sumbernya. | Di backend harus satu transaksi database. Prinsip "hanya menambah" di atas dibaca sebagai aturan migration. Perlu dicek apakah backend memakai hapus lunak. ID sekarang dari `uid()` (bukan jam) agar tidak kembar. |
 | Paket | Memakai npm (bukan pnpm) dan React Router (bukan TanStack Router). TypeScript 7 dan React Router 8 sesuai versi terbaru saat setup. | Kunci versi tetap lewat `package-lock.json` |
 
 ## Dokumen berikutnya
 
-- `docs/04-TRD.md`: arsitektur teknis rinci (struktur folder, pola data, keamanan)
-- `docs/05-UI-UX.md`: wireframe tiap layar
-- `docs/06-TEST-PLAN.md`: kasus uji rinci
+- [05-DESIGN-SYSTEM.md](05-DESIGN-SYSTEM.md): sistem desain (sudah ada)
+- [06-ADMIN-CRUD.md](06-ADMIN-CRUD.md): ubah dan hapus oleh owner (sudah ada)
+- `docs/07-TRD.md`: arsitektur teknis rinci (struktur folder, pola data, keamanan)
+- `docs/08-TEST-PLAN.md`: kasus uji rinci

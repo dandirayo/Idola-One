@@ -1,4 +1,4 @@
-import { Coffee, WashingMachine } from 'lucide-react'
+import { concept } from '@/lib/icons'
 import { useEffect } from 'react'
 import { Navigate, useNavigate } from 'react-router'
 import { useStore } from '@/data/store'
@@ -45,7 +45,7 @@ export function BusinessSelectorPage() {
         ) : (
           <ul className="space-y-3">
             {options.map((b) => {
-              const Icon = b.kind === 'laundry' ? WashingMachine : Coffee
+              const Icon = b.kind === 'laundry' ? concept.laundry : concept.drinks
               return (
                 <li key={b.id}>
                   <button

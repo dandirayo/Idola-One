@@ -88,7 +88,7 @@ export function PaymentReportPage() {
               value={text}
               onChange={(e) => setDraft(e.target.value)}
               rows={9}
-              className={`${inputClass} mt-1.5 h-auto p-3.5 font-mono text-xs`}
+              className={`${inputClass} field-area mt-1.5 font-mono text-xs`}
             />
           </label>
           <a

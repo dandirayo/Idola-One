@@ -1,30 +1,6 @@
-import {
-  Banknote,
-  BarChart3,
-  Bell,
-  Briefcase,
-  CalendarClock,
-  Camera,
-  ClipboardList,
-  Coffee,
-  Inbox,
-  LayoutGrid,
-  LogOut,
-  Menu,
-  Package,
-  Repeat,
-  Search,
-  Settings,
-  ShieldCheck,
-  ShoppingCart,
-  Store,
-  Tag,
-  UserCog,
-  Users,
-  Wallet,
-  X,
-  type LucideIcon,
-} from 'lucide-react'
+import { LogOut, Menu, Search, X } from 'lucide-react'
+import { LogoMark } from '@/components/LogoMark'
+import { concept, routeIcons } from '@/lib/icons'
 import { useState } from 'react'
 import { Link, Navigate, NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 import { useStore } from '@/data/store'
@@ -33,36 +9,10 @@ import { useAuth } from '@/lib/auth'
 import { isVisibleTo } from '@/lib/notifications'
 import { AccessDeniedPage } from '@/pages/AccessDeniedPage'
 
-const icons: Record<string, LucideIcon> = {
-  '/dashboard': LayoutGrid,
-  '/orders': ClipboardList,
-  '/customers': Users,
-  '/services': Tag,
-  '/inventory': Package,
-  '/projects': Briefcase,
-  '/requests/review': Inbox,
-  '/requests/me': Inbox,
-  '/employees': UserCog,
-  '/shifts': CalendarClock,
-  '/shifts/me': CalendarClock,
-  '/attendance': Camera,
-  '/attendance/me': Camera,
-  '/cashbook': Wallet,
-  '/payroll': Banknote,
-  '/reports': BarChart3,
-  '/reports/payments': BarChart3,
-  '/audit': ShieldCheck,
-  '/businesses/manage': Store,
-  '/settings/shop': Settings,
-  '/pos': LayoutGrid,
-  '/pos/cashier': ShoppingCart,
-  '/pos/products': Coffee,
-}
-
 function Logo({ name }: { name: string }) {
   return (
     <div className="flex items-center gap-2.5 px-2">
-      <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-lime text-sm font-extrabold text-sidebar">I1</span>
+      <LogoMark variant="lime" />
       <span className="min-w-0">
         <span className="block text-lg font-bold leading-tight text-white">Idola One</span>
         <span className="block truncate text-xs text-white/60">{name}</span>
@@ -93,9 +43,9 @@ function SidebarContent({
   return (
     <div className="flex h-full flex-col gap-4 rounded-[1.75rem] bg-sidebar p-4">
       <Logo name={businessName} />
-      <nav aria-label="Menu utama" className="flex flex-1 flex-col gap-0.5 overflow-y-auto pr-1">
+      <nav aria-label="Menu utama" className="scroll-thin flex flex-1 flex-col gap-0.5 overflow-y-auto pr-1">
         {entries.map(({ to, label, group }) => {
-          const Icon = icons[to] ?? LayoutGrid
+          const Icon = routeIcons[to] ?? concept.dashboard
           const badge = to === '/requests/review' ? pending : 0
           const heading = group !== lastGroup && entries.length > 6
           lastGroup = group
@@ -106,11 +56,7 @@ function SidebarContent({
                 to={to}
                 end={to === '/dashboard' || to === '/pos'}
                 onClick={onNavigate}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-sm font-semibold transition-colors ${
-                    isActive ? 'bg-lime text-sidebar' : 'text-white/90 hover:bg-sidebar-hover'
-                  }`
-                }
+                className={({ isActive }) => `nav-link${isActive ? ' is-active' : ''}`}
               >
                 <Icon className="size-[18px]" aria-hidden />
                 <span className="flex-1">{label}</span>
@@ -131,7 +77,7 @@ function SidebarContent({
           }}
           className="flex items-center gap-3 rounded-2xl bg-sidebar-hover px-3.5 py-2.5 text-sm font-semibold text-white"
         >
-          <Repeat className="size-[18px]" aria-hidden />
+          <concept.switchBusiness className="size-[18px]" aria-hidden />
           Ganti usaha
         </button>
       )}
@@ -184,6 +130,10 @@ export function AppShell() {
       )}
 
       <div className="min-w-0 flex-1">
+        <div role="note" className="mb-4 flex items-center gap-2 rounded-2xl bg-sidebar px-4 py-2.5 text-xs font-semibold text-white print:hidden">
+          <concept.preview className="size-4 shrink-0 text-lime" aria-hidden />
+          <span>Mode pratinjau: data contoh di perangkat ini, belum tersambung ke server.</span>
+        </div>
         <header className="mb-5 flex items-center gap-3">
           <button
             type="button"
@@ -222,7 +172,7 @@ export function AppShell() {
             aria-label={unread > 0 ? `Notifikasi, ${unread} belum dibaca` : 'Notifikasi, semua sudah dibaca'}
             className="relative grid size-11 place-items-center rounded-full bg-surface shadow-card"
           >
-            <Bell className="size-5" aria-hidden />
+            <concept.notifications className="size-5" aria-hidden />
             {unread > 0 && (
               <span className="absolute -right-0.5 -top-0.5 grid min-w-5 place-items-center rounded-full bg-danger px-1 text-[10px] font-bold text-white">
                 {unread}

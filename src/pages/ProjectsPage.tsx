@@ -1,6 +1,8 @@
 import { Plus } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Card, Hint, inputClass, primaryButton, SectionTitle, StatusChip } from '@/components/ui'
+import { DeleteButton } from '@/components/ConfirmDialog'
+import { deleteProject, deleteProjectBatch, deleteProjectPayment } from '@/data/admin'
 import { addProjectBatch, addProjectPayment, createProject, projectBilled, projectPaid, setProjectStatus } from '@/data/projects'
 import { useStore, type Project } from '@/data/store'
 import { formatQty, formatRupiah } from '@/lib/format'
@@ -140,11 +142,17 @@ function ProjectDetail({ project }: { project: Project }) {
           ) : (
             <ul className="space-y-1.5 text-sm">
               {[...batches].reverse().map((b) => (
-                <li key={b.id} className="flex justify-between rounded-xl bg-canvas px-3 py-2">
+                <li key={b.id} className="flex items-center justify-between gap-2 rounded-xl bg-canvas px-3 py-2">
                   <span>{b.date}</span>
                   <span className="font-semibold">
                     {b.pcs} pcs{b.kg > 0 ? ` · ${formatQty(b.kg)} kg` : ''}
                   </span>
+                  <DeleteButton
+                    label={`Hapus batch ${b.date}`}
+                    title={`Hapus batch ${b.date}?`}
+                    impacts={['Tagihan proyek dihitung ulang. Ditolak bila jadi lebih kecil dari yang sudah dibayar.']}
+                    onConfirm={() => deleteProjectBatch(b.id)}
+                  />
                 </li>
               ))}
             </ul>
@@ -157,11 +165,18 @@ function ProjectDetail({ project }: { project: Project }) {
           ) : (
             <ul className="space-y-1.5 text-sm">
               {[...payments].reverse().map((p) => (
-                <li key={p.id} className="flex justify-between rounded-xl bg-canvas px-3 py-2">
+                <li key={p.id} className="flex items-center justify-between gap-2 rounded-xl bg-canvas px-3 py-2">
                   <span>
                     {paymentMethodLabel[p.method]} · {dateTime.format(new Date(p.at))}
                   </span>
                   <span className="font-semibold">{formatRupiah(p.amount)}</span>
+                  <DeleteButton
+                    label={`Hapus pembayaran ${formatRupiah(p.amount)}`}
+                    title={`Hapus pembayaran termin ${formatRupiah(p.amount)}?`}
+                    impacts={[`Kas masuk ${formatRupiah(p.amount)} dibalik di Buku Kas.`]}
+                    reasonRequired
+                    onConfirm={(reason) => deleteProjectPayment(p.id, reason)}
+                  />
                 </li>
               ))}
             </ul>
@@ -176,6 +191,21 @@ function ProjectDetail({ project }: { project: Project }) {
       >
         {active ? 'Tandai proyek selesai' : 'Buka kembali proyek'}
       </button>
+      <DeleteButton
+        label={`Hapus proyek ${project.name}`}
+        className="btn btn-danger btn-sm ml-2"
+        title={`Hapus proyek ${project.name}?`}
+        impacts={[
+          `${batches.length} batch dan ${payments.length} pembayaran ikut terhapus.`,
+          payments.length > 0 ? `Kas masuk ${formatRupiah(payments.reduce((n, x) => n + x.amount, 0))} dibalik.` : 'Kas tidak berubah.',
+          'Salinan proyek disimpan di Audit.',
+        ]}
+        reasonRequired
+        confirmLabel="Hapus Proyek"
+        onConfirm={(reason) => deleteProject(project.id, reason)}
+      >
+        Hapus Proyek
+      </DeleteButton>
     </div>
   )
 }

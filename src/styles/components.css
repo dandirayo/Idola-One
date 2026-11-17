@@ -44,6 +44,7 @@
     user-select: none;
     background-size: 240% 100%;
     background-position: 0% 0%;
+    background-repeat: no-repeat;
     transition:
       background-position 0.45s ease,
       box-shadow 0.2s ease,
@@ -144,6 +145,7 @@
     background-image: var(--grad-soft);
     background-size: 240% 100%;
     background-position: 0% 0%;
+    background-repeat: no-repeat;
     transition:
       background-position 0.4s ease,
       box-shadow 0.2s ease,
@@ -217,6 +219,7 @@
     background-image: var(--grad-soft);
     background-size: 240% 100%;
     background-position: 0% 0%;
+    background-repeat: no-repeat;
     background-color: transparent;
     transition:
       background-position 0.4s ease,
@@ -389,6 +392,33 @@
   .scroll-thin::-webkit-scrollbar-thumb {
     background: rgb(255 255 255 / 0.25);
     border-radius: 9999px;
+  }
+
+  /* ---------- Chip pilihan (kotak centang) ---------- */
+  .chip-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    height: 2.25rem;
+    padding: 0 1rem;
+    border-radius: 9999px;
+    border: 1px solid var(--color-line);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease;
+  }
+  .chip-check:has(input:checked) {
+    background-color: var(--color-lime-soft);
+    border-color: var(--color-sidebar);
+  }
+  .chip-check:has(input:focus-visible) {
+    box-shadow: var(--ring);
+  }
+  .chip-check input {
+    accent-color: var(--color-sidebar);
   }
 
   /* ---------- Teks bantu ---------- */
