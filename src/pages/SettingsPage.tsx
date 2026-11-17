@@ -69,7 +69,7 @@ export function SettingsPage() {
                     onClick={() => setPaperWidth(w)}
                     className="seg-item flex-1"
                   >
-                    {w} mm · {COLUMNS[w]} kolom
+                    {w} mm<span className="hidden sm:inline"> · {COLUMNS[w]} kolom</span>
                   </button>
                 ))}
               </div>

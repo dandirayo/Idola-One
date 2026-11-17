@@ -136,7 +136,7 @@ export function IconChip({
 export function StatusChip({ label, tone }: { label: string; tone: Tone }) {
   return (
     <span
-      className={`inline-flex h-6 shrink-0 items-center whitespace-nowrap rounded-full px-2.5 text-xs font-semibold ${toneClass[tone]}`}
+      className={`chip ${toneClass[tone]}`}
     >
       {label}
     </span>

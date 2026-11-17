@@ -475,6 +475,46 @@
     accent-color: var(--color-sidebar);
   }
 
+  /* ---------- Bilah bawah (HP) ---------- */
+  .bottom-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    height: 4rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-muted);
+    cursor: pointer;
+    transition: color 0.2s ease;
+  }
+  .bottom-tab > span:first-child {
+    display: grid;
+    place-items: center;
+    padding: 0.125rem 1.25rem;
+    border-radius: 9999px;
+  }
+  .bottom-tab.is-active {
+    color: var(--color-ink);
+  }
+  .bottom-tab.is-active > span:first-child {
+    background-image: var(--grad-lime);
+  }
+
+  /* ---------- Chip status ---------- */
+  .chip {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    height: 1.5rem;
+    padding: 0 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
   /* ---------- Teks bantu ---------- */
   .hint {
     display: flex;
@@ -489,5 +529,90 @@
     height: 1rem;
     margin-top: 0.1rem;
     flex-shrink: 0;
+  }
+}
+
+/*
+ * Skala sentuh untuk HP dan tablet (< 1024px). Sengaja di luar @layer agar menang atas
+ * utilitas Tailwind tanpa mengubah tiap halaman. Desktop tidak terpengaruh.
+ * Tombol 48px, field 48px, teks isi 16px, teks sekunder minimal 14px, kontras muted lebih tinggi.
+ */
+@media (max-width: 1023px) {
+  :root {
+    --color-muted: #686874;
+  }
+  body {
+    font-size: 1rem;
+  }
+  .text-xs {
+    font-size: 0.875rem;
+    line-height: 1.35;
+  }
+  .text-sm {
+    font-size: 1rem;
+    line-height: 1.45;
+  }
+  .btn {
+    height: 3rem;
+    font-size: 1rem;
+    padding: 0 1.375rem;
+  }
+  .btn-sm {
+    height: 2.75rem;
+    font-size: 0.9375rem;
+    padding: 0 1.125rem;
+  }
+  .btn-lg {
+    height: 3.5rem;
+    font-size: 1.0625rem;
+  }
+  .icon-btn {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+  .icon-btn-sm {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+  .icon-btn > svg,
+  .btn > svg {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+  .field {
+    height: 3rem;
+    font-size: 1rem;
+  }
+  .field-area {
+    height: auto;
+  }
+  .field-sm {
+    height: 2.75rem;
+    font-size: 0.9375rem;
+  }
+  .seg-item {
+    height: 2.75rem;
+    font-size: 0.9375rem;
+  }
+  .chip-check {
+    height: 2.75rem;
+    font-size: 0.9375rem;
+  }
+  .nav-link {
+    padding: 0.75rem 0.875rem;
+    font-size: 1rem;
+  }
+  .chip {
+    height: 1.75rem;
+    font-size: 0.8125rem;
+    padding: 0 0.75rem;
+  }
+  .data-table {
+    font-size: 0.9375rem;
+  }
+  input[type="checkbox"],
+  input[type="radio"] {
+    width: 1.25rem;
+    height: 1.25rem;
   }
 }

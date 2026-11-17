@@ -1,4 +1,5 @@
-import { LogOut, Menu, Search, X } from 'lucide-react'
+import { LogOut, Search, X } from 'lucide-react'
+import { BottomNav } from '@/components/BottomNav'
 import { LogoMark } from '@/components/LogoMark'
 import { concept, routeIcons } from '@/lib/icons'
 import { useState } from 'react'
@@ -91,6 +92,21 @@ export function AppShell() {
   const location = useLocation()
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
+  const [barClosed, setBarClosed] = useState(() => {
+    try {
+      return sessionStorage.getItem('idola-one:preview-bar') === 'closed'
+    } catch {
+      return false
+    }
+  })
+  function closeBar() {
+    setBarClosed(true)
+    try {
+      sessionStorage.setItem('idola-one:preview-bar', 'closed')
+    } catch {
+      // diabaikan
+    }
+  }
   const businesses = useStore((s) => s.businesses)
   const members = useStore((s) => s.members)
   const notifications = useStore((s) => s.notifications)
@@ -109,7 +125,7 @@ export function AppShell() {
   )
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-[1600px] gap-6 p-3 sm:p-5">
+    <div className="mx-auto flex min-h-screen max-w-[1600px] gap-6 p-3 pb-28 sm:p-5 sm:pb-28 lg:pb-5">
       <aside className="sticky top-5 hidden h-[calc(100vh-2.5rem)] w-64 shrink-0 lg:block">{sidebar()}</aside>
 
       {open && (
@@ -130,20 +146,24 @@ export function AppShell() {
       )}
 
       <div className="min-w-0 flex-1">
-        <div role="note" className="mb-4 flex items-center gap-2 rounded-2xl bg-sidebar px-4 py-2.5 text-xs font-semibold text-white print:hidden">
-          <concept.preview className="size-4 shrink-0 text-lime" aria-hidden />
-          <span>Mode pratinjau: data contoh tersimpan di browser ini saja, belum tersambung ke server.</span>
-        </div>
-        <header className="mb-5 flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            aria-label="Buka menu"
-            className="grid size-11 place-items-center rounded-2xl bg-surface shadow-card lg:hidden"
-          >
-            <Menu className="size-5" aria-hidden />
-          </button>
-          <div className="flex-1" />
+        {!barClosed && (
+          <div role="note" className="mb-3 flex items-center gap-2 rounded-2xl bg-sidebar py-0.5 pl-4 pr-0.5 text-xs font-semibold text-white print:hidden">
+            <concept.preview className="size-4 shrink-0 text-lime" aria-hidden />
+            <span className="min-w-0 flex-1">
+              <span className="sm:hidden">Mode pratinjau: data tersimpan di browser ini.</span>
+              <span className="hidden sm:inline">Mode pratinjau: data contoh tersimpan di browser ini saja, belum tersambung ke server.</span>
+            </span>
+            <button
+              type="button"
+              onClick={closeBar}
+              aria-label="Tutup keterangan mode pratinjau"
+              className="grid size-11 shrink-0 place-items-center rounded-full text-white/80 hover:bg-sidebar-hover"
+            >
+              <X className="size-4" aria-hidden />
+            </button>
+          </div>
+        )}
+        <header className="mb-4 flex items-center justify-end gap-3 sm:mb-5">
           {business.kind === 'laundry' && canOpen('/orders', session.role, 'laundry') && (
             <form
               role="search"
@@ -170,7 +190,7 @@ export function AppShell() {
           <Link
             to="/notifications"
             aria-label={unread > 0 ? `Notifikasi, ${unread} belum dibaca` : 'Notifikasi, semua sudah dibaca'}
-            className="relative grid size-11 place-items-center rounded-full bg-surface shadow-card"
+            className="relative grid size-12 place-items-center rounded-full bg-surface shadow-card lg:size-11"
           >
             <concept.notifications className="size-5" aria-hidden />
             {unread > 0 && (
@@ -187,7 +207,7 @@ export function AppShell() {
             }}
             aria-label={`Keluar dari akun ${session.name}`}
             title="Keluar"
-            className="flex h-11 items-center gap-2 rounded-full bg-surface pl-1.5 pr-4 shadow-card"
+            className="flex h-12 items-center gap-2 rounded-full bg-surface pl-1.5 pr-4 shadow-card lg:h-11"
           >
             <span className="grid size-8 place-items-center rounded-full bg-lilac text-sm font-bold">{session.name.charAt(0)}</span>
             <span className="hidden text-xs font-semibold sm:block">{session.role === 'owner' ? 'Owner' : 'Karyawan'}</span>
@@ -196,6 +216,7 @@ export function AppShell() {
         </header>
         <main>{allowed ? <Outlet /> : <AccessDeniedPage kind={business.kind} />}</main>
       </div>
+      <BottomNav role={session.role} kind={business.kind} onMore={() => setOpen(true)} />
     </div>
   )
 }

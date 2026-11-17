@@ -333,11 +333,25 @@ export function OrderNewPage() {
                 {error}
               </p>
             )}
-            <button type="submit" className={`${primaryButton} mt-4 w-full`}>
+            <button type="submit" className={`${primaryButton} btn-lg mt-4 hidden w-full lg:inline-flex`}>
               Simpan Pesanan
             </button>
           </Card>
         </aside>
+      </div>
+
+      {/* HP: total dan tombol simpan menempel di atas bilah navigasi bawah */}
+      <div
+        className="fixed inset-x-0 z-20 flex items-center gap-3 border-t border-line bg-surface px-4 py-3 lg:hidden"
+        style={{ bottom: 'calc(4rem + env(safe-area-inset-bottom))', boxShadow: '0 -4px 16px rgb(27 27 40 / 0.06)' }}
+      >
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-muted">Perkiraan total</p>
+          <p className="text-xl font-bold tabular-nums">{formatRupiah(estimate)}</p>
+        </div>
+        <button type="submit" className={`${primaryButton} btn-lg ml-auto flex-1 sm:flex-none`}>
+          Simpan Pesanan
+        </button>
       </div>
     </form>
   )

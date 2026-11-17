@@ -137,3 +137,36 @@ export function navFor(role: Role, kind: BusinessKind): NavEntry[] {
 export function homeFor(kind: BusinessKind): string {
   return kind === 'beverage' ? '/pos' : '/dashboard'
 }
+
+export interface BottomNavEntry {
+  to: string
+  label: string
+}
+
+/**
+ * Tombol bilah bawah di HP (di luar tombol "Lainnya" yang membuka menu lengkap).
+ * Hanya halaman yang boleh dibuka peran dan usaha itu.
+ */
+export function bottomNavFor(role: Role, kind: BusinessKind): BottomNavEntry[] {
+  const entries: BottomNavEntry[] =
+    kind === 'beverage'
+      ? [
+          { to: '/pos', label: 'Ringkasan' },
+          { to: '/pos/cashier', label: 'Kasir' },
+          { to: '/pos/products', label: 'Produk' },
+        ]
+      : role === 'owner'
+        ? [
+            { to: '/dashboard', label: 'Beranda' },
+            { to: '/orders', label: 'Pesanan' },
+            { to: '/cashbook', label: 'Buku Kas' },
+            { to: '/requests/review', label: 'Pengajuan' },
+          ]
+        : [
+            { to: '/dashboard', label: 'Beranda' },
+            { to: '/attendance/me', label: 'Absensi' },
+            { to: '/orders', label: 'Pesanan' },
+            { to: '/requests/me', label: 'Pengajuan' },
+          ]
+  return entries.filter((e) => canOpen(e.to, role, kind))
+}

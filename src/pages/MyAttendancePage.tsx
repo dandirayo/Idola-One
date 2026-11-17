@@ -1,7 +1,7 @@
 import { LogIn, LogOut } from 'lucide-react'
 import { useState } from 'react'
 import { SelfieCapture } from '@/components/SelfieCapture'
-import { Card, Hint, SectionTitle, StatusChip } from '@/components/ui'
+import { Card, StatusChip } from '@/components/ui'
 import { checkIn, checkOut } from '@/data/attendance'
 import { useStore } from '@/data/store'
 import { useAuth } from '@/lib/auth'
@@ -54,63 +54,66 @@ export function MyAttendancePage() {
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-bold sm:text-3xl">Absensi</h1>
-        <p className="mt-1 text-sm text-muted">{day.format(now)}</p>
+        <p className="mt-1 text-base text-muted">{day.format(now)}</p>
       </div>
 
-      <Hint>Foto disimpan di memori dan hilang saat halaman dimuat ulang. Waktu absen dicatat oleh sistem, bukan dari isianmu.</Hint>
-
       <Card>
-        <SectionTitle>Hari ini</SectionTitle>
-        <dl className="grid gap-3 text-sm sm:grid-cols-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <dt className="text-muted">Jadwal</dt>
-            <dd className="font-semibold">{slotLabel(slot)}</dd>
+            <p className="text-sm font-semibold text-muted">Jadwal hari ini</p>
+            <p className="text-xl font-bold">{slotLabel(slot)}</p>
           </div>
-          <div>
-            <dt className="text-muted">Masuk</dt>
-            <dd className="font-semibold">
-              {today ? time.format(new Date(today.checkIn)) : '-'}{' '}
-              {today && today.lateMinutes > 0 && <StatusChip label={`Terlambat ${today.lateMinutes} mnt`} tone="peach" />}
-            </dd>
+          {today ? (
+            today.checkOut ? (
+              <StatusChip label="Selesai hari ini" tone="cream" />
+            ) : (
+              <StatusChip label="Sedang bekerja" tone="lime" />
+            )
+          ) : (
+            <StatusChip label="Belum absen" tone="peach" />
+          )}
+        </div>
+
+        <dl className="mt-4 grid grid-cols-2 gap-3">
+          <div className="rounded-2xl bg-canvas p-4">
+            <dt className="text-sm font-semibold text-muted">Masuk</dt>
+            <dd className="mt-1 text-3xl font-bold tabular-nums">{today ? time.format(new Date(today.checkIn)) : '--:--'}</dd>
+            {today && today.lateMinutes > 0 && (
+              <dd className="mt-1.5">
+                <StatusChip label={`Terlambat ${today.lateMinutes} mnt`} tone="peach" />
+              </dd>
+            )}
           </div>
-          <div>
-            <dt className="text-muted">Pulang</dt>
-            <dd className="font-semibold">{today?.checkOut ? time.format(new Date(today.checkOut)) : '-'}</dd>
+          <div className="rounded-2xl bg-canvas p-4">
+            <dt className="text-sm font-semibold text-muted">Pulang</dt>
+            <dd className="mt-1 text-3xl font-bold tabular-nums">{today?.checkOut ? time.format(new Date(today.checkOut)) : '--:--'}</dd>
           </div>
         </dl>
 
-        <div className="mt-4 flex flex-wrap gap-2">
-          <button
-            type="button"
-            disabled={!!today}
-            onClick={() => setMode('in')}
-            className="btn btn-primary"
-          >
-            <LogIn className="size-4" aria-hidden />
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <button type="button" disabled={!!today} onClick={() => setMode('in')} className="btn btn-primary btn-lg w-full">
+            <LogIn className="size-5" aria-hidden />
             Absen Masuk
           </button>
-          <button
-            type="button"
-            disabled={!today || !!today.checkOut}
-            onClick={() => setMode('out')}
-            className="btn btn-accent"
-          >
-            <LogOut className="size-4" aria-hidden />
+          <button type="button" disabled={!today || !!today.checkOut} onClick={() => setMode('out')} className="btn btn-accent btn-lg w-full">
+            <LogOut className="size-5" aria-hidden />
             Absen Pulang
           </button>
         </div>
 
         {done && (
-          <p role="status" className="mt-3 text-sm font-medium text-success">
+          <p role="status" className="mt-4 rounded-2xl bg-lime-soft p-3 text-base font-semibold text-success">
             {done}
           </p>
         )}
         {error && (
-          <p role="alert" className="mt-3 text-sm font-medium text-danger">
+          <p role="alert" className="mt-4 rounded-2xl bg-peach p-3 text-base font-semibold text-danger">
             {error}
           </p>
         )}
-        <p className="mt-3 text-xs text-muted">Lupa absen? Ajukan lewat Pengajuan Saya, jenis Lupa Absen, untuk disetujui owner.</p>
+        <p className="mt-4 text-sm text-muted">
+          Waktu absen dicatat oleh sistem. Lupa absen? Ajukan lewat Pengajuan Saya, jenis Lupa Absen.
+        </p>
       </Card>
 
       <section aria-labelledby="hist">

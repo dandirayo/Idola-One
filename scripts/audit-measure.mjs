@@ -1,13 +1,15 @@
 // Ukur tinggi kontrol (tombol, field) di semua halaman memakai Edge tanpa tampilan.
 // Pemakaian: node scripts/audit-measure.mjs   (butuh npm run dev di http://localhost:5173)
-// Tinggi yang diizinkan: 36, 40, 44, 48 px. Selain itu dilaporkan sebagai temuan.
+// Tinggi yang diizinkan: desktop 36, 40, 44, 48 px; HP (< 1024 px) 40, 44, 48, 56 px (skala sentuh).
+// Selain itu dilaporkan sebagai temuan.
 import { spawn } from 'node:child_process'
 import { join } from 'node:path'
 
 const EDGE = process.env.EDGE ?? 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'
 const BASE = process.env.BASE ?? 'http://localhost:5173'
 const PORT = 9334
-const ALLOWED = [36, 40, 44, 48]
+const ALLOWED_DESKTOP = [36, 40, 44, 48]
+const ALLOWED_TOUCH = [40, 44, 48, 56]
 
 const PAGES = [
   ['/dashboard', 'owner', 'b1'], ['/orders', 'owner', 'b1'], ['/orders/o10', 'owner', 'b1'], ['/orders/new', 'owner', 'b1'],
@@ -72,7 +74,7 @@ for (const size of SIZES) {
     const res = await send('Runtime.evaluate', { returnByValue: true, expression: probe })
     for (const c of res.result.value) {
       total++
-      if (ALLOWED.includes(c.h)) continue
+      if ((size.w < 1024 ? ALLOWED_TOUCH : ALLOWED_DESKTOP).includes(c.h)) continue
       const key = `${c.tag} h=${c.h} r=${c.radius} [${c.cls}]`
       const f = findings.get(key) ?? { pages: new Set(), sample: c.text }
       f.pages.add(`${path}@${size.w}`)

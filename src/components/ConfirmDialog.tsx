@@ -58,9 +58,9 @@ export function ConfirmDialog({
   }
 
   return createPortal(
-    <div className="screen-only fixed inset-0 z-50 grid place-items-center p-4" role="alertdialog" aria-modal="true" aria-labelledby={titleId}>
+    <div className="screen-only fixed inset-0 z-50 grid place-items-end sm:place-items-center sm:p-4" role="alertdialog" aria-modal="true" aria-labelledby={titleId}>
       <button type="button" aria-label="Tutup" className="absolute inset-0 bg-ink/50" onClick={onClose} />
-      <form onSubmit={submit} noValidate className="relative w-full max-w-md rounded-[1.5rem] bg-surface p-5 shadow-card">
+      <form onSubmit={submit} noValidate className="relative max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-[1.5rem] bg-surface p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-card sm:rounded-[1.5rem] sm:pb-5">
         <div className="mb-3 flex items-start gap-3">
           <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-peach text-danger">
             <AlertTriangle className="size-5" aria-hidden />

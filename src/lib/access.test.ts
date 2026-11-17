@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { accessibleBusinesses, canOpen, homeFor, navFor, type BusinessLike, type MemberLike } from './access'
+import { accessibleBusinesses, bottomNavFor, canOpen, homeFor, navFor, type BusinessLike, type MemberLike } from './access'
 
 const businesses: BusinessLike[] = [
   { id: 'b1', name: 'Laundry', kind: 'laundry', active: true },
@@ -91,5 +91,25 @@ describe('navFor dan homeFor', () => {
   it('halaman awal sesuai jenis usaha', () => {
     expect(homeFor('laundry')).toBe('/dashboard')
     expect(homeFor('beverage')).toBe('/pos')
+  })
+})
+
+describe('bilah bawah HP', () => {
+  it('karyawan laundry: beranda, absensi, pesanan, pengajuan saya', () => {
+    expect(bottomNavFor('employee', 'laundry').map((e) => e.to)).toEqual(['/dashboard', '/attendance/me', '/orders', '/requests/me'])
+  })
+
+  it('owner laundry: beranda, pesanan, buku kas, pengajuan', () => {
+    expect(bottomNavFor('owner', 'laundry').map((e) => e.to)).toEqual(['/dashboard', '/orders', '/cashbook', '/requests/review'])
+  })
+
+  it('usaha minuman: ringkasan, kasir, produk', () => {
+    expect(bottomNavFor('employee', 'beverage').map((e) => e.to)).toEqual(['/pos', '/pos/cashier', '/pos/products'])
+  })
+
+  it('hanya memuat halaman yang boleh dibuka peran itu', () => {
+    for (const [role, kind] of [['owner', 'laundry'], ['employee', 'laundry'], ['owner', 'beverage'], ['employee', 'beverage']] as const) {
+      for (const e of bottomNavFor(role, kind)) expect(canOpen(e.to, role, kind)).toBe(true)
+    }
   })
 })

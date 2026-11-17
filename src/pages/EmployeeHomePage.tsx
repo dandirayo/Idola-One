@@ -1,7 +1,7 @@
-import { Plus, type LucideIcon } from 'lucide-react'
+import { ChevronRight, Plus, type LucideIcon } from 'lucide-react'
 import { concept } from '@/lib/icons'
 import { Link } from 'react-router'
-import { Card, Hint, SectionTitle, StatusChip } from '@/components/ui'
+import { Card, SectionTitle, StatusChip } from '@/components/ui'
 import { useStore } from '@/data/store'
 import { useAuth } from '@/lib/auth'
 import { formatRupiah } from '@/lib/format'
@@ -13,11 +13,11 @@ const time = new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digi
 
 function Action({ to, icon: Icon, label }: { to: string; icon: LucideIcon; label: string }) {
   return (
-    <Link to={to} className="flex min-h-24 flex-col justify-between rounded-card bg-surface p-4 shadow-card card-hover">
-      <span className="grid size-10 place-items-center rounded-xl bg-lilac">
-        <Icon className="size-5" aria-hidden />
+    <Link to={to} className="flex min-h-32 flex-col justify-between rounded-card bg-surface p-4 shadow-card card-hover">
+      <span className="grid size-12 place-items-center rounded-2xl bg-lilac">
+        <Icon className="size-6" aria-hidden />
       </span>
-      <span className="mt-3 text-sm font-semibold">{label}</span>
+      <span className="mt-3 text-base font-bold leading-snug">{label}</span>
     </Link>
   )
 }
@@ -45,34 +45,35 @@ export function EmployeeHomePage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold sm:text-3xl">Halo, {session.name}</h1>
+      <h1 className="text-3xl font-bold">Halo, {session.name}</h1>
 
-      <Hint>Pratinjau dengan data contoh.</Hint>
-
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card className="p-4">
-          <p className="text-xs font-semibold text-muted">Jadwal hari ini</p>
-          <p className="mt-1 text-lg font-bold">{slotLabel(slot ? { start: slot.start, end: slot.end } : null)}</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-xs font-semibold text-muted">Absensi hari ini</p>
-          {today ? (
-            <p className="mt-1 text-lg font-bold">
-              {time.format(new Date(today.checkIn))}
-              {today.checkOut ? ` – ${time.format(new Date(today.checkOut))}` : ' · belum pulang'}
+      <Card variant="dark">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <p className="stat-label text-sm font-semibold">Jadwal hari ini</p>
+            <p className="mt-1 whitespace-nowrap text-xl font-bold tabular-nums">{slotLabel(slot ? { start: slot.start, end: slot.end } : null)}</p>
+          </div>
+          <div>
+            <p className="stat-label text-sm font-semibold">Absensi hari ini</p>
+            <p className="mt-1 text-xl font-bold tabular-nums">
+              {today ? time.format(new Date(today.checkIn)) : 'Belum absen'}
             </p>
-          ) : (
-            <Link to="/attendance/me" className="mt-1 inline-block text-lg font-bold underline">
-              Belum absen
-            </Link>
-          )}
-          {today && today.lateMinutes > 0 && <StatusChip label={`Terlambat ${today.lateMinutes} mnt`} tone="peach" />}
-        </Card>
-        <Card className="p-4">
-          <p className="text-xs font-semibold text-muted">Insentif belum dibayar</p>
-          <p className="mt-1 text-lg font-bold">{formatRupiah(myIncentive)}</p>
-        </Card>
-      </div>
+            <p className="mt-1 text-sm text-white/70">
+              {today ? (today.checkOut ? `Pulang ${time.format(new Date(today.checkOut))}` : 'Belum pulang') : 'Ketuk tombol di bawah'}
+              {today && today.lateMinutes > 0 ? ` · terlambat ${today.lateMinutes} mnt` : ''}
+            </p>
+          </div>
+        </div>
+        <Link to="/attendance/me" className="btn btn-accent btn-lg mt-5 w-full">
+          <concept.attendance aria-hidden />
+          {!today ? 'Absen Masuk' : today.checkOut ? 'Lihat Absensi' : 'Absen Pulang'}
+        </Link>
+      </Card>
+
+      <Card className="flex items-center justify-between gap-3 p-4">
+        <p className="text-base font-semibold text-muted">Insentif belum dibayar</p>
+        <p className="text-xl font-bold">{formatRupiah(myIncentive)}</p>
+      </Card>
 
       <section aria-labelledby="quick">
         <SectionTitle>
@@ -91,39 +92,36 @@ export function EmployeeHomePage() {
       <div className="grid gap-5 lg:grid-cols-2">
         <Card>
           <SectionTitle>Pekerjaan</SectionTitle>
-          <ul className="space-y-2 text-sm">
-            <li className="flex justify-between">
-              <Link to="/orders" className="hover:underline">
-                Perlu diproses
-              </Link>
-              <span className="font-semibold">{toProcess}</span>
-            </li>
-            <li className="flex justify-between">
-              <Link to="/orders" className="hover:underline">
-                Siap diambil, kabari pelanggan
-              </Link>
-              <span className="font-semibold">{ready}</span>
-            </li>
-            <li className="flex justify-between">
-              <Link to="/notifications" className="inline-flex items-center gap-1 hover:underline">
-                <concept.notifications className="size-3.5" aria-hidden /> Notifikasi belum dibaca
-              </Link>
-              <span className="font-semibold">{unread}</span>
-            </li>
+          <ul className="divide-y divide-line text-base">
+            {[
+              { to: '/orders', label: 'Perlu diproses', value: toProcess },
+              { to: '/orders', label: 'Siap diambil, kabari pelanggan', value: ready },
+              { to: '/notifications', label: 'Notifikasi belum dibaca', value: unread },
+            ].map((row) => (
+              <li key={row.label}>
+                <Link to={row.to} className="flex min-h-14 items-center justify-between gap-3">
+                  <span className="font-medium">{row.label}</span>
+                  <span className="flex items-center gap-2">
+                    <span className="grid min-w-9 place-items-center rounded-full bg-canvas px-2 py-1 text-lg font-bold">{row.value}</span>
+                    <ChevronRight className="size-5 text-muted" aria-hidden />
+                  </span>
+                </Link>
+              </li>
+            ))}
           </ul>
         </Card>
 
         <Card>
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-lg font-bold">Pengajuan saya</h2>
-            <Link to="/requests/me" className="inline-flex items-center gap-1 text-sm font-medium text-muted hover:text-ink">
-              <concept.requests className="size-4" aria-hidden /> {pendingMine} menunggu
+            <Link to="/requests/me" className="inline-flex min-h-11 items-center gap-1.5 text-base font-semibold text-muted hover:text-ink">
+              <concept.requests className="size-5" aria-hidden /> {pendingMine} menunggu
             </Link>
           </div>
           {mine.length === 0 ? (
-            <p className="text-sm text-muted">Belum ada pengajuan.</p>
+            <p className="text-base text-muted">Belum ada pengajuan.</p>
           ) : (
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-3 text-base">
               {mine.slice(0, 3).map((r) => (
                 <li key={r.id} className="flex items-center justify-between gap-2">
                   <span className="truncate">{requestTypeLabel[r.type]}</span>

@@ -30,9 +30,9 @@ function EditDialog({ entry, expenseId, onClose }: { entry: CashEntry; expenseId
   }
 
   return createPortal(
-    <div className="screen-only fixed inset-0 z-50 grid place-items-center p-4" role="dialog" aria-modal="true" aria-label="Ubah transaksi kas">
+    <div className="screen-only fixed inset-0 z-50 grid place-items-end sm:place-items-center sm:p-4" role="dialog" aria-modal="true" aria-label="Ubah transaksi kas">
       <button type="button" aria-label="Tutup" className="absolute inset-0 bg-ink/50" onClick={onClose} />
-      <form onSubmit={submit} noValidate className="relative w-full max-w-md space-y-3 rounded-[1.5rem] bg-surface p-5 shadow-card">
+      <form onSubmit={submit} noValidate className="relative max-h-[92vh] w-full max-w-md space-y-3 overflow-y-auto rounded-t-[1.5rem] bg-surface p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-card sm:rounded-[1.5rem] sm:pb-5">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-bold">Ubah {expenseId ? 'pengeluaran' : 'kas manual'}</h2>
           <button type="button" onClick={onClose} aria-label="Tutup" className="icon-btn icon-btn-sm">

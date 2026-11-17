@@ -84,6 +84,12 @@ Dilarang: tinggi tombol selain 36, 44, atau 48 px, dan sudut di luar skala di at
 | 1024–1535 px | Menu tetap, konten satu atau dua kolom |
 | ≥ 1536 px | Kolom samping kanan pada Beranda. Di bawahnya, kalender dan pengajuan turun menjadi dua kolom di bawah konten utama |
 
+**Skala sentuh (< 1024 px)** diatur di blok `@media (max-width: 1023px)` di akhir `src/styles/components.css` (di luar `@layer` agar menang atas utilitas Tailwind): tombol 48 px (`btn-sm` 44, `btn-lg` 56), tombol ikon 44 px, field dan segmen 44 sampai 48 px, teks isi 16 px, `text-xs` menjadi 14 px, warna `muted` lebih gelap (kontras lebih tinggi), chip 28 px. Desktop tetap memakai skala bagian 2.
+
+**Bilah bawah** (`src/components/BottomNav.tsx`, `bottomNavFor` di `src/lib/access.ts`) menggantikan tombol menu di header pada layar < 1024 px: karyawan (Beranda, Absensi, Pesanan, Pengajuan), owner (Beranda, Pesanan, Buku Kas, Pengajuan), POS (Ringkasan, Kasir, Produk), ditambah "Lainnya" yang membuka menu lengkap. Aksi utama halaman (Simpan Pesanan, Bayar di Kasir) menempel di atas bilah itu. Dialog tampil sebagai lembar dari bawah. Bilah mode pratinjau ringkas dan bisa ditutup.
+
+Layar karyawan memakai ukuran lebih besar lagi: hero jadwal dan absensi dengan tombol lebar penuh 56 px, jam 30 px, dan kartu aksi cepat 128 px.
+
 Kartu ringkasan (KPI) memakai dua kolom di ponsel. Pada detail pesanan, kartu Tagihan dan Status naik ke atas di ponsel karena itu aksi terpenting.
 
 Setiap halaman wajib bebas dari gulir horizontal pada 375, 768, dan 1280 px.
@@ -106,7 +112,7 @@ Foto audit mode tertentu: `VIEW=table node scripts/audit-shots.mjs <folder>` (ju
 ## 7. Audit visual
 
 - Foto: `node scripts/audit-shots.mjs <nama-folder> [ukuran,ukuran] [awalan-halaman]` memotret 29 halaman di desktop (1280), tablet (768), dan ponsel (375) memakai Edge tanpa tampilan lewat protokol DevTools, tinggi penuh halaman, dan menulis `report.json` (termasuk deteksi gulir horizontal). Butuh `npm run dev` berjalan.
-- Ukur: `node scripts/audit-measure.mjs` mengukur tinggi semua tombol dan field (skala 36, 40, 44, 48 px) dan melaporkan yang di luar skala.
+- Ukur: `node scripts/audit-measure.mjs` mengukur tinggi semua tombol dan field dan melaporkan yang di luar skala (desktop 36, 40, 44, 48 px; HP 40, 44, 48, 56 px).
 - Laporan: `audit/laporan-audit-1.md` (sebelum) dan `audit/laporan-audit-2.md` (sesudah).
 - Hasil disimpan di `audit/screenshots/<nama-folder>/<ukuran>/` (tidak ikut Git). Audit berikutnya memakai nama folder baru untuk dibandingkan dengan yang lama.
 - Masuk otomatis untuk audit: tambahkan `?as=owner|em1|em2|em3&biz=b1|b2` pada alamat. Hanya aktif di mode pengembangan, tidak ada di build produksi.

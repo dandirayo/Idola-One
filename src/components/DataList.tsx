@@ -175,6 +175,7 @@ export function DataList<T>({ id, items, rowKey, columns, renderNormal, actions,
               ))}
             </tbody>
           </table>
+          <p className="border-t border-line px-4 py-2.5 text-sm text-muted sm:hidden">Geser ke samping untuk melihat kolom lain.</p>
         </div>
       )}
 

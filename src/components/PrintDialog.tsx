@@ -50,9 +50,9 @@ export function PrintDialog({
 
   return createPortal(
     <>
-      <div className="screen-only fixed inset-0 z-50 grid place-items-center p-4" role="dialog" aria-modal="true" aria-label={title}>
+      <div className="screen-only fixed inset-0 z-50 grid place-items-end sm:place-items-center sm:p-4" role="dialog" aria-modal="true" aria-label={title}>
         <button type="button" aria-label="Tutup pratinjau" className="absolute inset-0 bg-ink/50" onClick={onClose} />
-        <div className="relative flex max-h-[92vh] w-full max-w-md flex-col rounded-[1.5rem] bg-surface p-5 shadow-card">
+        <div className="relative flex max-h-[92vh] w-full max-w-md flex-col rounded-t-[1.5rem] bg-surface p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-card sm:rounded-[1.5rem] sm:pb-5">
           <div className="mb-3 flex items-center justify-between gap-3">
             <h2 className="text-lg font-bold">{title}</h2>
             <button type="button" onClick={onClose} aria-label="Tutup" className="icon-btn icon-btn-sm">

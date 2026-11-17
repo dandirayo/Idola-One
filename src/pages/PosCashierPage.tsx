@@ -80,12 +80,12 @@ export function PosCashierPage() {
                   type="button"
                   onClick={() => change(p.id, 1)}
                   aria-label={`Tambah ${p.name}, ${formatRupiah(p.price)}`}
-                  className="relative min-h-24 rounded-card bg-surface p-4 text-left shadow-card card-hover"
+                  className="relative min-h-28 rounded-card bg-surface p-4 text-left shadow-card card-hover active:scale-[0.98]"
                 >
-                  <span className="block font-semibold">{p.name}</span>
-                  <span className="mt-1 block text-sm text-muted">{formatRupiah(p.price)}</span>
+                  <span className="block pr-8 text-lg font-bold leading-snug">{p.name}</span>
+                  <span className="mt-1 block text-base text-muted">{formatRupiah(p.price)}</span>
                   {cart[p.id] > 0 && (
-                    <span className="absolute right-3 top-3 grid size-7 place-items-center rounded-full bg-lime text-xs font-bold text-sidebar">{cart[p.id]}</span>
+                    <span className="absolute right-3 top-3 grid size-9 place-items-center rounded-full bg-lime text-base font-bold text-sidebar">{cart[p.id]}</span>
                   )}
                 </button>
               ))}
@@ -97,11 +97,11 @@ export function PosCashierPage() {
           <Card>
             <SectionTitle>Keranjang</SectionTitle>
             {lines.length === 0 ? (
-              <p className="text-sm text-muted">Pilih produk di sebelah kiri.</p>
+              <p className="text-base text-muted">Ketuk produk untuk menambah ke keranjang.</p>
             ) : (
               <ul className="divide-y divide-line">
                 {lines.map((l) => (
-                  <li key={l.productId} className="flex items-center gap-2 py-2.5 text-sm">
+                  <li key={l.productId} className="flex items-center gap-2 py-3 text-base">
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-semibold">{l.name}</span>
                       <span className="text-xs text-muted">{formatRupiah(l.price)}</span>
@@ -109,7 +109,7 @@ export function PosCashierPage() {
                     <button type="button" aria-label={`Kurangi ${l.name}`} onClick={() => change(l.productId, -1)} className="icon-btn icon-btn-sm">
                       <Minus className="size-4" aria-hidden />
                     </button>
-                    <span className="w-6 text-center font-semibold" aria-label={`Jumlah ${l.name}`}>
+                    <span className="w-8 text-center text-lg font-bold" aria-label={`Jumlah ${l.name}`}>
                       {l.qty}
                     </span>
                     <button type="button" aria-label={`Tambah ${l.name}`} onClick={() => change(l.productId, 1)} className="icon-btn icon-btn-sm">
@@ -128,7 +128,7 @@ export function PosCashierPage() {
               <span>{formatRupiah(total)}</span>
             </div>
 
-            <label className="mt-3 block text-sm font-semibold">
+            <label className="mt-3 hidden text-sm font-semibold lg:block">
               Metode bayar
               <select value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)} className={`${inputClass} mt-1.5`}>
                 {(Object.keys(paymentMethodLabel) as PaymentMethod[]).map((m) => (
@@ -148,12 +148,32 @@ export function PosCashierPage() {
               type="button"
               disabled={lines.length === 0}
               onClick={checkout}
-              className="btn btn-primary btn-lg mt-4 w-full"
+              className="btn btn-primary btn-lg mt-4 hidden w-full lg:inline-flex"
             >
               Bayar {formatRupiah(total)}
             </button>
           </Card>
         </aside>
+      </div>
+
+      {/* HP: metode, total, dan tombol Bayar menempel di atas bilah navigasi bawah */}
+      <div
+        className="fixed inset-x-0 z-20 flex items-center gap-3 border-t border-line bg-surface px-4 py-3 lg:hidden"
+        style={{ bottom: 'calc(4rem + env(safe-area-inset-bottom))', boxShadow: '0 -4px 16px rgb(27 27 40 / 0.06)' }}
+      >
+        <label className="shrink-0">
+          <span className="sr-only">Metode bayar</span>
+          <select value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)} className={`${inputClass} w-28`}>
+            {(Object.keys(paymentMethodLabel) as PaymentMethod[]).map((m) => (
+              <option key={m} value={m}>
+                {paymentMethodLabel[m]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button type="button" disabled={lines.length === 0} onClick={checkout} className="btn btn-primary btn-lg min-w-0 flex-1">
+          Bayar {formatRupiah(total)}
+        </button>
       </div>
     </div>
   )
