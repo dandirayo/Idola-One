@@ -1,6 +1,6 @@
 import { Bell, Camera, ClipboardList, Inbox, Package, Plus, Users, Wallet, type LucideIcon } from 'lucide-react'
 import { Link } from 'react-router'
-import { Card, SectionTitle, StatusChip } from '@/components/ui'
+import { Card, Hint, SectionTitle, StatusChip } from '@/components/ui'
 import { useStore } from '@/data/store'
 import { useAuth } from '@/lib/auth'
 import { formatRupiah } from '@/lib/format'
@@ -12,7 +12,7 @@ const time = new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digi
 
 function Action({ to, icon: Icon, label }: { to: string; icon: LucideIcon; label: string }) {
   return (
-    <Link to={to} className="flex min-h-24 flex-col justify-between rounded-card bg-surface p-4 shadow-card hover:bg-white/70">
+    <Link to={to} className="flex min-h-24 flex-col justify-between rounded-card bg-surface p-4 shadow-card card-hover">
       <span className="grid size-10 place-items-center rounded-xl bg-lilac">
         <Icon className="size-5" aria-hidden />
       </span>
@@ -46,9 +46,7 @@ export function EmployeeHomePage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold sm:text-3xl">Halo, {session.name} 👋</h1>
 
-      <p className="rounded-2xl bg-lilac px-4 py-2.5 text-sm" role="note">
-        Pratinjau dengan data contoh.
-      </p>
+      <Hint>Pratinjau dengan data contoh.</Hint>
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Card className="p-4">

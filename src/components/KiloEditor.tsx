@@ -1,6 +1,6 @@
 import { Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { Card, inputClass, primaryButton, SectionTitle } from '@/components/ui'
+import { Card, inputClass, SectionTitle } from '@/components/ui'
 import { updateOrderKiloLines, useStore, type Order, type OrderItem } from '@/data/store'
 import { formatQty, formatRupiah } from '@/lib/format'
 import { orderTotal } from '@/lib/orders'
@@ -59,7 +59,7 @@ export function KiloEditor({ order }: { order: Order }) {
       {!open ? (
         <>
           <p className="mb-3 text-xs text-muted">Khusus owner. Harga dan total dihitung ulang dari katalog saat ini, dan perubahan tercatat di Audit.</p>
-          <button type="button" onClick={start} className="h-10 rounded-full bg-canvas px-5 text-sm font-semibold hover:bg-line">
+          <button type="button" onClick={start} className="btn btn-secondary btn-sm">
             Ubah layanan kiloan
           </button>
         </>
@@ -95,7 +95,7 @@ export function KiloEditor({ order }: { order: Order }) {
                 aria-label="Hapus baris kiloan"
                 disabled={rows.length === 1}
                 onClick={() => setRows((prev) => prev.filter((_, n) => n !== idx))}
-                className="grid size-10 place-items-center rounded-full hover:bg-canvas disabled:opacity-40"
+                className="icon-btn icon-btn-ghost"
               >
                 <Trash2 className="size-4 text-muted" aria-hidden />
               </button>
@@ -104,7 +104,7 @@ export function KiloEditor({ order }: { order: Order }) {
           <button
             type="button"
             onClick={() => setRows((prev) => [...prev, { serviceId: kiloServices[0]?.id ?? '', qty: '' }])}
-            className="inline-flex h-9 items-center gap-1 rounded-full bg-canvas px-4 text-sm font-semibold hover:bg-line"
+            className="btn btn-secondary btn-sm"
           >
             <Plus className="size-4" aria-hidden /> Tambah baris
           </button>
@@ -120,10 +120,10 @@ export function KiloEditor({ order }: { order: Order }) {
             </p>
           )}
           <div className="flex gap-2">
-            <button type="button" onClick={save} className={`${primaryButton} h-10`}>
+            <button type="button" onClick={save} className="btn btn-primary btn-sm">
               Simpan perubahan
             </button>
-            <button type="button" onClick={() => setOpen(false)} className="h-10 rounded-full bg-canvas px-5 text-sm font-semibold hover:bg-line">
+            <button type="button" onClick={() => setOpen(false)} className="btn btn-secondary btn-sm">
               Batal
             </button>
           </div>

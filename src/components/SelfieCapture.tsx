@@ -137,7 +137,7 @@ export function SelfieCapture({ title, onCapture, onCancel }: { title: string; o
               stop()
               onCancel()
             }}
-            className="grid size-8 place-items-center rounded-full bg-canvas hover:bg-line"
+            className="icon-btn icon-btn-sm"
           >
             <X className="size-4" aria-hidden />
           </button>
@@ -159,15 +159,15 @@ export function SelfieCapture({ title, onCapture, onCancel }: { title: string; o
 
         <div className="mt-4 space-y-2">
           {live ? (
-            <button type="button" onClick={snap} className="h-11 w-full rounded-full bg-sidebar text-sm font-bold text-white hover:bg-sidebar-hover">
+            <button type="button" onClick={snap} className="btn btn-primary w-full">
               Ambil foto
             </button>
           ) : (
-            <button type="button" onClick={() => void start()} className="h-11 w-full rounded-full bg-sidebar text-sm font-bold text-white hover:bg-sidebar-hover">
+            <button type="button" onClick={() => void start()} className="btn btn-primary w-full">
               Buka kamera
             </button>
           )}
-          <label className="flex h-11 w-full cursor-pointer items-center justify-center rounded-full bg-canvas text-sm font-semibold hover:bg-line">
+          <label className="btn btn-secondary w-full">
             Pilih foto
             <input type="file" accept="image/*" capture="user" className="sr-only" onChange={(e) => fromFile(e.target.files?.[0])} />
           </label>
@@ -177,7 +177,7 @@ export function SelfieCapture({ title, onCapture, onCancel }: { title: string; o
               stop()
               onCapture(samplePhoto())
             }}
-            className="h-10 w-full rounded-full text-xs font-semibold text-muted hover:bg-canvas"
+            className="btn btn-ghost btn-sm w-full"
           >
             Pakai foto contoh (hanya pratinjau)
           </button>

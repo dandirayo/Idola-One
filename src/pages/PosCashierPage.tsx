@@ -53,7 +53,7 @@ export function PosCashierPage() {
       {!open && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-cream px-4 py-3 text-sm" role="status">
           <span>Hari ini belum ditandai berjualan. Aktifkan dulu untuk mencatat transaksi.</span>
-          <button type="button" onClick={() => setPosDay(businessId, true, '')} className="h-9 rounded-full bg-sidebar px-5 text-sm font-bold text-white">
+          <button type="button" onClick={() => setPosDay(businessId, true, '')} className="btn btn-primary btn-sm">
             Mulai jualan
           </button>
         </div>
@@ -80,7 +80,7 @@ export function PosCashierPage() {
                   type="button"
                   onClick={() => change(p.id, 1)}
                   aria-label={`Tambah ${p.name}, ${formatRupiah(p.price)}`}
-                  className="relative min-h-24 rounded-card bg-surface p-4 text-left shadow-card hover:bg-white/70"
+                  className="relative min-h-24 rounded-card bg-surface p-4 text-left shadow-card card-hover"
                 >
                   <span className="block font-semibold">{p.name}</span>
                   <span className="mt-1 block text-sm text-muted">{formatRupiah(p.price)}</span>
@@ -106,16 +106,16 @@ export function PosCashierPage() {
                       <span className="block truncate font-semibold">{l.name}</span>
                       <span className="text-xs text-muted">{formatRupiah(l.price)}</span>
                     </span>
-                    <button type="button" aria-label={`Kurangi ${l.name}`} onClick={() => change(l.productId, -1)} className="grid size-8 place-items-center rounded-full bg-canvas hover:bg-line">
+                    <button type="button" aria-label={`Kurangi ${l.name}`} onClick={() => change(l.productId, -1)} className="icon-btn icon-btn-sm">
                       <Minus className="size-4" aria-hidden />
                     </button>
                     <span className="w-6 text-center font-semibold" aria-label={`Jumlah ${l.name}`}>
                       {l.qty}
                     </span>
-                    <button type="button" aria-label={`Tambah ${l.name}`} onClick={() => change(l.productId, 1)} className="grid size-8 place-items-center rounded-full bg-canvas hover:bg-line">
+                    <button type="button" aria-label={`Tambah ${l.name}`} onClick={() => change(l.productId, 1)} className="icon-btn icon-btn-sm">
                       <Plus className="size-4" aria-hidden />
                     </button>
-                    <button type="button" aria-label={`Hapus ${l.name}`} onClick={() => change(l.productId, -l.qty)} className="grid size-8 place-items-center rounded-full hover:bg-canvas">
+                    <button type="button" aria-label={`Hapus ${l.name}`} onClick={() => change(l.productId, -l.qty)} className="icon-btn icon-btn-ghost icon-btn-sm">
                       <Trash2 className="size-4 text-muted" aria-hidden />
                     </button>
                   </li>
@@ -148,7 +148,7 @@ export function PosCashierPage() {
               type="button"
               disabled={lines.length === 0}
               onClick={checkout}
-              className="mt-4 h-12 w-full rounded-full bg-sidebar text-sm font-bold text-white hover:bg-sidebar-hover disabled:opacity-50"
+              className="btn btn-primary btn-lg mt-4 w-full"
             >
               Bayar {formatRupiah(total)}
             </button>

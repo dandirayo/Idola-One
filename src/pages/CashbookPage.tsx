@@ -1,6 +1,6 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { ManualCashForm } from '@/components/ManualCashForm'
-import { Card, inputClass, primaryButton, SectionTitle } from '@/components/ui'
+import { Card, Hint, inputClass, primaryButton, SectionTitle } from '@/components/ui'
 import { addExpense, useStore } from '@/data/store'
 import { balance, inRange, periodLabel, periodRange, summarize, type Period } from '@/lib/finance'
 import { formatRupiah } from '@/lib/format'
@@ -53,7 +53,7 @@ export function CashbookPage() {
             type="button"
             onClick={() => setManualOpen((v) => !v)}
             aria-expanded={manualOpen}
-            className="inline-flex h-11 items-center rounded-full bg-surface px-5 text-sm font-semibold shadow-card hover:bg-line"
+            className="btn btn-outline"
           >
             Kas Manual
           </button>
@@ -61,7 +61,7 @@ export function CashbookPage() {
             type="button"
             onClick={() => setFormOpen((v) => !v)}
             aria-expanded={formOpen}
-            className="inline-flex h-11 items-center rounded-full bg-lime px-5 text-sm font-bold text-sidebar"
+            className="btn btn-accent"
           >
             Catat Pengeluaran
           </button>
@@ -70,9 +70,7 @@ export function CashbookPage() {
 
       {manualOpen && <ManualCashForm onDone={() => setManualOpen(false)} />}
 
-      <p className="rounded-2xl bg-lilac px-4 py-2.5 text-sm" role="note">
-        Data contoh. Kas masuk terisi otomatis dari pembayaran pesanan, kas keluar dari pengeluaran dan pembelian stok.
-      </p>
+      <Hint>Kas masuk terisi otomatis dari pembayaran pesanan, kas keluar dari pengeluaran dan pembelian stok.</Hint>
 
       {formOpen && (
         <Card>
@@ -120,7 +118,7 @@ export function CashbookPage() {
         </Card>
       )}
 
-      <div className="flex flex-wrap gap-2" role="group" aria-label="Periode">
+      <div className="seg" role="group" aria-label="Periode">
         {periods.map((p) => (
           <button
             key={p}
@@ -130,9 +128,7 @@ export function CashbookPage() {
               setPeriod(p)
               setShowAll(false)
             }}
-            className={`h-9 rounded-full px-4 text-sm font-semibold ${
-              period === p ? 'bg-sidebar text-white' : 'bg-surface shadow-card hover:bg-line'
-            }`}
+            className="seg-item"
           >
             {periodLabel[p]}
           </button>
@@ -140,7 +136,7 @@ export function CashbookPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card className="bg-sidebar text-white">
+        <Card variant="dark">
           <p className="text-xs font-semibold text-lime">Saldo akhir</p>
           <p className="mt-1 text-2xl font-bold">{formatRupiah(closing)}</p>
           <p className="mt-1 text-xs text-white/60">Sepanjang waktu</p>
@@ -206,7 +202,7 @@ export function CashbookPage() {
           <button
             type="button"
             onClick={() => setShowAll((v) => !v)}
-            className="mt-3 h-9 rounded-full bg-surface px-4 text-sm font-semibold shadow-card"
+            className="btn btn-outline btn-sm mt-3"
           >
             {showAll ? 'Tampilkan lebih sedikit' : `Lihat semua (${entries.length})`}
           </button>

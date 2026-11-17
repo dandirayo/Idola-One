@@ -1,6 +1,6 @@
 import { Plus } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
-import { Card, inputClass, primaryButton, SectionTitle, StatusChip } from '@/components/ui'
+import { Card, Hint, inputClass, primaryButton, SectionTitle, StatusChip } from '@/components/ui'
 import { addProjectBatch, addProjectPayment, createProject, projectBilled, projectPaid, setProjectStatus } from '@/data/projects'
 import { useStore, type Project } from '@/data/store'
 import { formatQty, formatRupiah } from '@/lib/format'
@@ -81,7 +81,7 @@ function ProjectDetail({ project }: { project: Project }) {
                 <input inputMode="decimal" value={kg} onChange={(e) => setKg(e.target.value)} className={`${inputClass} mt-1 bg-surface`} />
               </label>
             </div>
-            <button type="submit" className={`${primaryButton} h-10 w-full`}>
+            <button type="submit" className="btn btn-primary btn-sm w-full">
               Simpan batch
             </button>
           </form>
@@ -115,10 +115,10 @@ function ProjectDetail({ project }: { project: Project }) {
               </label>
             </div>
             <div className="flex gap-2">
-              <button type="submit" className={`${primaryButton} h-10 flex-1`}>
+              <button type="submit" className="btn btn-primary btn-sm flex-1">
                 Catat
               </button>
-              <button type="button" onClick={() => setAmount(String(Math.max(0, remaining)))} className="h-10 rounded-full bg-surface px-4 text-sm font-semibold hover:bg-line">
+              <button type="button" onClick={() => setAmount(String(Math.max(0, remaining)))} className="btn btn-outline btn-sm">
                 Lunasi sisa
               </button>
             </div>
@@ -172,7 +172,7 @@ function ProjectDetail({ project }: { project: Project }) {
       <button
         type="button"
         onClick={() => run(() => setProjectStatus(project.id, active ? 'done' : 'active'))}
-        className="h-10 rounded-full bg-canvas px-5 text-sm font-semibold hover:bg-line"
+        className="btn btn-secondary btn-sm"
       >
         {active ? 'Tandai proyek selesai' : 'Buka kembali proyek'}
       </button>
@@ -216,15 +216,13 @@ export function ProjectsPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold sm:text-3xl">Proyek</h1>
-        <button type="button" onClick={() => setFormOpen((v) => !v)} aria-expanded={formOpen} className="inline-flex h-11 items-center gap-2 rounded-full bg-lime px-5 text-sm font-bold text-sidebar">
+        <button type="button" onClick={() => setFormOpen((v) => !v)} aria-expanded={formOpen} className="btn btn-accent">
           <Plus className="size-4" aria-hidden />
           Proyek Baru
         </button>
       </div>
 
-      <p className="rounded-2xl bg-lilac px-4 py-2.5 text-sm" role="note">
-        Laundry borongan (hotel, asrama, instansi). Data contoh. Pembayaran termin otomatis menjadi kas masuk di Buku Kas dan tidak boleh melebihi tagihan berjalan.
-      </p>
+      <Hint>Laundry borongan (hotel, asrama, instansi). Data contoh. Pembayaran termin otomatis menjadi kas masuk di Buku Kas dan tidak boleh melebihi tagihan berjalan.</Hint>
 
       {formOpen && (
         <Card>

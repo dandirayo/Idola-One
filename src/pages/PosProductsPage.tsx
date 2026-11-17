@@ -1,6 +1,6 @@
 import { ArrowDown, ArrowUp, Pencil, Plus } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
-import { Card, inputClass, primaryButton, StatusChip } from '@/components/ui'
+import { Card, Hint, inputClass, primaryButton, StatusChip } from '@/components/ui'
 import { addPosProduct, movePosProduct, setPosProductActive, updatePosProduct } from '@/data/pos'
 import { useStore, type PosProduct } from '@/data/store'
 import { useAuth } from '@/lib/auth'
@@ -44,18 +44,16 @@ export function PosProductsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold sm:text-3xl">Produk</h1>
         {isOwner && (
-          <button type="button" onClick={() => open('new')} className="inline-flex h-11 items-center gap-2 rounded-full bg-lime px-5 text-sm font-bold text-sidebar">
+          <button type="button" onClick={() => open('new')} className="btn btn-accent">
             <Plus className="size-4" aria-hidden />
             Tambah Produk
           </button>
         )}
       </div>
 
-      <p className="rounded-2xl bg-lilac px-4 py-2.5 text-sm" role="note">
-        {isOwner
+      <Hint>{isOwner
           ? 'Data contoh. Variasi ukuran atau topping dibuat sebagai produk terpisah. Harga baru tidak mengubah penjualan yang sudah tercatat.'
-          : 'Daftar produk aktif. Hanya owner yang dapat mengubah produk dan harga.'}
-      </p>
+          : 'Daftar produk aktif. Hanya owner yang dapat mengubah produk dan harga.'}</Hint>
 
       {editing && isOwner && (
         <Card>
@@ -71,7 +69,7 @@ export function PosProductsPage() {
             <button type="submit" className={primaryButton}>
               {editing === 'new' ? 'Simpan' : 'Perbarui'}
             </button>
-            <button type="button" onClick={() => setEditing(null)} className="h-11 rounded-full bg-canvas px-5 text-sm font-semibold hover:bg-line">
+            <button type="button" onClick={() => setEditing(null)} className="btn btn-secondary">
               Batal
             </button>
           </form>
@@ -98,16 +96,16 @@ export function PosProductsPage() {
               {!p.active && <StatusChip label="Nonaktif" tone="peach" />}
               {isOwner && (
                 <>
-                  <button type="button" disabled={i === 0} onClick={() => movePosProduct(p.id, 'up')} aria-label={`Naikkan ${p.name}`} className="grid size-9 place-items-center rounded-full bg-canvas hover:bg-line disabled:opacity-40">
+                  <button type="button" disabled={i === 0} onClick={() => movePosProduct(p.id, 'up')} aria-label={`Naikkan ${p.name}`} className="icon-btn icon-btn-sm">
                     <ArrowUp className="size-4" aria-hidden />
                   </button>
-                  <button type="button" disabled={i === products.length - 1} onClick={() => movePosProduct(p.id, 'down')} aria-label={`Turunkan ${p.name}`} className="grid size-9 place-items-center rounded-full bg-canvas hover:bg-line disabled:opacity-40">
+                  <button type="button" disabled={i === products.length - 1} onClick={() => movePosProduct(p.id, 'down')} aria-label={`Turunkan ${p.name}`} className="icon-btn icon-btn-sm">
                     <ArrowDown className="size-4" aria-hidden />
                   </button>
-                  <button type="button" onClick={() => open(p)} aria-label={`Ubah ${p.name}`} className="grid size-9 place-items-center rounded-full bg-canvas hover:bg-line">
+                  <button type="button" onClick={() => open(p)} aria-label={`Ubah ${p.name}`} className="icon-btn icon-btn-sm">
                     <Pencil className="size-4" aria-hidden />
                   </button>
-                  <button type="button" onClick={() => setPosProductActive(p.id, !p.active)} className="h-9 rounded-full bg-canvas px-4 text-sm font-semibold hover:bg-line">
+                  <button type="button" onClick={() => setPosProductActive(p.id, !p.active)} className="btn btn-secondary btn-sm">
                     {p.active ? 'Nonaktifkan' : 'Aktifkan'}
                   </button>
                 </>

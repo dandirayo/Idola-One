@@ -237,7 +237,7 @@ export function OrderNewPage() {
                       type="button"
                       aria-label={`Hapus ${i.name}`}
                       onClick={() => setItems((prev) => prev.filter((_, n) => n !== idx))}
-                      className="grid size-8 place-items-center rounded-full hover:bg-canvas"
+                      className="icon-btn icon-btn-ghost icon-btn-sm"
                     >
                       <Trash2 className="size-4 text-muted" aria-hidden />
                     </button>
@@ -286,7 +286,7 @@ export function OrderNewPage() {
 
             <fieldset className="mt-4">
               <legend className="mb-2 text-sm font-semibold">Pembayaran</legend>
-              <div className="flex gap-2">
+              <div className="seg w-full">
                 {(
                   [
                     ['none', 'Belum'],
@@ -299,9 +299,7 @@ export function OrderNewPage() {
                     type="button"
                     aria-pressed={payChoice === value}
                     onClick={() => setPayChoice(value)}
-                    className={`h-9 flex-1 rounded-full text-sm font-semibold ${
-                      payChoice === value ? 'bg-sidebar text-white' : 'bg-canvas hover:bg-line'
-                    }`}
+                    className="seg-item flex-1"
                   >
                     {label}
                   </button>

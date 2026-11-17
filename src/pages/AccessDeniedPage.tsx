@@ -13,7 +13,7 @@ export function AccessDeniedPage({ kind }: { kind: BusinessKind }) {
         </p>
         <Link
           to={homeFor(kind)}
-          className="mt-4 inline-flex h-11 items-center rounded-full bg-sidebar px-6 text-sm font-bold text-white hover:bg-sidebar-hover"
+          className="btn btn-primary mt-4"
         >
           Ke halaman utama
         </Link>

@@ -1,7 +1,7 @@
 import { MessageCircle } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
-import { Card, inputClass, SectionTitle } from '@/components/ui'
+import { Card, Hint, inputClass, SectionTitle } from '@/components/ui'
 import { useStore } from '@/data/store'
 import { periodLabel, periodRange, type Period } from '@/lib/finance'
 import { formatRupiah } from '@/lib/format'
@@ -33,12 +33,10 @@ export function PaymentReportPage() {
         </Link>
       </div>
 
-      <p className="rounded-2xl bg-lilac px-4 py-2.5 text-sm" role="note">
-        Merangkum pembayaran pelanggan pada periode. Kas manual dan pengeluaran tidak termasuk dan ada di Buku Kas.
-        Data contoh.
-      </p>
+      <Hint>Merangkum pembayaran pelanggan pada periode. Kas manual dan pengeluaran tidak termasuk dan ada di Buku Kas.
+        Data contoh.</Hint>
 
-      <div className="flex flex-wrap gap-2" role="group" aria-label="Periode">
+      <div className="seg" role="group" aria-label="Periode">
         {periods.map((p) => (
           <button
             key={p}
@@ -48,9 +46,7 @@ export function PaymentReportPage() {
               setPeriod(p)
               setDraft(null)
             }}
-            className={`h-9 rounded-full px-4 text-sm font-semibold ${
-              period === p ? 'bg-sidebar text-white' : 'bg-surface shadow-card hover:bg-line'
-            }`}
+            className="seg-item"
           >
             {periodLabel[p]}
           </button>
@@ -59,7 +55,7 @@ export function PaymentReportPage() {
 
       <div className="grid gap-5 lg:grid-cols-2">
         <div className="space-y-5">
-          <Card className="bg-sidebar text-white">
+          <Card variant="dark">
             <p className="text-xs font-semibold text-lime">Total pembayaran · {periodLabel[period]}</p>
             <p className="mt-1 text-3xl font-bold">{formatRupiah(report.total)}</p>
             <p className="mt-1 text-xs text-white/60">
@@ -99,7 +95,7 @@ export function PaymentReportPage() {
             href={whatsappUrl(shop.phone, text)}
             target="_blank"
             rel="noreferrer"
-            className="mt-3 inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-lime text-sm font-bold text-sidebar"
+            className="btn btn-accent mt-3 w-full"
           >
             <MessageCircle className="size-4" aria-hidden />
             Buka WhatsApp

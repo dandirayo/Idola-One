@@ -26,7 +26,7 @@ export function MiniCalendar() {
           type="button"
           onClick={() => move(-1)}
           aria-label="Bulan sebelumnya"
-          className="grid size-8 place-items-center rounded-full bg-canvas hover:bg-line"
+          className="icon-btn icon-btn-sm"
         >
           <ChevronLeft className="size-4" aria-hidden />
         </button>
@@ -35,7 +35,7 @@ export function MiniCalendar() {
           type="button"
           onClick={() => move(1)}
           aria-label="Bulan berikutnya"
-          className="grid size-8 place-items-center rounded-full bg-canvas hover:bg-line"
+          className="icon-btn icon-btn-sm"
         >
           <ChevronRight className="size-4" aria-hidden />
         </button>

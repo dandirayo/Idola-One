@@ -61,7 +61,7 @@ export function ManualCashForm({ onDone }: { onDone: () => void }) {
           <button type="submit" className={primaryButton}>
             Simpan
           </button>
-          <button type="button" onClick={onDone} className="h-11 rounded-full bg-canvas px-5 text-sm font-semibold hover:bg-line">
+          <button type="button" onClick={onDone} className="btn btn-secondary">
             Batal
           </button>
         </div>

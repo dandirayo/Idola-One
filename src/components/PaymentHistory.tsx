@@ -1,6 +1,6 @@
 import { Pencil } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
-import { Card, inputClass, primaryButton, SectionTitle } from '@/components/ui'
+import { Card, inputClass, SectionTitle } from '@/components/ui'
 import { correctPayment, useStore, type Order, type Payment } from '@/data/store'
 import { useAuth } from '@/lib/auth'
 import { formatRupiah } from '@/lib/format'
@@ -73,7 +73,7 @@ export function PaymentHistory({ order }: { order: Order }) {
                       onClick={() => (editing?.id === p.id ? setEditing(null) : open(p))}
                       aria-label={`Koreksi pembayaran ${formatRupiah(p.amount)}`}
                       aria-expanded={editing?.id === p.id}
-                      className="grid size-8 place-items-center rounded-full bg-canvas hover:bg-line"
+                      className="icon-btn icon-btn-sm"
                     >
                       <Pencil className="size-4" aria-hidden />
                     </button>
@@ -116,13 +116,13 @@ export function PaymentHistory({ order }: { order: Order }) {
                     />
                   </label>
                   <div className="flex gap-2 sm:col-span-3">
-                    <button type="submit" className={`${primaryButton} h-10`}>
+                    <button type="submit" className="btn btn-primary btn-sm">
                       Simpan koreksi
                     </button>
                     <button
                       type="button"
                       onClick={() => setEditing(null)}
-                      className="h-10 rounded-full bg-surface px-5 text-sm font-semibold hover:bg-line"
+                      className="btn btn-outline btn-sm"
                     >
                       Batal
                     </button>

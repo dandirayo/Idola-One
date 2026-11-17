@@ -176,7 +176,7 @@ export function OrderDetailPage() {
                   <button
                     type="button"
                     onClick={() => setAmount(String(remaining))}
-                    className="h-11 rounded-full bg-canvas px-4 text-sm font-semibold hover:bg-line"
+                    className="btn btn-secondary"
                   >
                     Lunasi
                   </button>
@@ -203,8 +203,8 @@ export function OrderDetailPage() {
                     onClick={() => changeStatus(s)}
                     className={
                       s === 'cancelled'
-                        ? 'h-11 rounded-full border border-line text-sm font-semibold text-danger hover:bg-canvas'
-                        : primaryButton
+                        ? 'btn btn-danger'
+                        : 'btn btn-primary'
                     }
                   >
                     {actionLabel[s]}
@@ -223,7 +223,7 @@ export function OrderDetailPage() {
                 })}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-2 inline-flex h-11 w-full items-center justify-center gap-2 rounded-full bg-lime text-sm font-bold text-sidebar"
+                className="btn btn-accent mt-2 w-full"
               >
                 <MessageCircle className="size-4" aria-hidden />
                 Kabari via WhatsApp
@@ -245,7 +245,7 @@ export function OrderDetailPage() {
                   key={k}
                   type="button"
                   onClick={() => setPrintKind(k)}
-                  className="h-11 rounded-full bg-canvas text-sm font-semibold hover:bg-line"
+                  className="btn btn-secondary"
                 >
                   {docKindLabel[k]}
                 </button>

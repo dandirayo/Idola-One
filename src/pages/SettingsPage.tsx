@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { PrintDialog } from '@/components/PrintDialog'
-import { Card, inputClass, primaryButton, SectionTitle } from '@/components/ui'
+import { Card, Hint, inputClass, primaryButton, SectionTitle } from '@/components/ui'
 import { updateShop, useStore } from '@/data/store'
 import { buildTestPage, COLUMNS, type PaperWidth } from '@/lib/receipt'
 
@@ -32,9 +32,7 @@ export function SettingsPage() {
     <div className="space-y-5">
       <h1 className="text-2xl font-bold sm:text-3xl">Pengaturan Toko</h1>
 
-      <p className="rounded-2xl bg-lilac px-4 py-2.5 text-sm" role="note">
-        Data contoh. Perubahan hanya tersimpan sementara dan hilang saat halaman dimuat ulang.
-      </p>
+      <Hint>Perubahan hanya tersimpan sementara dan hilang saat halaman dimuat ulang.</Hint>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <Card>
@@ -59,16 +57,14 @@ export function SettingsPage() {
 
             <fieldset>
               <legend className="mb-2 text-sm font-semibold">Lebar kertas printer</legend>
-              <div className="flex gap-2">
+              <div className="seg w-full">
                 {([58, 80] as PaperWidth[]).map((w) => (
                   <button
                     key={w}
                     type="button"
                     aria-pressed={paperWidth === w}
                     onClick={() => setPaperWidth(w)}
-                    className={`h-10 flex-1 rounded-full text-sm font-semibold ${
-                      paperWidth === w ? 'bg-sidebar text-white' : 'bg-canvas hover:bg-line'
-                    }`}
+                    className="seg-item flex-1"
                   >
                     {w} mm · {COLUMNS[w]} kolom
                   </button>
@@ -105,7 +101,7 @@ export function SettingsPage() {
           <button
             type="button"
             onClick={() => setTestOpen(true)}
-            className="mt-4 h-11 w-full rounded-full bg-lime text-sm font-bold text-sidebar"
+            className="btn btn-accent mt-4 w-full"
           >
             Cetak Uji
           </button>

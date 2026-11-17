@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Card, inputClass, primaryButton, SectionTitle, StatusChip } from '@/components/ui'
+import { Card, Hint, inputClass, primaryButton, SectionTitle, StatusChip } from '@/components/ui'
 import { adjustStock, buyStock, consumeStock, useStore, type InventoryItem } from '@/data/store'
 import { useAuth } from '@/lib/auth'
 import { formatQty } from '@/lib/format'
@@ -66,9 +66,7 @@ export function InventoryPage() {
         </p>
       </div>
 
-      <p className="rounded-2xl bg-lilac px-4 py-2.5 text-sm" role="note">
-        Data contoh. Perubahan hanya tersimpan sementara dan hilang saat halaman dimuat ulang.
-      </p>
+      <Hint>Perubahan hanya tersimpan sementara dan hilang saat halaman dimuat ulang.</Hint>
 
       {target && (
         <Card>
@@ -123,7 +121,7 @@ export function InventoryPage() {
               <button
                 type="button"
                 onClick={() => setTarget(null)}
-                className="h-11 rounded-full bg-canvas px-5 text-sm font-semibold hover:bg-line"
+                className="btn btn-secondary"
               >
                 Batal
               </button>
@@ -165,7 +163,7 @@ export function InventoryPage() {
                     type="button"
                     onClick={() => open(i, m)}
                     aria-label={`${modeLabel[m]} ${i.name}`}
-                    className="h-9 rounded-full bg-canvas px-4 text-sm font-semibold hover:bg-line"
+                    className="btn btn-secondary btn-sm"
                   >
                     {modeLabel[m]}
                   </button>

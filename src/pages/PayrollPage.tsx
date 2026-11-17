@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useState } from 'react'
-import { Card, inputClass, StatusChip } from '@/components/ui'
+import { Card, Hint, StatusChip } from '@/components/ui'
 import { payIncentive, payWeeklySalary } from '@/data/payroll'
 import { useStore } from '@/data/store'
 import { formatQty, formatRupiah } from '@/lib/format'
@@ -42,7 +42,7 @@ export function PayrollPage() {
   const methodSelect = (
     <label className="text-sm font-semibold">
       <span className="sr-only">Metode bayar</span>
-      <select value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)} className={`${inputClass} h-10 w-40`}>
+      <select value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)} className="field w-40">
         {(Object.keys(paymentMethodLabel) as PaymentMethod[]).map((m) => (
           <option key={m} value={m}>
             {paymentMethodLabel[m]}
@@ -56,12 +56,10 @@ export function PayrollPage() {
     <div className="space-y-5">
       <h1 className="text-2xl font-bold sm:text-3xl">Gaji & Insentif</h1>
 
-      <p className="rounded-2xl bg-lilac px-4 py-2.5 text-sm" role="note">
-        Data contoh. Gaji dan insentif yang dibayar menjadi pengeluaran dan kas keluar di Buku Kas. Insentif yang belum dibayar tidak mengurangi kas.
-      </p>
+      <Hint>Gaji dan insentif yang dibayar menjadi pengeluaran dan kas keluar di Buku Kas. Insentif yang belum dibayar tidak mengurangi kas.</Hint>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex gap-2" role="tablist" aria-label="Jenis">
+        <div className="seg" role="tablist" aria-label="Jenis">
           {(
             [
               ['salary', 'Gaji mingguan'],
@@ -74,7 +72,7 @@ export function PayrollPage() {
               role="tab"
               aria-selected={tab === value}
               onClick={() => setTab(value)}
-              className={`h-10 rounded-full px-5 text-sm font-semibold ${tab === value ? 'bg-sidebar text-white' : 'bg-surface shadow-card hover:bg-line'}`}
+              className="seg-item"
             >
               {label}
             </button>
@@ -92,7 +90,7 @@ export function PayrollPage() {
       {tab === 'salary' ? (
         <div className="space-y-4" role="tabpanel" aria-label="Gaji mingguan">
           <div className="flex items-center gap-3">
-            <button type="button" onClick={() => shift(-1)} aria-label="Minggu sebelumnya" className="grid size-9 place-items-center rounded-full bg-surface shadow-card hover:bg-line">
+            <button type="button" onClick={() => shift(-1)} aria-label="Minggu sebelumnya" className="icon-btn icon-btn-outline icon-btn-sm">
               <ChevronLeft className="size-4" aria-hidden />
             </button>
             <p className="text-sm font-semibold">
@@ -103,7 +101,7 @@ export function PayrollPage() {
               disabled={week >= currentWeek}
               onClick={() => shift(1)}
               aria-label="Minggu berikutnya"
-              className="grid size-9 place-items-center rounded-full bg-surface shadow-card hover:bg-line disabled:opacity-40"
+              className="icon-btn icon-btn-outline icon-btn-sm"
             >
               <ChevronRight className="size-4" aria-hidden />
             </button>
@@ -134,7 +132,7 @@ export function PayrollPage() {
                         type="button"
                         onClick={() => run(() => payWeeklySalary(e.id, week, e.weeklySalary, method))}
                         aria-label={`Bayar gaji ${e.name} ${formatRupiah(e.weeklySalary)}`}
-                        className="h-10 rounded-full bg-sidebar px-5 text-sm font-bold text-white hover:bg-sidebar-hover"
+                        className="btn btn-primary btn-sm"
                       >
                         Bayar {formatRupiah(e.weeklySalary)}
                       </button>
@@ -176,7 +174,7 @@ export function PayrollPage() {
                       type="button"
                       onClick={() => run(() => payIncentive(i.id, method))}
                       aria-label={`Bayar insentif ${name(i.employeeId)} ${formatRupiah(i.amount)}`}
-                      className="h-10 rounded-full bg-sidebar px-5 text-sm font-bold text-white hover:bg-sidebar-hover"
+                      className="btn btn-primary btn-sm"
                     >
                       Bayar {formatRupiah(i.amount)}
                     </button>

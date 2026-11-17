@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
-import { Card, SectionTitle, StatusChip } from '@/components/ui'
+import { Card, Hint, SectionTitle, StatusChip } from '@/components/ui'
 import { posDayFor, setPosDay } from '@/data/pos'
 import { useStore } from '@/data/store'
 import { useAuth } from '@/lib/auth'
@@ -49,9 +49,7 @@ export function PosHomePage() {
         <StatusChip label={open ? 'Berjualan hari ini' : 'Belum berjualan'} tone={open ? 'lime' : 'peach'} />
       </div>
 
-      <p className="rounded-2xl bg-lilac px-4 py-2.5 text-sm" role="note">
-        Data contoh. Penjualan POS dipisah dari Buku Kas laundry dan tidak dicampur ke omzet laundry.
-      </p>
+      <Hint>Penjualan POS dipisah dari Buku Kas laundry dan tidak dicampur ke omzet laundry.</Hint>
 
       <Card>
         <SectionTitle>Jualan hari ini</SectionTitle>
@@ -62,7 +60,7 @@ export function PosHomePage() {
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Contoh: buka di depan kampus"
-              className="mt-1.5 h-11 w-full rounded-xl border border-line bg-canvas px-3.5 text-sm outline-none focus:border-ink"
+              className="field mt-1.5"
             />
           </label>
         )}
@@ -71,12 +69,12 @@ export function PosHomePage() {
           <button
             type="button"
             onClick={toggle}
-            className={`h-11 rounded-full px-6 text-sm font-bold ${open ? 'border border-line text-danger hover:bg-canvas' : 'bg-sidebar text-white hover:bg-sidebar-hover'}`}
+            className={`btn ${open ? 'btn-danger' : 'btn-primary'}`}
           >
             {open ? 'Tutup jualan hari ini' : 'Mulai jualan hari ini'}
           </button>
           {open && (
-            <Link to="/pos/cashier" className="inline-flex h-11 items-center rounded-full bg-lime px-6 text-sm font-bold text-sidebar">
+            <Link to="/pos/cashier" className="btn btn-accent">
               Buka Kasir
             </Link>
           )}
@@ -88,14 +86,14 @@ export function PosHomePage() {
         )}
       </Card>
 
-      <div className="flex flex-wrap gap-2" role="group" aria-label="Periode">
+      <div className="seg" role="group" aria-label="Periode">
         {periods.map((p) => (
           <button
             key={p}
             type="button"
             aria-pressed={period === p}
             onClick={() => setPeriod(p)}
-            className={`h-9 rounded-full px-4 text-sm font-semibold ${period === p ? 'bg-sidebar text-white' : 'bg-surface shadow-card hover:bg-line'}`}
+            className="seg-item"
           >
             {periodLabel[p]}
           </button>
@@ -103,7 +101,7 @@ export function PosHomePage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Card className="bg-sidebar text-white">
+        <Card variant="dark">
           <p className="text-xs font-semibold text-lime">Omzet · {periodLabel[period]}</p>
           <p className="mt-1 text-3xl font-bold">{formatRupiah(summary.total)}</p>
           <p className="mt-1 text-xs text-white/60">{summary.count} transaksi</p>

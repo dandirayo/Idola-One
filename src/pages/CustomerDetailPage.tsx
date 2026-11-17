@@ -46,7 +46,7 @@ export function CustomerDetailPage() {
           href={whatsappUrl(customer.phone, `Halo ${customer.name}, `)}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex h-11 items-center gap-2 rounded-full bg-lime px-5 text-sm font-bold text-sidebar"
+          className="btn btn-accent"
         >
           <MessageCircle className="size-4" aria-hidden />
           WhatsApp
@@ -62,7 +62,7 @@ export function CustomerDetailPage() {
           <p className="text-xs font-semibold text-muted">Sisa tagihan</p>
           <p className="mt-1 text-xl font-bold">{formatRupiah(outstanding)}</p>
         </Card>
-        <Card className="bg-sidebar p-4 text-white">
+        <Card variant="dark" className="p-4">
           <p className="flex items-center gap-1 text-xs font-semibold text-lime">
             <Star className="size-3.5" aria-hidden /> Poin
           </p>

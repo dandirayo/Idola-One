@@ -56,7 +56,7 @@ function Kpi({
   hint?: string
 }) {
   return (
-    <Link to={to} className="flex items-center gap-3 rounded-card bg-surface p-4 shadow-card hover:bg-white/70">
+    <Link to={to} className="flex items-center gap-3 rounded-card bg-surface p-4 shadow-card card-hover">
       <IconChip icon={icon} tone={tone} />
       <span className="min-w-0">
         <span className="block truncate text-xs text-muted">{label}</span>
@@ -123,9 +123,6 @@ export function DashboardPage() {
       <div className="min-w-0 space-y-6">
         <h1 className="text-2xl font-bold sm:text-3xl">Selamat datang kembali, {session?.name} 👋</h1>
 
-        <p className="rounded-2xl bg-lilac px-4 py-2.5 text-sm" role="note">
-          Pratinjau dengan <strong>data contoh</strong> yang dihitung di browser. Belum terhubung ke server.
-        </p>
 
         <section aria-label="Ringkasan" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Kpi to="/orders" icon={ClipboardList} tone="peach" label="Pesanan hari ini" value={String(kpis.ordersToday)} />
@@ -157,7 +154,7 @@ export function DashboardPage() {
             {recent.map((o, i) => {
               const pay = paymentStatus(o.total, o.paid)
               return (
-                <Link key={o.id} to={`/orders/${o.id}`} className="block rounded-card bg-surface p-4 shadow-card hover:bg-white/70">
+                <Link key={o.id} to={`/orders/${o.id}`} className="block rounded-card bg-surface p-4 shadow-card card-hover">
                   <div className="flex items-center gap-3">
                     <IconChip icon={recentIcons[i]} tone={recentTones[i]} />
                     <div className="min-w-0">
@@ -235,7 +232,7 @@ export function DashboardPage() {
               <Link
                 to="/orders/new"
                 aria-label="Buat pesanan baru"
-                className="grid size-8 place-items-center rounded-full bg-lime"
+                className="icon-btn icon-btn-accent icon-btn-sm"
               >
                 <Plus className="size-4" aria-hidden />
               </Link>
@@ -253,7 +250,7 @@ export function DashboardPage() {
                 <Link
                   key={o.id}
                   to={`/orders/${o.id}`}
-                  className="flex items-center gap-4 rounded-card bg-surface p-4 shadow-card hover:bg-white/70"
+                  className="flex items-center gap-4 rounded-card bg-surface p-4 shadow-card card-hover"
                 >
                   <IconChip icon={WashingMachine} tone={orderStatusTone[o.status]} />
                   <div className="min-w-0 flex-1">
@@ -281,7 +278,7 @@ export function DashboardPage() {
           <p className="mt-1 max-w-[14rem] text-sm text-white/70">Kiloan, satuan, atau gabung. Total dihitung otomatis.</p>
           <Link
             to="/orders/new"
-            className="mt-4 inline-flex h-10 items-center rounded-full bg-lime px-5 text-sm font-bold text-sidebar"
+            className="btn btn-accent mt-4"
           >
             Buat Pesanan
           </Link>
@@ -298,7 +295,7 @@ export function DashboardPage() {
               <Link
                 to="/requests/new"
                 aria-label="Buat pengajuan"
-                className="grid size-8 place-items-center rounded-full bg-lime"
+                className="icon-btn icon-btn-accent icon-btn-sm"
               >
                 <Plus className="size-4" aria-hidden />
               </Link>
@@ -311,7 +308,7 @@ export function DashboardPage() {
               <Link
                 key={r.id}
                 to="/requests/review"
-                className="flex items-center gap-3 rounded-card bg-surface p-4 shadow-card hover:bg-white/70"
+                className="flex items-center gap-3 rounded-card bg-surface p-4 shadow-card card-hover"
               >
                 <IconChip icon={Sparkles} tone={requestTone[r.status]} />
                 <div className="min-w-0 flex-1">

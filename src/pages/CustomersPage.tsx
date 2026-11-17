@@ -1,7 +1,7 @@
 import { Pencil, Plus, Search } from 'lucide-react'
 import { useMemo, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
-import { Card, inputClass, primaryButton, StatusChip } from '@/components/ui'
+import { Card, Hint, inputClass, primaryButton, StatusChip } from '@/components/ui'
 import { customerPoints } from '@/lib/points'
 import { addCustomer, setCustomerActive, updateCustomer, useStore, type Customer } from '@/data/store'
 
@@ -57,16 +57,14 @@ export function CustomersPage() {
         <button
           type="button"
           onClick={() => open('new')}
-          className="inline-flex h-11 items-center gap-2 rounded-full bg-lime px-5 text-sm font-bold text-sidebar"
+          className="btn btn-accent"
         >
           <Plus className="size-4" aria-hidden />
           Tambah Pelanggan
         </button>
       </div>
 
-      <p className="rounded-2xl bg-lilac px-4 py-2.5 text-sm" role="note">
-        Data contoh. Perubahan hanya tersimpan sementara dan hilang saat halaman dimuat ulang.
-      </p>
+      <Hint>Perubahan hanya tersimpan sementara dan hilang saat halaman dimuat ulang.</Hint>
 
       {editing && (
         <Card>
@@ -90,7 +88,7 @@ export function CustomersPage() {
             <button
               type="button"
               onClick={() => setEditing(null)}
-              className="h-11 rounded-full bg-canvas px-5 text-sm font-semibold hover:bg-line"
+              className="btn btn-secondary"
             >
               Batal
             </button>
@@ -112,7 +110,7 @@ export function CustomersPage() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Cari nama atau nomor"
-            className="h-11 w-full rounded-full border border-line bg-surface pl-10 pr-4 text-sm outline-none placeholder:text-muted focus:border-ink"
+            className="field field-search"
           />
         </label>
         <label className="flex items-center gap-2 text-sm">
@@ -145,14 +143,14 @@ export function CustomersPage() {
                 type="button"
                 onClick={() => open(c)}
                 aria-label={`Ubah ${c.name}`}
-                className="grid size-9 place-items-center rounded-full bg-canvas hover:bg-line"
+                className="icon-btn icon-btn-sm"
               >
                 <Pencil className="size-4" aria-hidden />
               </button>
               <button
                 type="button"
                 onClick={() => setCustomerActive(c.id, !c.active)}
-                className="h-9 rounded-full bg-canvas px-4 text-sm font-semibold hover:bg-line"
+                className="btn btn-secondary btn-sm"
               >
                 {c.active ? 'Nonaktifkan' : 'Aktifkan'}
               </button>

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Card, inputClass, primaryButton, SectionTitle, StatusChip } from '@/components/ui'
+import { Card, Hint, inputClass, primaryButton, SectionTitle, StatusChip } from '@/components/ui'
 import { addBeverageBusiness, setBusinessActive, setMember } from '@/data/business'
 import { useStore } from '@/data/store'
 
@@ -35,10 +35,8 @@ export function BusinessManagePage() {
     <div className="space-y-5">
       <h1 className="text-2xl font-bold sm:text-3xl">Kelola Usaha</h1>
 
-      <p className="rounded-2xl bg-lilac px-4 py-2.5 text-sm" role="note">
-        Data contoh. Karyawan hanya melihat usaha yang aksesnya kamu aktifkan di sini. Usaha nonaktif tidak bisa dipilih untuk transaksi baru. Jenis usaha
-        yang bisa ditambah saat ini: minuman.
-      </p>
+      <Hint>Karyawan hanya melihat usaha yang aksesnya kamu aktifkan di sini. Usaha nonaktif tidak bisa dipilih untuk transaksi baru. Jenis usaha
+        yang bisa ditambah saat ini: minuman.</Hint>
 
       <Card>
         <SectionTitle>Tambah usaha minuman</SectionTitle>
@@ -70,7 +68,7 @@ export function BusinessManagePage() {
               <button
                 type="button"
                 onClick={() => run(() => setBusinessActive(b.id, !b.active))}
-                className="h-9 rounded-full bg-canvas px-4 text-sm font-semibold hover:bg-line"
+                className="btn btn-secondary btn-sm"
               >
                 {b.active ? 'Nonaktifkan' : 'Aktifkan'}
               </button>

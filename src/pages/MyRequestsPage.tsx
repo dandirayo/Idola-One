@@ -1,6 +1,6 @@
 import { Plus } from 'lucide-react'
 import { Link } from 'react-router'
-import { Card, StatusChip } from '@/components/ui'
+import { Card, Hint, StatusChip } from '@/components/ui'
 import { useStore } from '@/data/store'
 import { useAuth } from '@/lib/auth'
 import { formatRupiah } from '@/lib/format'
@@ -20,15 +20,13 @@ export function MyRequestsPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold sm:text-3xl">Pengajuan Saya</h1>
-        <Link to="/requests/new" className="inline-flex h-11 items-center gap-2 rounded-full bg-lime px-5 text-sm font-bold text-sidebar">
+        <Link to="/requests/new" className="btn btn-accent">
           <Plus className="size-4" aria-hidden />
           Buat Pengajuan
         </Link>
       </div>
 
-      <p className="rounded-2xl bg-lilac px-4 py-2.5 text-sm" role="note">
-        Data contoh. Hanya owner yang dapat menyetujui atau menolak.
-      </p>
+      <Hint>Hanya owner yang dapat menyetujui atau menolak.</Hint>
 
       {mine.length === 0 ? (
         <Card>

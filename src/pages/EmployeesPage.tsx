@@ -1,6 +1,6 @@
 import { Pencil, Plus } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
-import { Card, inputClass, primaryButton, StatusChip } from '@/components/ui'
+import { Card, Hint, inputClass, primaryButton, StatusChip } from '@/components/ui'
 import { addEmployee, setEmployeeActive, updateEmployee, useStore, type Employee } from '@/data/store'
 import { formatRupiah } from '@/lib/format'
 
@@ -48,16 +48,14 @@ export function EmployeesPage() {
         <button
           type="button"
           onClick={() => open('new')}
-          className="inline-flex h-11 items-center gap-2 rounded-full bg-lime px-5 text-sm font-bold text-sidebar"
+          className="btn btn-accent"
         >
           <Plus className="size-4" aria-hidden />
           Tambah Karyawan
         </button>
       </div>
 
-      <p className="rounded-2xl bg-lilac px-4 py-2.5 text-sm" role="note">
-        Data contoh. Pembuatan akun login karyawan (username dan password) baru tersedia setelah backend ada.
-      </p>
+      <Hint>Pembuatan akun login karyawan (username dan password) baru tersedia setelah backend ada.</Hint>
 
       {editing && (
         <Card>
@@ -85,7 +83,7 @@ export function EmployeesPage() {
             <button
               type="button"
               onClick={() => setEditing(null)}
-              className="h-11 rounded-full bg-canvas px-5 text-sm font-semibold hover:bg-line"
+              className="btn btn-secondary"
             >
               Batal
             </button>
@@ -125,14 +123,14 @@ export function EmployeesPage() {
                 type="button"
                 onClick={() => open(e)}
                 aria-label={`Ubah ${e.name}`}
-                className="grid size-9 place-items-center rounded-full bg-canvas hover:bg-line"
+                className="icon-btn icon-btn-sm"
               >
                 <Pencil className="size-4" aria-hidden />
               </button>
               <button
                 type="button"
                 onClick={() => setEmployeeActive(e.id, !e.active)}
-                className="h-9 rounded-full bg-canvas px-4 text-sm font-semibold hover:bg-line"
+                className="btn btn-secondary btn-sm"
               >
                 {e.active ? 'Nonaktifkan' : 'Aktifkan'}
               </button>

@@ -1,6 +1,6 @@
 import { Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { Card } from '@/components/ui'
+import { Card, Hint } from '@/components/ui'
 import { useStore } from '@/data/store'
 
 const dateTime = new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' })
@@ -33,10 +33,8 @@ export function AuditPage() {
         <p className="mt-1 text-sm text-muted">Jejak perubahan penting. Hanya bisa dibaca, tidak bisa diubah atau dihapus.</p>
       </div>
 
-      <p className="rounded-2xl bg-lilac px-4 py-2.5 text-sm" role="note">
-        Data contoh. Hanya mencatat perubahan pada sesi ini: koreksi pembayaran, ubah layanan kiloan, perubahan harga, kas manual, gaji dan
-        insentif, pembayaran kasbon, proyek, dan akses usaha.
-      </p>
+      <Hint>Hanya mencatat perubahan pada sesi ini: koreksi pembayaran, ubah layanan kiloan, perubahan harga, kas manual, gaji dan
+        insentif, pembayaran kasbon, proyek, dan akses usaha.</Hint>
 
       <div className="flex flex-wrap items-center gap-3">
         <label className="relative w-full sm:w-72">
@@ -50,7 +48,7 @@ export function AuditPage() {
               setPage(0)
             }}
             placeholder="Cari rujukan, aksi, atau pelaku"
-            className="h-11 w-full rounded-full border border-line bg-surface pl-10 pr-4 text-sm outline-none placeholder:text-muted focus:border-ink"
+            className="field field-search"
           />
         </label>
         <label className="text-sm font-semibold">
@@ -61,7 +59,7 @@ export function AuditPage() {
               setEntity(e.target.value)
               setPage(0)
             }}
-            className="h-11 rounded-full border border-line bg-surface px-4 text-sm outline-none focus:border-ink"
+            className="field field-pill"
           >
             <option value="all">Semua jenis</option>
             {entities.map((e) => (
@@ -108,13 +106,13 @@ export function AuditPage() {
 
       {pages > 1 && (
         <div className="flex items-center justify-between text-sm">
-          <button type="button" disabled={current === 0} onClick={() => setPage(current - 1)} className="h-9 rounded-full bg-surface px-4 font-semibold shadow-card disabled:opacity-50">
+          <button type="button" disabled={current === 0} onClick={() => setPage(current - 1)} className="btn btn-outline btn-sm">
             Sebelumnya
           </button>
           <span className="text-muted">
             Halaman {current + 1} dari {pages}
           </span>
-          <button type="button" disabled={current >= pages - 1} onClick={() => setPage(current + 1)} className="h-9 rounded-full bg-surface px-4 font-semibold shadow-card disabled:opacity-50">
+          <button type="button" disabled={current >= pages - 1} onClick={() => setPage(current + 1)} className="btn btn-outline btn-sm">
             Berikutnya
           </button>
         </div>

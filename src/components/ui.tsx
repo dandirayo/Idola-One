@@ -1,4 +1,6 @@
+import { Info } from 'lucide-react'
 import type { ComponentType, ReactNode } from 'react'
+
 export type Tone = 'peach' | 'lilac' | 'lime' | 'cream'
 
 const toneClass: Record<Tone, string> = {
@@ -8,11 +10,9 @@ const toneClass: Record<Tone, string> = {
   cream: 'bg-cream',
 }
 
-export const inputClass =
-  'h-11 w-full rounded-xl border border-line bg-canvas px-3.5 text-sm outline-none placeholder:text-muted focus:border-ink'
-
-export const primaryButton =
-  'inline-flex h-11 items-center justify-center rounded-full bg-sidebar px-6 text-sm font-bold text-white hover:bg-sidebar-hover disabled:opacity-60'
+/** Kelas bawaan untuk input, select, dan textarea. Lihat src/styles/components.css. */
+export const inputClass = 'field'
+export const primaryButton = 'btn btn-primary'
 
 export const orderStatusTone: Record<string, Tone> = {
   received: 'cream',
@@ -28,19 +28,97 @@ export const paymentTone: Record<string, Tone> = {
   paid: 'lime',
 }
 
-export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <section className={`rounded-card bg-surface p-5 shadow-card ${className}`}>{children}</section>
+/**
+ * Kartu. Varian "dark" untuk angka utama (hero) memakai gradien gelap dan teks
+ * putih sekaligus, sehingga tidak bisa lagi menghasilkan teks putih di atas putih.
+ */
+export function Card({
+  children,
+  className = '',
+  variant = 'default',
+}: {
+  children: ReactNode
+  className?: string
+  variant?: 'default' | 'dark'
+}) {
+  const base = variant === 'dark' ? 'card-dark' : 'bg-surface'
+  return <section className={`rounded-card p-5 shadow-card ${base} ${className}`}>{children}</section>
 }
 
 export function SectionTitle({ children, action }: { children: ReactNode; action?: ReactNode }) {
   return (
-    <div className="mb-3 flex items-center justify-between gap-3">
+    <div className="mb-3 flex min-h-9 items-center justify-between gap-3">
       <h2 className="text-lg font-bold">{children}</h2>
       {action}
     </div>
   )
 }
 
+/** Judul halaman: judul, keterangan, dan aksi yang rata dan turun rapi di layar sempit. */
+export function PageHeader({
+  title,
+  subtitle,
+  actions,
+}: {
+  title: ReactNode
+  subtitle?: ReactNode
+  actions?: ReactNode
+}) {
+  return (
+    <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
+      <div className="min-w-0">
+        <h1 className="text-2xl font-bold leading-tight sm:text-3xl">{title}</h1>
+        {subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>}
+      </div>
+      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+    </div>
+  )
+}
+
+/** Keterangan kecil dengan ikon info. Menggantikan banner berwarna di tiap halaman. */
+export function Hint({ children, className = '' }: { children: ReactNode; className?: string }) {
+  return (
+    <p className={`hint ${className}`}>
+      <Info aria-hidden />
+      <span>{children}</span>
+    </p>
+  )
+}
+
+/** Angka ringkasan. Varian "hero" menonjolkan angka yang paling penting pada halaman. */
+export function StatCard({
+  label,
+  value,
+  hint,
+  variant = 'default',
+  className = '',
+}: {
+  label: ReactNode
+  value: ReactNode
+  hint?: ReactNode
+  variant?: 'default' | 'hero'
+  className?: string
+}) {
+  const hero = variant === 'hero'
+  return (
+    <Card variant={hero ? 'dark' : 'default'} className={`flex flex-col justify-center ${hero ? 'p-5' : 'p-4'} ${className}`}>
+      <p className={`text-xs font-semibold ${hero ? 'stat-label' : 'text-muted'}`}>{label}</p>
+      <p className={`mt-1 font-bold leading-tight ${hero ? 'text-3xl' : 'text-xl'}`}>{value}</p>
+      {hint && <p className={`mt-1 text-xs ${hero ? 'text-white/65' : 'text-muted'}`}>{hint}</p>}
+    </Card>
+  )
+}
+
+export function EmptyState({ title, children }: { title: ReactNode; children?: ReactNode }) {
+  return (
+    <Card className="text-center">
+      <p className="font-semibold">{title}</p>
+      {children && <p className="mt-1 text-sm text-muted">{children}</p>}
+    </Card>
+  )
+}
+
+/** Kotak ikon seragam: 40px, sudut 12px, ikon 20px. */
 export function IconChip({
   icon: Icon,
   tone,
@@ -58,7 +136,7 @@ export function IconChip({
 export function StatusChip({ label, tone }: { label: string; tone: Tone }) {
   return (
     <span
-      className={`inline-flex shrink-0 items-center whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${toneClass[tone]}`}
+      className={`inline-flex h-6 shrink-0 items-center whitespace-nowrap rounded-full px-2.5 text-xs font-semibold ${toneClass[tone]}`}
     >
       {label}
     </span>

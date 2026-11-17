@@ -59,7 +59,7 @@ export function LoginPage() {
           </div>
         </fieldset>
 
-        <button type="submit" className="mt-6 h-11 w-full rounded-full bg-sidebar text-sm font-bold text-white hover:bg-sidebar-hover">
+        <button type="submit" className="btn btn-primary mt-6 w-full">
           Masuk
         </button>
 

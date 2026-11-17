@@ -51,7 +51,7 @@ export function BusinessSelectorPage() {
                   <button
                     type="button"
                     onClick={() => choose(b.id, b.kind)}
-                    className="flex w-full items-center gap-4 rounded-card bg-surface p-4 text-left shadow-card hover:bg-white/70"
+                    className="flex w-full items-center gap-4 rounded-card bg-surface p-4 text-left shadow-card card-hover"
                   >
                     <span className={`grid size-12 place-items-center rounded-xl ${b.kind === 'laundry' ? 'bg-lilac' : 'bg-peach'}`}>
                       <Icon className="size-6" aria-hidden />
@@ -60,7 +60,7 @@ export function BusinessSelectorPage() {
                       <span className="block font-semibold">{b.name}</span>
                       <span className="block text-xs text-muted">{b.kind === 'laundry' ? 'Laundry' : 'Minuman'}</span>
                     </span>
-                    <span className="rounded-full bg-lime-soft px-3 py-1 text-xs font-semibold">Aktif</span>
+                    <span className="inline-flex h-6 items-center rounded-full bg-lime-soft px-2.5 text-xs font-semibold">Aktif</span>
                   </button>
                 </li>
               )

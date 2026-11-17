@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Card, StatusChip } from '@/components/ui'
+import { Card, Hint, StatusChip } from '@/components/ui'
 import { useStore } from '@/data/store'
 import { inRange, periodLabel, periodRange, type Period } from '@/lib/finance'
 import { dateKey, slotLabel, weekdayIndex } from '@/lib/shifts'
@@ -39,19 +39,17 @@ export function AttendancePage() {
     <div className="space-y-5">
       <h1 className="text-2xl font-bold sm:text-3xl">Absensi</h1>
 
-      <p className="rounded-2xl bg-lilac px-4 py-2.5 text-sm" role="note">
-        Data contoh. Absensi dibuat karyawan dari akunnya (selfie) atau lewat pengajuan Lupa Absen yang kamu setujui.
-      </p>
+      <Hint>Absensi dibuat karyawan dari akunnya (selfie) atau lewat pengajuan Lupa Absen yang kamu setujui.</Hint>
 
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex gap-2" role="group" aria-label="Periode">
+        <div className="seg" role="group" aria-label="Periode">
           {periods.map((p) => (
             <button
               key={p}
               type="button"
               aria-pressed={period === p}
               onClick={() => setPeriod(p)}
-              className={`h-9 rounded-full px-4 text-sm font-semibold ${period === p ? 'bg-sidebar text-white' : 'bg-surface shadow-card hover:bg-line'}`}
+              className="seg-item"
             >
               {periodLabel[p]}
             </button>
@@ -59,7 +57,7 @@ export function AttendancePage() {
         </div>
         <label className="text-sm font-semibold">
           <span className="sr-only">Filter karyawan</span>
-          <select value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} className="h-9 rounded-full border border-line bg-surface px-4 text-sm outline-none focus:border-ink">
+          <select value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} className="field field-pill">
             <option value="all">Semua karyawan</option>
             {employees.map((e) => (
               <option key={e.id} value={e.id}>

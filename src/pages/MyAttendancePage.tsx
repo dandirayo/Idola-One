@@ -1,7 +1,7 @@
 import { LogIn, LogOut } from 'lucide-react'
 import { useState } from 'react'
 import { SelfieCapture } from '@/components/SelfieCapture'
-import { Card, SectionTitle, StatusChip } from '@/components/ui'
+import { Card, Hint, SectionTitle, StatusChip } from '@/components/ui'
 import { checkIn, checkOut } from '@/data/attendance'
 import { useStore } from '@/data/store'
 import { useAuth } from '@/lib/auth'
@@ -57,9 +57,7 @@ export function MyAttendancePage() {
         <p className="mt-1 text-sm text-muted">{day.format(now)}</p>
       </div>
 
-      <p className="rounded-2xl bg-lilac px-4 py-2.5 text-sm" role="note">
-        Data contoh. Foto disimpan di memori dan hilang saat halaman dimuat ulang. Waktu absen dicatat oleh sistem, bukan dari isianmu.
-      </p>
+      <Hint>Foto disimpan di memori dan hilang saat halaman dimuat ulang. Waktu absen dicatat oleh sistem, bukan dari isianmu.</Hint>
 
       <Card>
         <SectionTitle>Hari ini</SectionTitle>
@@ -86,7 +84,7 @@ export function MyAttendancePage() {
             type="button"
             disabled={!!today}
             onClick={() => setMode('in')}
-            className="inline-flex h-11 items-center gap-2 rounded-full bg-sidebar px-6 text-sm font-bold text-white hover:bg-sidebar-hover disabled:opacity-50"
+            className="btn btn-primary"
           >
             <LogIn className="size-4" aria-hidden />
             Absen Masuk
@@ -95,7 +93,7 @@ export function MyAttendancePage() {
             type="button"
             disabled={!today || !!today.checkOut}
             onClick={() => setMode('out')}
-            className="inline-flex h-11 items-center gap-2 rounded-full bg-lime px-6 text-sm font-bold text-sidebar disabled:opacity-50"
+            className="btn btn-accent"
           >
             <LogOut className="size-4" aria-hidden />
             Absen Pulang

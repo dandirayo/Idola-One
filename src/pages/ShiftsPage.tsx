@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Card, inputClass, primaryButton, SectionTitle } from '@/components/ui'
+import { Card, Hint, inputClass, primaryButton, SectionTitle } from '@/components/ui'
 import { setShift } from '@/data/attendance'
 import { useStore } from '@/data/store'
 import { shiftPresets, slotLabel, weekdayNames, type ShiftSlot } from '@/lib/shifts'
@@ -58,9 +58,7 @@ export function ShiftsPage() {
     <div className="space-y-5">
       <h1 className="text-2xl font-bold sm:text-3xl">Jadwal Shift</h1>
 
-      <p className="rounded-2xl bg-lilac px-4 py-2.5 text-sm" role="note">
-        Jadwal mingguan berulang. Jam masuk karyawan dibandingkan dengan jadwal ini untuk menghitung keterlambatan (toleransi 10 menit). Data contoh.
-      </p>
+      <Hint>Jadwal mingguan berulang. Jam masuk karyawan dibandingkan dengan jadwal ini untuk menghitung keterlambatan (toleransi 10 menit). Data contoh.</Hint>
 
       {error && (
         <p role="alert" className="text-sm font-medium text-danger">
@@ -97,7 +95,7 @@ export function ShiftsPage() {
                         aria-label={`Shift ${e.name} hari ${d}`}
                         value={value}
                         onChange={(ev) => onPreset(e.id, wd, ev.target.value)}
-                        className="h-9 w-full rounded-lg border border-line bg-canvas px-1.5 text-xs outline-none focus:border-ink"
+                        className="field field-sm"
                       >
                         <option value="libur">Libur</option>
                         <option value="pagi">Pagi 08–16</option>

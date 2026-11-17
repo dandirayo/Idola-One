@@ -1,7 +1,7 @@
 import { Plus } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
-import { Card, inputClass, StatusChip } from '@/components/ui'
+import { Card, Hint, inputClass, StatusChip } from '@/components/ui'
 import { completeRequest, decideRequest, payRequest, useStore, type EmployeeRequest } from '@/data/store'
 import { formatRupiah } from '@/lib/format'
 import { paymentMethodLabel, type PaymentMethod } from '@/lib/orders'
@@ -44,28 +44,24 @@ export function RequestsPage() {
         </div>
         <Link
           to="/requests/new"
-          className="inline-flex h-11 items-center gap-2 rounded-full bg-lime px-5 text-sm font-bold text-sidebar"
+          className="btn btn-accent"
         >
           <Plus className="size-4" aria-hidden />
           Buat Pengajuan
         </Link>
       </div>
 
-      <p className="rounded-2xl bg-lilac px-4 py-2.5 text-sm" role="note">
-        Data contoh. Di aplikasi sungguhan karyawan membuat pengajuan dari akunnya sendiri dan hanya owner yang
-        memutuskan.
-      </p>
+      <Hint>Di aplikasi sungguhan karyawan membuat pengajuan dari akunnya sendiri dan hanya owner yang
+        memutuskan.</Hint>
 
-      <div className="flex flex-wrap gap-2" role="group" aria-label="Filter status">
+      <div className="seg" role="group" aria-label="Filter status">
         {(['all', ...requestStatuses] as const).map((s) => (
           <button
             key={s}
             type="button"
             aria-pressed={filter === s}
             onClick={() => setFilter(s)}
-            className={`h-9 rounded-full px-4 text-sm font-semibold ${
-              filter === s ? 'bg-sidebar text-white' : 'bg-surface shadow-card hover:bg-line'
-            }`}
+            className="seg-item"
           >
             {s === 'all' ? 'Semua' : requestStatusLabel[s]}
           </button>
@@ -165,8 +161,8 @@ function RequestCard({ request: r }: { request: EmployeeRequest }) {
                 aria-label={`${requestActionLabel[a]}: ${requestTypeLabel[r.type]} ${r.requester}`}
                 className={
                   a === 'reject'
-                    ? 'h-10 rounded-full border border-line px-5 text-sm font-semibold text-danger hover:bg-canvas'
-                    : 'h-10 rounded-full bg-sidebar px-5 text-sm font-bold text-white hover:bg-sidebar-hover'
+                    ? 'btn btn-danger btn-sm'
+                    : 'btn btn-primary btn-sm'
                 }
               >
                 {requestActionLabel[a]}

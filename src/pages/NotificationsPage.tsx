@@ -1,6 +1,6 @@
 import { Trash2 } from 'lucide-react'
 import { useNavigate } from 'react-router'
-import { Card } from '@/components/ui'
+import { Card, Hint } from '@/components/ui'
 import { deleteNotification, markAllNotificationsRead, markNotificationRead } from '@/data/business'
 import { useStore } from '@/data/store'
 import { useAuth } from '@/lib/auth'
@@ -28,15 +28,13 @@ export function NotificationsPage() {
           type="button"
           disabled={unread === 0}
           onClick={() => markAllNotificationsRead(session)}
-          className="h-11 rounded-full bg-surface px-5 text-sm font-semibold shadow-card hover:bg-line disabled:opacity-50"
+          className="btn btn-outline"
         >
           Tandai semua dibaca
         </button>
       </div>
 
-      <p className="rounded-2xl bg-lilac px-4 py-2.5 text-sm" role="note">
-        Notifikasi dalam aplikasi, data contoh. Notifikasi push ke ponsel belum tersedia.
-      </p>
+      <Hint>Notifikasi dalam aplikasi, data contoh. Notifikasi push ke ponsel belum tersedia.</Hint>
 
       {visible.length === 0 ? (
         <Card>
@@ -65,7 +63,7 @@ export function NotificationsPage() {
                 type="button"
                 onClick={() => deleteNotification(n.id)}
                 aria-label={`Hapus notifikasi: ${n.title}`}
-                className="grid size-9 shrink-0 place-items-center rounded-full bg-canvas hover:bg-line"
+                className="icon-btn icon-btn-sm"
               >
                 <Trash2 className="size-4" aria-hidden />
               </button>

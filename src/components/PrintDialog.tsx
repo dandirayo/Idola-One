@@ -55,7 +55,7 @@ export function PrintDialog({
         <div className="relative flex max-h-[92vh] w-full max-w-md flex-col rounded-[1.5rem] bg-surface p-5 shadow-card">
           <div className="mb-3 flex items-center justify-between gap-3">
             <h2 className="text-lg font-bold">{title}</h2>
-            <button type="button" onClick={onClose} aria-label="Tutup" className="grid size-8 place-items-center rounded-full bg-canvas hover:bg-line">
+            <button type="button" onClick={onClose} aria-label="Tutup" className="icon-btn icon-btn-sm">
               <X className="size-4" aria-hidden />
             </button>
           </div>
@@ -69,12 +69,12 @@ export function PrintDialog({
             <button
               type="button"
               onClick={() => window.print()}
-              className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full bg-sidebar text-sm font-bold text-white hover:bg-sidebar-hover"
+              className="btn btn-primary flex-1"
             >
               <Printer className="size-4" aria-hidden />
               Cetak
             </button>
-            <button type="button" onClick={onClose} className="h-11 rounded-full bg-canvas px-5 text-sm font-semibold hover:bg-line">
+            <button type="button" onClick={onClose} className="btn btn-secondary">
               Tutup
             </button>
           </div>

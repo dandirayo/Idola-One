@@ -212,7 +212,7 @@ export function AppShell() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Cari pesanan atau pelanggan"
-                  className="h-11 w-full rounded-full border border-line bg-surface pl-10 pr-4 text-sm outline-none placeholder:text-muted focus:border-ink"
+                  className="field field-search"
                 />
               </label>
             </form>

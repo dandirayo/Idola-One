@@ -1,7 +1,7 @@
 import { Download } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
-import { Card, SectionTitle } from '@/components/ui'
+import { Card, Hint, SectionTitle } from '@/components/ui'
 import { useStore } from '@/data/store'
 import { inRange, periodLabel, periodRange, type Period } from '@/lib/finance'
 import { downloadCsv } from '@/lib/download'
@@ -49,14 +49,14 @@ export function ReportsPage() {
         <div className="flex gap-2">
           <Link
             to="/reports/payments"
-            className="inline-flex h-11 items-center rounded-full bg-surface px-5 text-sm font-semibold shadow-card hover:bg-line"
+            className="btn btn-outline"
           >
             Laporan Pembayaran
           </Link>
           <button
             type="button"
             onClick={exportCsv}
-            className="inline-flex h-11 items-center gap-2 rounded-full bg-lime px-5 text-sm font-bold text-sidebar"
+            className="btn btn-accent"
           >
             <Download className="size-4" aria-hidden />
             Ekspor CSV
@@ -64,12 +64,10 @@ export function ReportsPage() {
         </div>
       </div>
 
-      <p className="rounded-2xl bg-lilac px-4 py-2.5 text-sm" role="note">
-        Data contoh yang dihitung di browser. Di aplikasi sungguhan angka laporan dihitung server.
-      </p>
+      <Hint>Data contoh yang dihitung di browser. Di aplikasi sungguhan angka laporan dihitung server.</Hint>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex gap-2" role="tablist" aria-label="Jenis laporan">
+        <div className="seg" role="tablist" aria-label="Jenis laporan">
           {(
             [
               ['orders', 'Pesanan'],
@@ -82,24 +80,20 @@ export function ReportsPage() {
               role="tab"
               aria-selected={tab === value}
               onClick={() => setTab(value)}
-              className={`h-10 rounded-full px-5 text-sm font-semibold ${
-                tab === value ? 'bg-sidebar text-white' : 'bg-surface shadow-card hover:bg-line'
-              }`}
+              className="seg-item"
             >
               {label}
             </button>
           ))}
         </div>
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Periode">
+        <div className="seg" role="group" aria-label="Periode">
           {periods.map((p) => (
             <button
               key={p}
               type="button"
               aria-pressed={period === p}
               onClick={() => setPeriod(p)}
-              className={`h-9 rounded-full px-4 text-sm font-semibold ${
-                period === p ? 'bg-sidebar text-white' : 'bg-surface shadow-card hover:bg-line'
-              }`}
+              className="seg-item"
             >
               {periodLabel[p]}
             </button>

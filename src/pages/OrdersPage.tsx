@@ -1,7 +1,7 @@
 import { Plus, Search } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
-import { Card, orderStatusTone, paymentTone, StatusChip } from '@/components/ui'
+import { Card, Hint, orderStatusTone, paymentTone, StatusChip } from '@/components/ui'
 import { useStore } from '@/data/store'
 import { formatQty, formatRupiah } from '@/lib/format'
 import {
@@ -57,16 +57,14 @@ export function OrdersPage() {
         <h1 className="text-2xl font-bold sm:text-3xl">Pesanan</h1>
         <Link
           to="/orders/new"
-          className="inline-flex h-11 items-center gap-2 rounded-full bg-lime px-5 text-sm font-bold text-sidebar"
+          className="btn btn-accent"
         >
           <Plus className="size-4" aria-hidden />
           Pesanan Baru
         </Link>
       </div>
 
-      <p className="rounded-2xl bg-lilac px-4 py-2.5 text-sm" role="note">
-        Data contoh. Perubahan hanya tersimpan sementara dan hilang saat halaman dimuat ulang.
-      </p>
+      <Hint>Perubahan hanya tersimpan sementara dan hilang saat halaman dimuat ulang.</Hint>
 
       <div className="flex flex-wrap items-center gap-3">
         <label className="relative w-full sm:w-72">
@@ -80,10 +78,10 @@ export function OrdersPage() {
               setPage(0)
             }}
             placeholder="Cari nomor nota atau pelanggan"
-            className="h-11 w-full rounded-full border border-line bg-surface pl-10 pr-4 text-sm outline-none placeholder:text-muted focus:border-ink"
+            className="field field-search"
           />
         </label>
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Filter status">
+        <div className="seg" role="group" aria-label="Filter status">
           {filters.map((f) => (
             <button
               key={f.value}
@@ -93,9 +91,7 @@ export function OrdersPage() {
                 setStatus(f.value)
                 setPage(0)
               }}
-              className={`h-9 rounded-full px-4 text-sm font-semibold ${
-                status === f.value ? 'bg-sidebar text-white' : 'bg-surface text-ink shadow-card hover:bg-line'
-              }`}
+              className="seg-item"
             >
               {f.label}
             </button>
@@ -116,7 +112,7 @@ export function OrdersPage() {
               <li key={o.id}>
                 <Link
                   to={`/orders/${o.id}`}
-                  className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-card bg-surface p-4 shadow-card hover:bg-white/70"
+                  className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-card bg-surface p-4 shadow-card card-hover"
                 >
                   <div className="min-w-0 flex-1 basis-48">
                     <p className="truncate font-semibold">{o.customerName}</p>
@@ -145,7 +141,7 @@ export function OrdersPage() {
             type="button"
             disabled={current === 0}
             onClick={() => setPage(current - 1)}
-            className="h-9 rounded-full bg-surface px-4 font-semibold shadow-card disabled:opacity-50"
+            className="btn btn-outline btn-sm"
           >
             Sebelumnya
           </button>
@@ -156,7 +152,7 @@ export function OrdersPage() {
             type="button"
             disabled={current >= pages - 1}
             onClick={() => setPage(current + 1)}
-            className="h-9 rounded-full bg-surface px-4 font-semibold shadow-card disabled:opacity-50"
+            className="btn btn-outline btn-sm"
           >
             Berikutnya
           </button>
