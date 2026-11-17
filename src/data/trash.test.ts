@@ -13,6 +13,9 @@ import { addProjectBatch, addProjectPayment, createProject } from './projects'
 import { payWeeklySalary } from './payroll'
 import { addCustomer, addEmployee, addExpense, addPayment, createOrder, getState, setOrderStatus, type Order } from './store'
 import { purgeTrash, restoreBlocker, restoreFromTrash, trashSummary } from './trash'
+import { serviceByName } from './seed-services'
+
+const svc = (name: string) => serviceByName(name).id
 
 const cash = () => balance(getState().cash)
 const rid = () => `0818${Math.floor(Math.random() * 1e8)}`
@@ -21,7 +24,7 @@ function newOrder(paid = 0): Order {
   const c = addCustomer(`Sampah ${Math.random()}`, rid())
   return createOrder({
     customerId: c.id,
-    items: [{ serviceId: 's1', name: 'Cuci Setrika', unit: 'kg', qty: 3, price: 8000 }],
+    items: [{ serviceId: svc('Cuci Setrika Reguler'), name: 'Cuci Setrika', unit: 'kg', qty: 3, price: 8000 }],
     skipMinKg: false,
     note: '',
     initialPayment: paid > 0 ? { amount: paid, method: 'cash' } : null,
@@ -101,7 +104,7 @@ describe('Sampah: penolakan', () => {
     const c = addCustomer('Induk Sampah', rid())
     const o = createOrder({
       customerId: c.id,
-      items: [{ serviceId: 's1', name: 'Cuci Setrika', unit: 'kg', qty: 3, price: 8000 }],
+      items: [{ serviceId: svc('Cuci Setrika Reguler'), name: 'Cuci Setrika', unit: 'kg', qty: 3, price: 8000 }],
       skipMinKg: false,
       note: '',
       initialPayment: null,

@@ -4,6 +4,7 @@
 
 import { useSyncExternalStore } from 'react'
 import { loadState, scheduleSave } from './persist'
+import { catalogServices, serviceByName } from './seed-services'
 import type { CashEntry } from '@/lib/finance'
 import type { ShopInfo } from '@/lib/receipt'
 import type { BusinessKind } from '@/lib/access'
@@ -35,6 +36,8 @@ export interface Service {
   unit: Unit
   price: number
   active: boolean
+  /** Kelompok di daftar layanan, misalnya Pakaian atau Kiloan: Cuci Setrika. */
+  category?: string
   /** Item satuan yang boleh diberi insentif karyawan (sepatu, helm, tas). */
   incentive?: boolean
 }
@@ -312,17 +315,7 @@ export interface State {
   cash: CashEntry[]
 }
 
-const services: Service[] = [
-  { id: 's1', name: 'Cuci Setrika', unit: 'kg', price: 8000, active: true },
-  { id: 's2', name: 'Cuci Kering', unit: 'kg', price: 6000, active: true },
-  { id: 's3', name: 'Setrika Saja', unit: 'kg', price: 5000, active: true },
-  { id: 's4', name: 'Jas', unit: 'pcs', price: 30000, active: true },
-  { id: 's5', name: 'Sprei 180', unit: 'pcs', price: 20000, active: true },
-  { id: 's6', name: 'Bed Cover', unit: 'pcs', price: 35000, active: true },
-  { id: 's7', name: 'Sepatu', unit: 'pcs', price: 40000, active: true, incentive: true },
-  { id: 's8', name: 'Helm', unit: 'pcs', price: 25000, active: true, incentive: true },
-  { id: 's9', name: 'Tas', unit: 'pcs', price: 35000, active: true, incentive: true },
-]
+const services: Service[] = catalogServices
 
 const customers: Customer[] = [
   { id: 'c1', name: 'Bu Sinta', phone: '081200000001', active: true },
@@ -392,11 +385,11 @@ const line = (s: Service, qty: number): OrderItem => ({
 })
 
 const seedOrders: Order[] = [
-  seedOrder(12, customers[0], [line(services[0], 3.5)], 'received', 28000, seedAt(0, 8, 10)),
-  seedOrder(11, customers[1], [line(services[3], 2)], 'processing', 30000, seedAt(0, 7, 40)),
-  seedOrder(10, customers[2], [line(services[0], 5), line(services[4], 1)], 'processing', 0, seedAt(0, 7, 5)),
-  seedOrder(9, customers[3], [line(services[0], 4)], 'ready', 32000, seedAt(1, 16, 20)),
-  seedOrder(8, customers[0], [line(services[5], 2)], 'picked_up', 70000, seedAt(2, 10, 0)),
+  seedOrder(12, customers[0], [line(serviceByName('Cuci Setrika Reguler'), 3.5)], 'received', 28000, seedAt(0, 8, 10)),
+  seedOrder(11, customers[1], [line(serviceByName('Jas Cuci Setrika'), 2)], 'processing', 30000, seedAt(0, 7, 40)),
+  seedOrder(10, customers[2], [line(serviceByName('Cuci Setrika Reguler'), 5), line(serviceByName('Sprei Besar 180x200 Cuci Setrika'), 1)], 'processing', 0, seedAt(0, 7, 5)),
+  seedOrder(9, customers[3], [line(serviceByName('Cuci Setrika Reguler'), 4)], 'ready', 32000, seedAt(1, 16, 20)),
+  seedOrder(8, customers[0], [line(serviceByName('Bed Cover Besar'), 2)], 'picked_up', 70000, seedAt(2, 10, 0)),
 ]
 
 const inventory: InventoryItem[] = [
@@ -686,7 +679,7 @@ export function createOrder(input: NewOrderInput): Order {
       return rest
     }
     const service = state.services.find((x) => x.id === it.serviceId)
-    if (!service?.incentive || it.unit !== 'pcs') throw new Error(`${it.name} tidak mendapat insentif.`)
+    if (!service?.incentive || it.unit === 'kg') throw new Error(`${it.name} tidak mendapat insentif.`)
     if (!isValidIncentive(it.incentive.perUnit)) throw new Error('Nilai insentif tidak valid.')
     const emp = state.employees.find((e) => e.id === it.incentive?.employeeId)
     if (!emp?.active) throw new Error('Pilih karyawan penerima insentif yang aktif.')
@@ -763,9 +756,10 @@ function validateService(name: string, price: number) {
   return { name: clean, price }
 }
 
-export function addService(name: string, unit: Unit, price: number): Service {
+export function addService(name: string, unit: Unit, price: number, category?: string): Service {
   const valid = validateService(name, price)
-  const service: Service = { id: uid('s'), ...valid, unit, active: true }
+  const cat = category?.trim()
+  const service: Service = { id: uid('s'), ...valid, unit, active: true, ...(cat ? { category: cat } : {}) }
   emit({ ...state, services: [...state.services, service] })
   return service
 }

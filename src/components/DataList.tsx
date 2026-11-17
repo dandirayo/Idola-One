@@ -12,19 +12,19 @@ const MODES: { value: ViewMode; label: string; icon: typeof List }[] = [
 
 const storageKey = (id: string) => `idola-one:view:${id}`
 
-function readMode(id: string): ViewMode {
+function readMode(id: string, fallback: ViewMode): ViewMode {
   try {
     const v = localStorage.getItem(storageKey(id))
     if (v === 'normal' || v === 'table' || v === 'compact' || v === 'grid') return v
   } catch {
     // penyimpanan diblokir: pakai Normal
   }
-  return 'normal'
+  return fallback
 }
 
 /** Pilihan tampilan daftar, diingat per daftar di browser. */
-export function useViewMode(id: string): [ViewMode, (m: ViewMode) => void] {
-  const [mode, setMode] = useState<ViewMode>(() => readMode(id))
+export function useViewMode(id: string, fallback: ViewMode = 'normal'): [ViewMode, (m: ViewMode) => void] {
+  const [mode, setMode] = useState<ViewMode>(() => readMode(id, fallback))
   return [
     mode,
     (m) => {

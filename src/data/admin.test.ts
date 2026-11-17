@@ -46,6 +46,9 @@ import {
   type Order,
 } from './store'
 import { addBeverageBusiness } from './business'
+import { serviceByName } from './seed-services'
+
+const svc = (name: string) => serviceByName(name).id
 
 const cash = () => balance(getState().cash)
 const lastAudit = () => getState().audit[0]
@@ -54,7 +57,7 @@ function newOrder(paid = 0, status?: 'ready'): Order {
   const customer = addCustomer(`Tes ${Math.random()}`, `0813${Math.floor(Math.random() * 1e8)}`)
   const o = createOrder({
     customerId: customer.id,
-    items: [{ serviceId: 's1', name: 'Cuci Setrika', unit: 'kg', qty: 3, price: 8000 }],
+    items: [{ serviceId: svc('Cuci Setrika Reguler'), name: 'Cuci Setrika', unit: 'kg', qty: 3, price: 8000 }],
     skipMinKg: false,
     note: '',
     initialPayment: paid > 0 ? { amount: paid, method: 'cash' } : null,
@@ -105,7 +108,7 @@ describe('hapus pesanan', () => {
     const mk = () =>
       createOrder({
         customerId: customer.id,
-        items: [{ serviceId: 's7', name: 'Sepatu', unit: 'pcs', qty: 1, price: 40000, incentive: { perUnit: 10000, employeeId: 'em2' } }],
+        items: [{ serviceId: svc('Sepatu Bagus'), name: 'Sepatu Bagus', unit: 'pasang', qty: 1, price: 40000, incentive: { perUnit: 10000, employeeId: 'em2' } }],
         skipMinKg: false,
         note: '',
         initialPayment: null,
@@ -184,7 +187,7 @@ describe('gaji, insentif, kasbon, proyek', () => {
     const customer = addCustomer('Inc2', `0815${Math.floor(Math.random() * 1e8)}`)
     const o = createOrder({
       customerId: customer.id,
-      items: [{ serviceId: 's8', name: 'Helm', unit: 'pcs', qty: 2, price: 25000, incentive: { perUnit: 10000, employeeId: 'em2' } }],
+      items: [{ serviceId: svc('Helm'), name: 'Helm', unit: 'pcs', qty: 2, price: 35000, incentive: { perUnit: 10000, employeeId: 'em2' } }],
       skipMinKg: false,
       note: '',
       initialPayment: null,
@@ -234,7 +237,7 @@ describe('data master', () => {
   })
 
   it('layanan yang dipakai pesanan ditolak, yang baru boleh', () => {
-    expect(() => deleteService('s1')).toThrow(/dipakai/)
+    expect(() => deleteService(svc('Cuci Setrika Reguler'))).toThrow(/dipakai/)
     const s = addService('Layanan Tes', 'kg', 1000)
     deleteService(s.id)
     expect(getState().services.some((x) => x.id === s.id)).toBe(false)

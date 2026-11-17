@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router'
 import { Card, inputClass, primaryButton, SectionTitle } from '@/components/ui'
 import { addCustomer, createOrder, useStore, type OrderItem } from '@/data/store'
 import { formatQty, formatRupiah } from '@/lib/format'
-import { lineAmount, MIN_KG, orderTotal, paymentMethodLabel, subtotal, type PaymentMethod } from '@/lib/orders'
+import { lineAmount, MIN_KG, orderTotal, paymentMethodLabel, subtotal, type PaymentMethod, isDecimalUnit } from '@/lib/orders'
 import { INCENTIVE_OPTIONS } from '@/lib/payroll'
 
 type PayChoice = 'none' | 'half' | 'full'
@@ -33,6 +33,11 @@ export function OrderNewPage() {
   const [error, setError] = useState<string | null>(null)
 
   const selected = services.find((s) => s.id === serviceId)
+  const serviceGroups = [
+    ...services
+      .reduce((map, s) => map.set(s.category ?? 'Lainnya', [...(map.get(s.category ?? 'Lainnya') ?? []), s]), new Map<string, typeof services>())
+      .entries(),
+  ]
   const estimate = orderTotal(items, skipMinKg)
   const raw = subtotal(items, skipMinKg)
   const hasKg = items.some((i) => i.unit === 'kg')
@@ -45,9 +50,10 @@ export function OrderNewPage() {
     const value = Number(qty.replace(',', '.'))
     if (!selected) return setError('Pilih layanan.')
     if (!Number.isFinite(value) || value <= 0) return setError('Isi berat atau jumlah lebih dari nol.')
-    const step = selected.unit === 'kg' ? 0.1 : 1
+    const decimal = isDecimalUnit(selected.unit)
+    const step = decimal ? 0.1 : 1
     if (Math.abs(value / step - Math.round(value / step)) > 1e-9) {
-      return setError(selected.unit === 'kg' ? 'Berat per 0,1 kg.' : 'Jumlah harus bilangan bulat.')
+      return setError(decimal ? `Jumlah per 0,1 ${selected.unit}.` : 'Jumlah harus bilangan bulat.')
     }
     const perUnit = selected.incentive ? Number(incentive) : 0
     const receiver = incentiveTo || employees[0]?.id || ''
@@ -166,10 +172,14 @@ export function OrderNewPage() {
               <label>
                 <span className="sr-only">Layanan</span>
                 <select value={serviceId} onChange={(e) => setServiceId(e.target.value)} className={inputClass}>
-                  {services.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name} · {formatRupiah(s.price)}/{s.unit}
-                    </option>
+                  {serviceGroups.map(([cat, list]) => (
+                    <optgroup key={cat} label={cat}>
+                      {list.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.name} · {formatRupiah(s.price)}/{s.unit}
+                        </option>
+                      ))}
+                    </optgroup>
                   ))}
                 </select>
               </label>
@@ -177,7 +187,7 @@ export function OrderNewPage() {
                 <span className="sr-only">Berat atau jumlah</span>
                 <input
                   inputMode="decimal"
-                  placeholder={selected?.unit === 'kg' ? 'Berat (kg)' : 'Jumlah'}
+                  placeholder={selected?.unit === 'kg' ? 'Berat (kg)' : selected && isDecimalUnit(selected.unit) ? `Jumlah (${selected.unit})` : 'Jumlah'}
                   value={qty}
                   onChange={(e) => setQty(e.target.value)}
                   onKeyDown={(e) => {

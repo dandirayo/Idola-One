@@ -1,7 +1,20 @@
 // Aturan bisnis pesanan di sisi tampilan. Nilai di sini hanya PERKIRAAN.
 // Setelah backend ada, total, nomor nota, dan status final selalu dari server.
 
-export type Unit = 'kg' | 'pcs'
+export type Unit = 'kg' | 'pcs' | 'pasang' | 'set' | 'm' | 'm²'
+
+/** Satuan yang boleh berpecahan (per 0,1). Sisanya bilangan bulat. */
+const DECIMAL_UNITS: readonly Unit[] = ['kg', 'm', 'm²']
+export const isDecimalUnit = (unit: Unit): boolean => DECIMAL_UNITS.includes(unit)
+
+export const unitLabel: Record<Unit, string> = {
+  kg: 'Kiloan (per kg)',
+  pcs: 'Satuan (per pcs)',
+  pasang: 'Per pasang',
+  set: 'Per set',
+  m: 'Per meter',
+  'm²': 'Per meter persegi',
+}
 export type OrderStatus = 'received' | 'processing' | 'ready' | 'picked_up' | 'cancelled'
 export type PaymentStatus = 'unpaid' | 'partial' | 'paid'
 export type PaymentMethod = 'cash' | 'transfer' | 'qris'

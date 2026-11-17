@@ -85,3 +85,10 @@ body {
     padding: 2mm 3mm;
   }
 }
+
+/* Anak grid boleh menyusut: teks panjang (nama layanan) dipotong, bukan melebarkan halaman. */
+@layer base {
+  .grid > * {
+    min-width: 0;
+  }
+}

@@ -5,7 +5,7 @@
 import type { State } from './store'
 
 export const STORAGE_KEY = 'idola-one:data:v1'
-export const STORAGE_VERSION = 1
+export const STORAGE_VERSION = 2 // 2: katalog layanan asli
 const SAVE_DELAY_MS = 300
 
 export function serializeState(state: State): string {

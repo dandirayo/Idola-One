@@ -1,5 +1,5 @@
 import { DataList, useViewMode, ViewSwitch } from '@/components/DataList'
-import { Pencil, Plus } from 'lucide-react'
+import { Pencil, Plus, Search } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { useAuth } from '@/lib/auth'
 import { DeleteButton } from '@/components/ConfirmDialog'
@@ -7,12 +7,10 @@ import { deleteService, serviceUsage } from '@/data/admin'
 import { Card, Hint, inputClass, primaryButton, StatusChip } from '@/components/ui'
 import { addService, setServiceActive, updateService, useStore, type Service } from '@/data/store'
 import { formatRupiah } from '@/lib/format'
-import type { Unit } from '@/lib/orders'
-
-const unitLabel: Record<Unit, string> = { kg: 'Kiloan (per kg)', pcs: 'Satuan (per pcs)' }
+import { unitLabel, type Unit } from '@/lib/orders'
 
 export function ServicesPage() {
-  const view = useViewMode('services')
+  const view = useViewMode('services', 'compact')
   const services = useStore((s) => s.services)
   const { session } = useAuth()
   const isOwner = session?.role === 'owner'
@@ -21,6 +19,8 @@ export function ServicesPage() {
   const [name, setName] = useState('')
   const [unit, setUnit] = useState<Unit>('kg')
   const [price, setPrice] = useState('')
+  const [category, setCategory] = useState('')
+  const [query, setQuery] = useState('')
   const [error, setError] = useState<string | null>(null)
 
   function open(target: Service | 'new') {
@@ -29,6 +29,7 @@ export function ServicesPage() {
     setName(target === 'new' ? '' : target.name)
     setUnit(target === 'new' ? 'kg' : target.unit)
     setPrice(target === 'new' ? '' : String(target.price))
+    setCategory(target === 'new' ? '' : (target.category ?? ''))
   }
 
   function submit(e: FormEvent) {
@@ -36,13 +37,24 @@ export function ServicesPage() {
     setError(null)
     try {
       const value = Number(price.replace(/\./g, ''))
-      if (editing === 'new') addService(name, unit, value)
+      if (editing === 'new') addService(name, unit, value, category)
       else if (editing) updateService(editing.id, name, value)
       setEditing(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal menyimpan layanan.')
     }
   }
+
+  const categories = [...new Set(services.map((s) => s.category).filter((c): c is string => !!c))]
+  const q = query.trim().toLowerCase()
+  const grouped = new Map<string, Service[]>()
+  for (const s of services) {
+    if (!(isOwner || s.active)) continue
+    if (q && !s.name.toLowerCase().includes(q) && !(s.category ?? '').toLowerCase().includes(q)) continue
+    const key = s.category ?? 'Lainnya'
+    grouped.set(key, [...(grouped.get(key) ?? []), s])
+  }
+  const groups = [...grouped.entries()]
 
   const actions = (s: Service) => (
     <>
@@ -85,11 +97,11 @@ export function ServicesPage() {
         )}
       </div>
 
-      <Hint>Bukan katalog harga asli. Mengubah harga tidak mengubah pesanan yang sudah dibuat.</Hint>
+      <Hint>Katalog contoh disalin dari sistem lama ({services.length} layanan). Mengubah harga tidak mengubah pesanan yang sudah dibuat.</Hint>
 
       {editing && isOwner && (
         <Card>
-          <form onSubmit={submit} noValidate className="grid gap-3 sm:grid-cols-[1fr_12rem_9rem_auto_auto] sm:items-end">
+          <form onSubmit={submit} noValidate className="grid gap-3 sm:grid-cols-[1fr_12rem_12rem_9rem_auto_auto] sm:items-end">
             <label className="block text-sm font-semibold">
               Nama layanan
               <input value={name} onChange={(e) => setName(e.target.value)} className={`${inputClass} mt-1.5`} />
@@ -108,6 +120,22 @@ export function ServicesPage() {
                   </option>
                 ))}
               </select>
+            </label>
+            <label className="block text-sm font-semibold">
+              Kategori
+              <input
+                list="service-categories"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                disabled={editing !== 'new'}
+                placeholder="Pakaian, Sepatu, ..."
+                className={`${inputClass} mt-1.5 disabled:opacity-60`}
+              />
+              <datalist id="service-categories">
+                {categories.map((c) => (
+                  <option key={c} value={c} />
+                ))}
+              </datalist>
             </label>
             <label className="block text-sm font-semibold">
               Harga (Rp)
@@ -137,16 +165,27 @@ export function ServicesPage() {
         </Card>
       )}
 
-      <div className="flex justify-end">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <label className="relative w-full sm:w-72">
+          <span className="sr-only">Cari layanan</span>
+          <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden />
+          <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Cari layanan" className="field field-search" />
+        </label>
         <ViewSwitch mode={view[0]} onChange={view[1]} />
       </div>
 
-      {(['kg', 'pcs'] as Unit[]).map((u) => {
-        const list = services.filter((s) => s.unit === u && (isOwner || s.active))
+      {groups.length === 0 && (
+        <Card>
+          <p className="font-semibold">Tidak ada layanan yang cocok.</p>
+        </Card>
+      )}
+
+      {groups.map(([cat, list]) => {
+        const u = cat
         return (
           <section key={u} aria-labelledby={`grp-${u}`}>
             <h2 id={`grp-${u}`} className="mb-3 text-lg font-bold">
-              {unitLabel[u]}
+              {cat} <span className="text-sm font-medium text-muted">· {list.length}</span>
             </h2>
             {list.length === 0 ? (
               <Card>
@@ -154,7 +193,7 @@ export function ServicesPage() {
               </Card>
             ) : (
               <DataList
-                id="services"
+                id={`services-${u}`}
                 items={list}
                 rowKey={(s) => s.id}
                 actions={actions}
@@ -163,6 +202,7 @@ export function ServicesPage() {
                 columns={[
             { key: 'name', label: 'Layanan', primary: true, sort: (s) => s.name, render: (s) => s.name },
             { key: 'price', label: 'Harga', align: 'right', compact: true, sort: (s) => s.price, render: (s) => `${formatRupiah(s.price)} / ${s.unit}` },
+            { key: 'unit', label: 'Satuan', hideBelow: 'sm', render: (s) => unitLabel[s.unit] },
             { key: 'status', label: 'Status', compact: true, render: (s) => <StatusChip label={s.active ? 'Aktif' : 'Nonaktif'} tone={s.active ? 'lime' : 'peach'} /> },
                 ]}
                 renderNormal={(s) => (

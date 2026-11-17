@@ -15,6 +15,9 @@ import {
   updateOrderKiloLines,
   updateService,
 } from './store'
+import { serviceByName } from './seed-services'
+
+const svc = (name: string) => serviceByName(name).id
 
 const cashBalance = () => balance(getState().cash)
 
@@ -89,7 +92,7 @@ describe('gaji mingguan', () => {
 function sepatuOrder(perUnit: number, employeeId = 'em1', qty = 2) {
   return createOrder({
     customerId: 'c1',
-    items: [{ serviceId: 's7', name: 'Sepatu', unit: 'pcs', qty, price: 40000, incentive: { perUnit, employeeId } }],
+    items: [{ serviceId: svc('Sepatu Bagus'), name: 'Sepatu Bagus', unit: 'pasang', qty, price: 40000, incentive: { perUnit, employeeId } }],
     skipMinKg: false,
     note: '',
     initialPayment: null,
@@ -144,7 +147,7 @@ describe('insentif item', () => {
     expect(() =>
       createOrder({
         customerId: 'c1',
-        items: [{ serviceId: 's4', name: 'Jas', unit: 'pcs', qty: 1, price: 30000, incentive: { perUnit: 10000, employeeId: 'em1' } }],
+        items: [{ serviceId: svc('Jas Cuci Setrika'), name: 'Jas', unit: 'pcs', qty: 1, price: 30000, incentive: { perUnit: 10000, employeeId: 'em1' } }],
         skipMinKg: false,
         note: '',
         initialPayment: null,
@@ -184,8 +187,8 @@ describe('ubah layanan kiloan', () => {
     createOrder({
       customerId: 'c1',
       items: [
-        { serviceId: 's1', name: 'Cuci Setrika', unit: 'kg', qty: 4, price: 8000 },
-        { serviceId: 's4', name: 'Jas', unit: 'pcs', qty: 1, price: 30000 },
+        { serviceId: svc('Cuci Setrika Reguler'), name: 'Cuci Setrika', unit: 'kg', qty: 4, price: 8000 },
+        { serviceId: svc('Jas Cuci Setrika'), name: 'Jas', unit: 'pcs', qty: 1, price: 30000 },
       ],
       skipMinKg: false,
       note: '',
@@ -195,36 +198,36 @@ describe('ubah layanan kiloan', () => {
   it('menghitung ulang total dari katalog, mempertahankan item satuan, dan mencatat audit', () => {
     const o = kiloOrder() // 32.000 + 30.000 = 62.000
     expect(o.total).toBe(62000)
-    updateOrderKiloLines(o.id, [{ serviceId: 's2', qty: 5 }]) // Cuci Kering 6.000 x 5 = 30.000 + Jas
+    updateOrderKiloLines(o.id, [{ serviceId: svc('Cuci Kering Lipat Reguler'), qty: 5 }]) // Cuci Kering Lipat 4.000 x 5 = 20.000 + Jas 30.000
     const after = getOrder(o.id)!
-    expect(after.total).toBe(60000)
-    expect(after.items.map((i) => i.name)).toEqual(['Cuci Kering', 'Jas'])
+    expect(after.total).toBe(50000)
+    expect(after.items.map((i) => i.name)).toEqual(['Cuci Kering Lipat Reguler', 'Jas'])
     expect(after.paid).toBe(20000)
     expect(getState().audit[0]).toMatchObject({ entity: 'Pesanan', action: 'Ubah layanan kiloan' })
   })
 
   it('tidak boleh membuat total lebih kecil dari yang sudah dibayar', () => {
     const o = kiloOrder()
-    expect(() => updateOrderKiloLines(o.id, [{ serviceId: 's3', qty: 3 }])).not.toThrow() // 15.000 + 30.000 = 45.000
+    expect(() => updateOrderKiloLines(o.id, [{ serviceId: svc('Setrika Lipat Reguler'), qty: 3 }])).not.toThrow() // 15.000 + 30.000 = 45.000
     const o2 = createOrder({
       customerId: 'c1',
-      items: [{ serviceId: 's1', name: 'Cuci Setrika', unit: 'kg', qty: 4, price: 8000 }],
+      items: [{ serviceId: svc('Cuci Setrika Reguler'), name: 'Cuci Setrika', unit: 'kg', qty: 4, price: 8000 }],
       skipMinKg: false,
       note: '',
       initialPayment: { amount: 32000, method: 'cash' },
     })
-    expect(() => updateOrderKiloLines(o2.id, [{ serviceId: 's3', qty: 3 }])).toThrow(/lebih kecil/)
+    expect(() => updateOrderKiloLines(o2.id, [{ serviceId: svc('Setrika Lipat Reguler'), qty: 3 }])).toThrow(/lebih kecil/)
     expect(getOrder(o2.id)!.total).toBe(32000)
   })
 
   it('menolak layanan satuan, berat tidak valid, daftar kosong, dan pesanan yang sudah diambil atau batal', () => {
     const o = kiloOrder()
-    expect(() => updateOrderKiloLines(o.id, [{ serviceId: 's4', qty: 1 }])).toThrow(/kiloan/)
-    expect(() => updateOrderKiloLines(o.id, [{ serviceId: 's1', qty: 0 }])).toThrow(/Berat/)
-    expect(() => updateOrderKiloLines(o.id, [{ serviceId: 's1', qty: 1.25 }])).toThrow(/0,1/)
+    expect(() => updateOrderKiloLines(o.id, [{ serviceId: svc('Jas Cuci Setrika'), qty: 1 }])).toThrow(/kiloan/)
+    expect(() => updateOrderKiloLines(o.id, [{ serviceId: svc('Cuci Setrika Reguler'), qty: 0 }])).toThrow(/Berat/)
+    expect(() => updateOrderKiloLines(o.id, [{ serviceId: svc('Cuci Setrika Reguler'), qty: 1.25 }])).toThrow(/0,1/)
     expect(() => updateOrderKiloLines(o.id, [])).toThrow(/minimal/)
     setOrderStatus(o.id, 'cancelled')
-    expect(() => updateOrderKiloLines(o.id, [{ serviceId: 's1', qty: 3 }])).toThrow(/tidak bisa diubah/)
+    expect(() => updateOrderKiloLines(o.id, [{ serviceId: svc('Cuci Setrika Reguler'), qty: 3 }])).toThrow(/tidak bisa diubah/)
   })
 })
 
@@ -251,17 +254,17 @@ describe('notifikasi dan audit dari aksi', () => {
 
   it('perubahan harga layanan tercatat di audit, perubahan tanpa beda tidak', () => {
     const before = getState().audit.length
-    updateService('s1', 'Cuci Setrika', 8000)
+    updateService(svc('Cuci Setrika Reguler'), 'Cuci Setrika Reguler', 7000)
     expect(getState().audit.length).toBe(before)
-    updateService('s1', 'Cuci Setrika', 8500)
+    updateService(svc('Cuci Setrika Reguler'), 'Cuci Setrika Reguler', 7500)
     expect(getState().audit[0]).toMatchObject({ entity: 'Layanan', action: 'Ubah layanan' })
-    updateService('s1', 'Cuci Setrika', 8000)
+    updateService(svc('Cuci Setrika Reguler'), 'Cuci Setrika Reguler', 7000)
   })
 
   it('Pesanan Siap Diambil memberi tahu owner', () => {
     const o = createOrder({
       customerId: 'c1',
-      items: [{ serviceId: 's4', name: 'Jas', unit: 'pcs', qty: 1, price: 30000 }],
+      items: [{ serviceId: svc('Jas Cuci Setrika'), name: 'Jas', unit: 'pcs', qty: 1, price: 30000 }],
       skipMinKg: false,
       note: '',
       initialPayment: null,

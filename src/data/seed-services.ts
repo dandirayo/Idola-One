@@ -1,0 +1,208 @@
+// Katalog layanan Idola Laundry (161 layanan aktif), disalin dari katalog yang sudah dipakai
+// di sistem lama pada 17 November 2026. Dipakai sebagai data contoh sampai backend ada.
+// Format baris: [nama, satuan asal, harga (Rp), kategori]. Satuan asal dipetakan ke Unit
+// aplikasi: piece dan item menjadi pcs, pair menjadi pasang, m2 menjadi m².
+
+import type { Unit } from '@/lib/orders'
+import type { Service } from './store'
+
+type Row = [name: string, unit: string, price: number, category: string]
+
+const unitMap: Record<string, Unit> = { kg: 'kg', piece: 'pcs', item: 'pcs', pair: 'pasang', set: 'set', m: 'm', m2: 'm²' }
+
+/** Layanan yang boleh diberi insentif karyawan. */
+const INCENTIVE = /^(sepatu|helm|tas ransel)/i
+
+const rows: Row[] = [
+  ['Boneka XS', 'piece', 10000, 'boneka'],
+  ['Boneka S', 'piece', 15000, 'boneka'],
+  ['Boneka M', 'piece', 20000, 'boneka'],
+  ['Boneka L', 'piece', 25000, 'boneka'],
+  ['Boneka XL', 'piece', 35000, 'boneka'],
+  ['Boneka XXL', 'piece', 50000, 'boneka'],
+  ['Boneka XXXL', 'piece', 70000, 'boneka'],
+  ['Cuci Kering Lipat Reguler', 'kg', 4000, 'cuci kering lipat'],
+  ['Cuci Kering Lipat Express', 'kg', 6000, 'cuci kering lipat'],
+  ['Cuci Kering Lipat Kilat', 'kg', 9000, 'cuci kering lipat'],
+  ['Cuci Setrika Reguler', 'kg', 7000, 'cuci setrika'],
+  ['Cuci Setrika Express', 'kg', 9000, 'cuci setrika'],
+  ['Cuci Setrika Kilat', 'kg', 12000, 'cuci setrika'],
+  ['Setrika Lipat Reguler', 'kg', 5000, 'setrika lipat'],
+  ['Setrika Lipat Express', 'kg', 7000, 'setrika lipat'],
+  ['Setrika Lipat Kilat', 'kg', 10000, 'setrika lipat'],
+  ['Handuk Kecil', 'piece', 5000, 'handuk'],
+  ['Handuk Sedang', 'piece', 7500, 'handuk'],
+  ['Handuk Besar', 'piece', 10000, 'handuk'],
+  ['Handuk Jumbo', 'piece', 15000, 'handuk'],
+  ['Helm', 'item', 35000, 'helm'],
+  ['Jas Cuci Setrika', 'piece', 25000, 'jas dan jaket'],
+  ['Jas Setrika Saja', 'piece', 15000, 'jas dan jaket'],
+  ['Blazer Cuci Setrika', 'piece', 25000, 'jas dan jaket'],
+  ['Jaket Cuci Setrika', 'piece', 20000, 'jas dan jaket'],
+  ['Jaket Setrika Saja', 'piece', 15000, 'jas dan jaket'],
+  ['Hoodie Cuci Setrika', 'piece', 20000, 'jas dan jaket'],
+  ['Hoodie Setrika Saja', 'piece', 15000, 'jas dan jaket'],
+  ['Sweater Cuci Setrika', 'piece', 20000, 'jas dan jaket'],
+  ['Sweater Setrika Saja', 'piece', 15000, 'jas dan jaket'],
+  ['Jaket Kulit', 'piece', 50000, 'jas dan jaket'],
+  ['Jaket Tebal/Bulu', 'piece', 35000, 'jas dan jaket'],
+  ['Kain (<3 m)', 'piece', 15000, 'kain dan gorden'],
+  ['Kain Pantai', 'piece', 15000, 'kain dan gorden'],
+  ['Kain Payung', 'piece', 15000, 'kain dan gorden'],
+  ['Kain Songket', 'piece', 15000, 'kain dan gorden'],
+  ['Kain Ulos', 'piece', 15000, 'kain dan gorden'],
+  ['Kain Gorden Dalam', 'm', 3500, 'kain dan gorden'],
+  ['Kain Gorden Tipis', 'm', 5000, 'kain dan gorden'],
+  ['Kain (>3 M) / Meter', 'm2', 3000, 'kain dan gorden'],
+  ['Kain Gorden Tebal', 'm', 7500, 'kain dan gorden'],
+  ['Bendera Besar', 'piece', 20000, 'lainnya'],
+  ['Bendera Kecil', 'piece', 15000, 'lainnya'],
+  ['Body Protector', 'piece', 50000, 'lainnya'],
+  ['Bendera Meteran', 'm2', 5000, 'lainnya'],
+  ['Express Tambahan', 'item', 5000, 'layanan tambahan'],
+  ['Noda Berat Tambahan', 'item', 5000, 'layanan tambahan'],
+  ['Rok Cuci Setrika', 'piece', 15000, 'pakaian'],
+  ['Rok Setrika Saja', 'piece', 10000, 'pakaian'],
+  ['Kemeja Cuci Setrika', 'piece', 15000, 'pakaian'],
+  ['Kemeja Setrika Saja', 'piece', 10000, 'pakaian'],
+  ['Kerudung Kecil (S, M, L) Cuci Setrika', 'piece', 15000, 'pakaian'],
+  ['Kerudung Kecil (S, M, L) Setrika Saja', 'piece', 10000, 'pakaian'],
+  ['Kerudung Besar (XL, XXL) Cuci Setrika', 'piece', 20000, 'pakaian'],
+  ['Kerudung Besar (XL, XXL) Setrika Saja', 'piece', 15000, 'pakaian'],
+  ['Bandana', 'piece', 5000, 'pakaian'],
+  ['Daleman Baju Pengantin', 'piece', 15000, 'pakaian'],
+  ['Gaun Pengantin', 'piece', 50000, 'pakaian'],
+  ['Kamisol', 'piece', 10000, 'pakaian'],
+  ['Kamisol Anak', 'piece', 5000, 'pakaian'],
+  ['Pashmina', 'piece', 15000, 'pakaian'],
+  ['Rompi', 'piece', 15000, 'pakaian'],
+  ['Rompi Anak', 'piece', 10000, 'pakaian'],
+  ['Wearpack', 'piece', 20000, 'pakaian'],
+  ['Kaos Normal', 'piece', 10000, 'pakaian'],
+  ['Kaos Bagus', 'piece', 15000, 'pakaian'],
+  ['Kaos Besar Normal', 'piece', 15000, 'pakaian'],
+  ['Celana Panjang Normal', 'piece', 20000, 'pakaian'],
+  ['Baju Muslim', 'piece', 15000, 'pakaian'],
+  ['Baju Muslim Panjang', 'piece', 20000, 'pakaian'],
+  ['Baju Balet Anak', 'piece', 15000, 'pakaian'],
+  ['Baju Bayi', 'piece', 5000, 'pakaian'],
+  ['Baju Kaos', 'piece', 15000, 'pakaian'],
+  ['Baju Ihrom', 'piece', 15000, 'pakaian'],
+  ['Baju Koko', 'piece', 10000, 'pakaian'],
+  ['Baju Lab', 'piece', 20000, 'pakaian'],
+  ['Baju Muslim Selutut', 'piece', 15000, 'pakaian'],
+  ['Baju Renang', 'piece', 15000, 'pakaian'],
+  ['Baju Safari', 'piece', 15000, 'pakaian'],
+  ['Baju Tidur', 'piece', 15000, 'pakaian'],
+  ['Celana Panjang', 'piece', 15000, 'pakaian'],
+  ['Celana Pendek', 'piece', 15000, 'pakaian'],
+  ['Celana Bayi', 'piece', 5000, 'pakaian'],
+  ['Daster', 'piece', 20000, 'pakaian'],
+  ['Gamis', 'piece', 20000, 'pakaian'],
+  ['Gaun', 'piece', 25000, 'pakaian'],
+  ['Kebaya Pendek', 'piece', 15000, 'pakaian'],
+  ['Kebaya Panjang', 'piece', 20000, 'pakaian'],
+  ['Alas Box Bayi', 'piece', 20000, 'perlengkapan bayi'],
+  ['Alas Keranjang Bayi', 'piece', 10000, 'perlengkapan bayi'],
+  ['Baby Walker', 'piece', 30000, 'perlengkapan bayi'],
+  ['Bemper Bayi Kecil', 'piece', 15000, 'perlengkapan bayi'],
+  ['Bemper Bayi Sedang', 'piece', 20000, 'perlengkapan bayi'],
+  ['Boks Bayi', 'piece', 50000, 'perlengkapan bayi'],
+  ['Busa Alas Keranjang Bayi', 'piece', 15000, 'perlengkapan bayi'],
+  ['Perlak', 'piece', 15000, 'perlengkapan bayi'],
+  ['Mukena Cuci Setrika', 'set', 20000, 'perlengkapan ibadah'],
+  ['Mukena Setrika Saja', 'set', 15000, 'perlengkapan ibadah'],
+  ['Sajadah Tipis Cuci Setrika', 'piece', 10000, 'perlengkapan ibadah'],
+  ['Sajadah Tipis Setrika Saja', 'piece', 6000, 'perlengkapan ibadah'],
+  ['Sajadah Tebal Cuci Setrika', 'piece', 15000, 'perlengkapan ibadah'],
+  ['Sajadah Tebal Setrika Saja', 'piece', 9000, 'perlengkapan ibadah'],
+  ['Bantalan Sandaran Mobil', 'piece', 10000, 'perlengkapan kendaraan'],
+  ['Cover (Tutup) Mobil', 'piece', 25000, 'perlengkapan kendaraan'],
+  ['Cover (Tutup) Motor', 'piece', 20000, 'perlengkapan kendaraan'],
+  ['Alas Piring Meja Makan', 'piece', 5000, 'perlengkapan rumah'],
+  ['Alas Sofa', 'piece', 10000, 'perlengkapan rumah'],
+  ['Bantal Kursi', 'piece', 15000, 'perlengkapan rumah'],
+  ['Bantal Lantai', 'piece', 20000, 'perlengkapan rumah'],
+  ['Bantalan Tempat Duduk', 'piece', 30000, 'perlengkapan rumah'],
+  ['Kap Lampu Besar', 'piece', 20000, 'perlengkapan rumah'],
+  ['Kap Lampu Sedang', 'piece', 15000, 'perlengkapan rumah'],
+  ['Keset Tebal', 'piece', 10000, 'perlengkapan rumah'],
+  ['Keset Tipis', 'piece', 5000, 'perlengkapan rumah'],
+  ['Tikar', 'piece', 25000, 'perlengkapan rumah'],
+  ['Karpet Tebal', 'm', 20000, 'perlengkapan rumah'],
+  ['Karpet Tipis', 'm', 15000, 'perlengkapan rumah'],
+  ['Sprei Besar 160x200 Cuci Setrika', 'piece', 15000, 'perlengkapan tidur'],
+  ['Sprei Besar 180x200 Cuci Setrika', 'piece', 15000, 'perlengkapan tidur'],
+  ['Sprei Balon Cuci Setrika', 'piece', 20000, 'perlengkapan tidur'],
+  ['Sprei Besar 200x200 Cuci Setrika', 'piece', 15000, 'perlengkapan tidur'],
+  ['Sprei Balon Setrika Saja', 'piece', 12000, 'perlengkapan tidur'],
+  ['Sprei Besar 160x200 Setrika Saja', 'piece', 15000, 'perlengkapan tidur'],
+  ['Selimut Kecil (90, 100, 120) Cuci Setrika', 'piece', 10000, 'perlengkapan tidur'],
+  ['Sprei Besar 180x200 Setrika Saja', 'piece', 18000, 'perlengkapan tidur'],
+  ['Selimut Kecil (90, 100, 120) Setrika Saja', 'piece', 6000, 'perlengkapan tidur'],
+  ['Sprei Besar 200x200 Setrika Saja', 'piece', 20000, 'perlengkapan tidur'],
+  ['Selimut Besar (160, 180, 200) Cuci Setrika', 'piece', 15000, 'perlengkapan tidur'],
+  ['Selimut Besar (160, 180, 200) Setrika Saja', 'piece', 9000, 'perlengkapan tidur'],
+  ['Alas Kasur Springbed', 'piece', 15000, 'perlengkapan tidur'],
+  ['Kelambu Tempat Tidur Besar', 'piece', 25000, 'perlengkapan tidur'],
+  ['Kelambu Tempat Tidur Sedang', 'piece', 20000, 'perlengkapan tidur'],
+  ['Kelambu Tempat Tidur Kecil', 'piece', 15000, 'perlengkapan tidur'],
+  ['Sprei Saja', 'piece', 10000, 'perlengkapan tidur'],
+  ['Sprei Set Sedang', 'piece', 15000, 'perlengkapan tidur'],
+  ['Bed Cover Sedang', 'piece', 25000, 'perlengkapan tidur'],
+  ['Bed Cover Besar', 'piece', 30000, 'perlengkapan tidur'],
+  ['Bed Cover Jumbo', 'piece', 35000, 'perlengkapan tidur'],
+  ['Selimut Tebal', 'piece', 15000, 'perlengkapan tidur'],
+  ['Sprei Set Besar', 'piece', 20000, 'perlengkapan tidur'],
+  ['Sepatu Biasa', 'pair', 35000, 'sepatu'],
+  ['Sepatu Bagus', 'pair', 40000, 'sepatu'],
+  ['Kaos + Celana Cuci Setrika', 'set', 25000, 'setelan (atasan + bawahan)'],
+  ['Kaos + Celana Setrika Saja', 'set', 15000, 'setelan (atasan + bawahan)'],
+  ['Kemeja + Celana Panjang Cuci Setrika', 'set', 25000, 'setelan (atasan + bawahan)'],
+  ['Kemeja + Celana Panjang Setrika Saja', 'set', 15000, 'setelan (atasan + bawahan)'],
+  ['Jas + Celana Panjang Cuci Setrika', 'set', 40000, 'setelan (atasan + bawahan)'],
+  ['Jas + Celana Panjang Setrika Saja', 'set', 25000, 'setelan (atasan + bawahan)'],
+  ['Kebaya Panjang + Sarung Cuci Setrika', 'set', 35000, 'setelan (atasan + bawahan)'],
+  ['Kebaya Panjang + Sarung Setrika Saja', 'set', 25000, 'setelan (atasan + bawahan)'],
+  ['Kebaya Pendek + Sarung Cuci Setrika', 'set', 25000, 'setelan (atasan + bawahan)'],
+  ['Kebaya Pendek + Sarung Setrika Saja', 'set', 15000, 'setelan (atasan + bawahan)'],
+  ['Baju Koko + Sarung Cuci Setrika', 'set', 30000, 'setelan (atasan + bawahan)'],
+  ['Baju Koko + Sarung Setrika Saja', 'set', 20000, 'setelan (atasan + bawahan)'],
+  ['Baju Damkar Reguler', 'set', 30000, 'setelan (atasan + bawahan)'],
+  ['Baju Damkar Kilat', 'set', 40000, 'setelan (atasan + bawahan)'],
+  ['Baju Tentara Reguler', 'set', 30000, 'setelan (atasan + bawahan)'],
+  ['Baju Tentara Kilat', 'set', 40000, 'setelan (atasan + bawahan)'],
+  ['Tas Ransel Kecil', 'piece', 25000, 'tas'],
+  ['Tas Ransel Sedang', 'piece', 35000, 'tas'],
+  ['Tas Ransel Besar', 'piece', 45000, 'tas'],
+]
+
+const KILO_CATEGORIES = new Set(['cuci kering lipat', 'cuci setrika', 'setrika lipat'])
+
+/** "jas dan jaket" menjadi "Jas dan Jaket". */
+function titleCase(text: string): string {
+  return text
+    .split(' ')
+    .map((w) => (w === 'dan' ? w : w.replace(/^\(?[a-z]/, (c) => c.toUpperCase())))
+    .join(' ')
+}
+
+/** Kategori kiloan lebih dulu, lalu sesuai urutan abjad (urutan baris sumber). */
+const ordered = [...rows].sort((a, b) => Number(KILO_CATEGORIES.has(b[3])) - Number(KILO_CATEGORIES.has(a[3])))
+
+export const catalogServices: Service[] = ordered.map(([name, unit, price, category], i) => ({
+  id: `svc-${String(i + 1).padStart(3, '0')}`,
+  name,
+  unit: unitMap[unit],
+  price,
+  active: true,
+  category: KILO_CATEGORIES.has(category) ? `Kiloan: ${titleCase(category)}` : titleCase(category),
+  ...(INCENTIVE.test(name) ? { incentive: true } : {}),
+}))
+
+/** Cari layanan katalog menurut nama persis (dipakai data contoh pesanan). */
+export function serviceByName(name: string): Service {
+  const found = catalogServices.find((s) => s.name === name)
+  if (!found) throw new Error(`Layanan contoh tidak ada: ${name}`)
+  return found
+}
