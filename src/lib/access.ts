@@ -34,7 +34,7 @@ export function accessibleBusinesses(
   return active.filter((b) => allowed.has(b.id))
 }
 
-const common = ['/notifications']
+const common = ['/notifications', '/profile']
 
 /** Halaman khusus karyawan. Owner tidak membukanya walau awalan path-nya cocok dengan halaman owner. */
 const employeeOnly = ['/requests/me', '/attendance/me', '/shifts/me']
@@ -56,6 +56,7 @@ const allowed: Record<string, string[]> = {
     '/projects',
     '/audit',
     '/trash',
+    '/backup',
     '/settings',
     '/businesses/manage',
     ...common,
@@ -106,6 +107,7 @@ const laundryOwnerNav: NavEntry[] = [
   { to: '/reports', label: 'Laporan', group: 'Keuangan' },
   { to: '/audit', label: 'Audit', group: 'Kontrol' },
   { to: '/trash', label: 'Sampah', group: 'Kontrol' },
+  { to: '/backup', label: 'Backup', group: 'Kontrol' },
   { to: '/businesses/manage', label: 'Kelola Usaha', group: 'Kontrol' },
   { to: '/settings/shop', label: 'Pengaturan', group: 'Kontrol' },
 ]
@@ -113,6 +115,7 @@ const laundryOwnerNav: NavEntry[] = [
 const laundryEmployeeNav: NavEntry[] = [
   { to: '/dashboard', label: 'Beranda', group: 'Ringkasan' },
   { to: '/orders', label: 'Pesanan', group: 'Pekerjaan' },
+  { to: '/orders/me', label: 'Pesanan Saya', group: 'Saya' },
   { to: '/customers', label: 'Pelanggan', group: 'Pekerjaan' },
   { to: '/services', label: 'Layanan & Harga', group: 'Pekerjaan' },
   { to: '/inventory', label: 'Stok', group: 'Pekerjaan' },

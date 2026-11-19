@@ -6,11 +6,18 @@ import { DataList, type Column } from '@/components/DataList'
 import { useStore, type Order } from '@/data/store'
 import { formatQty, formatRupiah } from '@/lib/format'
 import {
+  orderSpeed,
   orderStatusLabel,
   paymentStatus,
   paymentStatusLabel,
+  speedLabel,
   type OrderStatus,
+  type Speed,
 } from '@/lib/orders'
+import { PeriodPicker } from '@/components/PeriodPicker'
+import { useAuth } from '@/lib/auth'
+import { choiceRange, inRangeOrAll, initialPeriod } from '@/lib/finance'
+import { matches } from '@/lib/search'
 
 const filters: { value: OrderStatus | 'all'; label: string }[] = [
   { value: 'all', label: 'Semua' },
@@ -53,8 +60,16 @@ const columns: Column<Order>[] = [
 
 const dateFormat = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 
-export function OrdersPage() {
-  const orders = useStore((s) => s.orders)
+/** `mine`: halaman "Pesanan Saya" untuk karyawan, hanya pesanan yang dia buat. */
+export function OrdersPage({ mine = false }: { mine?: boolean }) {
+  const allOrders = useStore((s) => s.orders)
+  const { session } = useAuth()
+  const orders = useMemo(
+    () => (mine && session ? allOrders.filter((o) => o.cashier === session.name) : allOrders),
+    [allOrders, mine, session],
+  )
+  const [period, setPeriod] = useState(() => initialPeriod('all'))
+  const [speed, setSpeed] = useState<Speed | 'all'>('all')
   const [params] = useSearchParams()
   const urlQuery = params.get('q') ?? ''
   const [query, setQuery] = useState(urlQuery)
@@ -68,13 +83,15 @@ export function OrdersPage() {
   }, [urlQuery])
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
+    const range = choiceRange(period)
     return orders.filter(
       (o) =>
         (status === 'all' || o.status === status) &&
-        (!q || o.number.toLowerCase().includes(q) || o.customerName.toLowerCase().includes(q)),
+        (speed === 'all' || orderSpeed(o.items) === speed) &&
+        inRangeOrAll(o.createdAt, range) &&
+        matches(query, [o.number, o.customerName], [o.customerPhone]),
     )
-  }, [orders, query, status])
+  }, [orders, query, status, speed, period])
 
   const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const current = Math.min(page, pages - 1)
@@ -83,7 +100,7 @@ export function OrdersPage() {
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold sm:text-3xl">Pesanan</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl">{mine ? 'Pesanan Saya' : 'Pesanan'}</h1>
         <Link
           to="/orders/new"
           className="btn btn-accent"
@@ -97,7 +114,7 @@ export function OrdersPage() {
 
       <div className="flex flex-wrap items-center gap-3">
         <label className="relative w-full sm:w-72">
-          <span className="sr-only">Cari nomor nota atau pelanggan</span>
+          <span className="sr-only">Cari nota, nama, atau nomor HP</span>
           <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden />
           <input
             type="search"
@@ -106,7 +123,7 @@ export function OrdersPage() {
               setQuery(e.target.value)
               setPage(0)
             }}
-            placeholder="Cari nomor nota atau pelanggan"
+            placeholder="Cari nota, nama, atau nomor HP"
             className="field field-search"
           />
         </label>
@@ -123,6 +140,23 @@ export function OrdersPage() {
               className="seg-item"
             >
               {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <PeriodPicker value={period} onChange={(v) => { setPeriod(v); setPage(0) }} choices={['all', 'today', 'yesterday', 'week', 'month', 'custom']} />
+        <div className="seg" role="group" aria-label="Filter kecepatan">
+          {(['all', 'reguler', 'express', 'kilat'] as const).map((sp) => (
+            <button
+              key={sp}
+              type="button"
+              aria-pressed={speed === sp}
+              onClick={() => { setSpeed(sp); setPage(0) }}
+              className="seg-item"
+            >
+              {sp === 'all' ? 'Semua kecepatan' : speedLabel[sp]}
             </button>
           ))}
         </div>

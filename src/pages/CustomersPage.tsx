@@ -1,3 +1,6 @@
+import { matches } from '@/lib/search'
+import { GoogleContactsCard } from '@/components/GoogleContactsCard'
+import { pushNewCustomer } from '@/lib/google-contacts'
 import { Pencil, Plus, Search } from 'lucide-react'
 import { useMemo, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
@@ -26,12 +29,7 @@ export function CustomersPage() {
   }, [orders])
 
   const visible = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    return customers.filter(
-      (c) =>
-        (showInactive || c.active) &&
-        (!q || c.name.toLowerCase().includes(q) || c.phone.replace(/\D/g, '').includes(q.replace(/\D/g, '') || '\u0000')),
-    )
+    return customers.filter((c) => (showInactive || c.active) && matches(query, [c.name], [c.phone]))
   }, [customers, query, showInactive])
 
   function open(target: Customer | 'new') {
@@ -45,7 +43,7 @@ export function CustomersPage() {
     e.preventDefault()
     setError(null)
     try {
-      if (editing === 'new') addCustomer(name, phone)
+      if (editing === 'new') pushNewCustomer(addCustomer(name, phone))
       else if (editing) updateCustomer(editing.id, name, phone)
       setEditing(null)
     } catch (err) {
@@ -84,7 +82,9 @@ export function CustomersPage() {
         </button>
       </div>
 
-      <Hint>Perubahan hanya tersimpan sementara dan hilang saat halaman dimuat ulang.</Hint>
+      <Hint>Data pelanggan tersimpan di browser ini sampai backend tersedia.</Hint>
+
+      <GoogleContactsCard />
 
       {editing && (
         <Card>

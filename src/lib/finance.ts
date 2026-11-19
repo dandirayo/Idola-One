@@ -56,6 +56,62 @@ export function periodRange(period: Period, now: Date = new Date()): Range {
   }
 }
 
+/** Pilihan periode di layar: periode tetap, rentang tanggal bebas, atau semua (khusus daftar). */
+export type PeriodChoice = Period | 'custom' | 'all'
+
+export interface PeriodState {
+  choice: PeriodChoice
+  /** Tanggal awal dan akhir rentang bebas, format yyyy-mm-dd, keduanya termasuk. */
+  from: string
+  to: string
+}
+
+const parseDay = (s: string) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s)
+  return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : null
+}
+
+export const toDayInput = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+
+/** Rentang tanggal bebas (termasuk kedua ujung). Urutan terbalik ditukar. Tanggal tidak valid: null. */
+export function dayRange(from: string, to: string): Range | null {
+  const a = parseDay(from)
+  const b = parseDay(to)
+  if (!a || !b) return null
+  const [start, end] = a <= b ? [a, b] : [b, a]
+  return { from: start, to: addDays(end, 1) }
+}
+
+/** null berarti tanpa batas (semua tanggal). */
+export function choiceRange(state: PeriodState, now: Date = new Date()): Range | null {
+  if (state.choice === 'all') return null
+  if (state.choice === 'custom') return dayRange(state.from, state.to) ?? periodRange('today', now)
+  return periodRange(state.choice, now)
+}
+
+const shortDay = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+
+export function choiceLabel(state: PeriodState): string {
+  if (state.choice === 'all') return 'Semua tanggal'
+  if (state.choice === 'custom') {
+    const r = dayRange(state.from, state.to)
+    if (!r) return 'Rentang tanggal'
+    const last = addDays(r.to, -1)
+    return r.from.getTime() === last.getTime() ? shortDay.format(r.from) : `${shortDay.format(r.from)} – ${shortDay.format(last)}`
+  }
+  return periodLabel[state.choice]
+}
+
+export function initialPeriod(choice: PeriodChoice, now: Date = new Date()): PeriodState {
+  const first = new Date(now.getFullYear(), now.getMonth(), 1)
+  return { choice, from: toDayInput(first), to: toDayInput(now) }
+}
+
+export function inRangeOrAll(iso: string, range: Range | null): boolean {
+  return range === null || inRange(iso, range)
+}
+
 export function inRange(iso: string, range: Range): boolean {
   const t = new Date(iso).getTime()
   return t >= range.from.getTime() && t < range.to.getTime()

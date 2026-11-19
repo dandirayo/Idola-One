@@ -3,13 +3,13 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import { Card, Hint, SectionTitle } from '@/components/ui'
 import { useStore } from '@/data/store'
-import { inRange, periodLabel, periodRange, type Period } from '@/lib/finance'
+import { choiceLabel, choiceRange, inRange, initialPeriod } from '@/lib/finance'
+import { PeriodPicker } from '@/components/PeriodPicker'
 import { downloadCsv } from '@/lib/download'
 import { formatQty, formatRupiah } from '@/lib/format'
 import { orderStatusLabel, paymentMethodLabel, type OrderStatus, type PaymentMethod } from '@/lib/orders'
 import { cashCsv, cashReport, orderReport, ordersCsv } from '@/lib/reports'
 
-const periods: Period[] = ['today', 'yesterday', 'week', 'month']
 type Tab = 'orders' | 'cash'
 
 function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
@@ -27,18 +27,19 @@ export function ReportsPage() {
   const cash = useStore((s) => s.cash)
 
   const [tab, setTab] = useState<Tab>('orders')
-  const [period, setPeriod] = useState<Period>('month')
+  const [period, setPeriod] = useState(() => initialPeriod('month'))
+  const periodText = choiceLabel(period)
 
-  const range = useMemo(() => periodRange(period), [period])
+  const range = useMemo(() => choiceRange(period)!, [period])
   const orderRep = useMemo(() => orderReport(orders, range), [orders, range])
   const cashRep = useMemo(() => cashReport(cash, range), [cash, range])
 
   function exportCsv() {
     const stamp = new Date().toISOString().slice(0, 10)
     if (tab === 'orders') {
-      downloadCsv(`pesanan-${period}-${stamp}.csv`, ordersCsv(orders.filter((o) => inRange(o.createdAt, range))))
+      downloadCsv(`pesanan-${period.choice}-${stamp}.csv`, ordersCsv(orders.filter((o) => inRange(o.createdAt, range))))
     } else {
-      downloadCsv(`kas-${period}-${stamp}.csv`, cashCsv(cash.filter((e) => inRange(e.at, range))))
+      downloadCsv(`kas-${period.choice}-${stamp}.csv`, cashCsv(cash.filter((e) => inRange(e.at, range))))
     }
   }
 
@@ -86,19 +87,7 @@ export function ReportsPage() {
             </button>
           ))}
         </div>
-        <div className="seg" role="group" aria-label="Periode">
-          {periods.map((p) => (
-            <button
-              key={p}
-              type="button"
-              aria-pressed={period === p}
-              onClick={() => setPeriod(p)}
-              className="seg-item"
-            >
-              {periodLabel[p]}
-            </button>
-          ))}
-        </div>
+        <PeriodPicker value={period} onChange={setPeriod} />
       </div>
 
       {tab === 'orders' ? (
@@ -125,7 +114,7 @@ export function ReportsPage() {
             <Card>
               <SectionTitle>Per layanan</SectionTitle>
               {orderRep.byService.length === 0 ? (
-                <p className="text-sm text-muted">Belum ada pesanan pada {periodLabel[period].toLowerCase()}.</p>
+                <p className="text-sm text-muted">Belum ada pesanan pada {periodText.toLowerCase()}.</p>
               ) : (
                 <ul className="space-y-2 text-sm">
                   {orderRep.byService.map((r) => (
@@ -168,7 +157,7 @@ export function ReportsPage() {
             <Card>
               <SectionTitle>Per kategori</SectionTitle>
               {cashRep.byCategory.length === 0 ? (
-                <p className="text-sm text-muted">Belum ada transaksi pada {periodLabel[period].toLowerCase()}.</p>
+                <p className="text-sm text-muted">Belum ada transaksi pada {periodText.toLowerCase()}.</p>
               ) : (
                 <ul className="space-y-2 text-sm">
                   {cashRep.byCategory.map((c) => (

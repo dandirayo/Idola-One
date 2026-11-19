@@ -6,7 +6,9 @@ import {
   orderTotal,
   paymentStatus,
   subtotal,
-  whatsappReadyUrl,
+  orderSpeed,
+  paymentRequestMessage,
+  readyPickupMessage,
 } from './orders'
 
 describe('subtotal dan orderTotal', () => {
@@ -133,19 +135,30 @@ describe('normalizePhone', () => {
   })
 })
 
-describe('whatsappReadyUrl', () => {
-  it('memuat nama, nomor nota, dan sisa tagihan', () => {
-    const url = whatsappReadyUrl({
-      phone: '08123456789',
-      customer: 'Bu Sinta',
-      number: 'IDL-1',
-      remaining: 14000,
-      formattedRemaining: 'Rp 14.000',
-    })
-    expect(url.startsWith('https://wa.me/628123456789?text=')).toBe(true)
-    const text = decodeURIComponent(url.split('text=')[1])
-    expect(text).toContain('Bu Sinta')
-    expect(text).toContain('IDL-1')
-    expect(text).toContain('Rp 14.000')
+describe('pesan WhatsApp', () => {
+  const rp = (n: number) => `Rp ${n.toLocaleString('id-ID')}`
+  const o = { customer: 'Bu Sinta', number: 'IDL-1', total: 28000, remaining: 14000 }
+
+  it('siap diambil: total dan sisa, seperti aplikasi Android', () => {
+    const t = readyPickupMessage(o, 'Idola Laundry', rp)
+    expect(t).toContain('pesanan IDL-1 sudah selesai dan siap diambil di Idola Laundry')
+    expect(t).toContain('Total: Rp 28.000')
+    expect(t).toContain('Sisa pembayaran Rp 14.000')
+    expect(readyPickupMessage({ ...o, remaining: 0 }, 'Idola Laundry', rp)).toContain('Sudah lunas')
+  })
+
+  it('permintaan bayar menyebut metode dan bukti pembayaran', () => {
+    const t = paymentRequestMessage(o, 'QRIS', rp)
+    expect(t).toContain('sudah diambil dengan sisa pembayaran Rp 14.000')
+    expect(t).toContain('melalui QRIS')
+    expect(t).toContain('bukti pembayaran')
+  })
+})
+
+describe('kecepatan pesanan', () => {
+  it('diambil dari nama layanan; yang tercepat menang', () => {
+    expect(orderSpeed([{ name: 'Cuci Setrika Reguler' }])).toBe('reguler')
+    expect(orderSpeed([{ name: 'Cuci Setrika Reguler' }, { name: 'Setrika Lipat Express' }])).toBe('express')
+    expect(orderSpeed([{ name: 'Cuci Kering Lipat Express' }, { name: 'Baju Damkar Kilat' }])).toBe('kilat')
   })
 })

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { balance, inRange, periodRange, summarize, type CashEntry } from './finance'
+import { balance, inRange, periodRange, summarize, type CashEntry, choiceLabel, choiceRange, dayRange, inRangeOrAll } from './finance'
 
 // Rabu, 18 November 2026 (lokal)
 const now = new Date(2026, 10, 18, 15, 30)
@@ -72,5 +72,25 @@ describe('summarize dan balance', () => {
   it('saldo = masuk dikurangi keluar', () => {
     expect(balance(entries)).toBe(63000)
     expect(balance([])).toBe(0)
+  })
+})
+
+describe('rentang tanggal bebas', () => {
+  it('termasuk kedua ujung dan menukar urutan terbalik', () => {
+    const r = dayRange('2026-11-10', '2026-11-03')!
+    expect(r.from).toEqual(new Date(2026, 10, 3))
+    expect(r.to).toEqual(new Date(2026, 10, 11))
+    expect(inRange(new Date(2026, 10, 10, 23, 59).toISOString(), r)).toBe(true)
+    expect(inRange(new Date(2026, 10, 11, 0, 0).toISOString(), r)).toBe(false)
+  })
+  it('tanggal tidak valid menghasilkan null; pilihan Semua tanpa batas', () => {
+    expect(dayRange('2026-13-01', 'x')).toBeNull()
+    expect(choiceRange({ choice: 'all', from: '', to: '' })).toBeNull()
+    expect(inRangeOrAll('2000-01-01T00:00:00Z', null)).toBe(true)
+  })
+  it('label rentang', () => {
+    expect(choiceLabel({ choice: 'custom', from: '2026-11-03', to: '2026-11-03' })).toBe('3 Nov 2026')
+    expect(choiceLabel({ choice: 'custom', from: '2026-11-03', to: '2026-11-10' })).toContain('–')
+    expect(choiceLabel({ choice: 'week', from: '', to: '' })).toBe('Minggu ini')
   })
 })

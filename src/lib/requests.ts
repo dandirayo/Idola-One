@@ -1,6 +1,6 @@
 // Aturan pengajuan karyawan. Mengikuti PRD bagian 8.9 (REQ-01 s.d. REQ-04).
 
-export type RequestType = 'stock' | 'overtime' | 'shift_swap' | 'leave' | 'cash_advance' | 'forgot_attendance'
+export type RequestType = 'stock' | 'overtime' | 'shift_swap' | 'leave' | 'cash_advance' | 'forgot_attendance' | 'incentive'
 export type RequestStatus = 'pending' | 'approved' | 'rejected' | 'paid' | 'completed'
 export type RequestAction = 'approve' | 'reject' | 'pay' | 'complete'
 
@@ -10,6 +10,7 @@ export const requestTypeLabel: Record<RequestType, string> = {
   shift_swap: 'Tukar Shift',
   leave: 'Izin',
   cash_advance: 'Kasbon',
+  incentive: 'Insentif',
   forgot_attendance: 'Lupa Absen',
 }
 

@@ -1,3 +1,4 @@
+import { matches } from '@/lib/search'
 import { DataList, useViewMode, ViewSwitch } from '@/components/DataList'
 import { Pencil, Plus, Search } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
@@ -46,11 +47,10 @@ export function ServicesPage() {
   }
 
   const categories = [...new Set(services.map((s) => s.category).filter((c): c is string => !!c))]
-  const q = query.trim().toLowerCase()
   const grouped = new Map<string, Service[]>()
   for (const s of services) {
     if (!(isOwner || s.active)) continue
-    if (q && !s.name.toLowerCase().includes(q) && !(s.category ?? '').toLowerCase().includes(q)) continue
+    if (!matches(query, [s.name, s.category, s.unit])) continue
     const key = s.category ?? 'Lainnya'
     grouped.set(key, [...(grouped.get(key) ?? []), s])
   }

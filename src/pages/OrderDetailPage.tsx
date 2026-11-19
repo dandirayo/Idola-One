@@ -1,12 +1,13 @@
-import { ArrowLeft, MessageCircle } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
-import { Link, useNavigate, useParams } from 'react-router'
+import { ArrowLeft, MessageCircle, Printer } from 'lucide-react'
+import { useEffect, useState, type FormEvent } from 'react'
+import { Link, useLocation, useNavigate, useParams } from 'react-router'
 import { DeleteButton } from '@/components/ConfirmDialog'
-import { deleteOrder } from '@/data/admin'
+import { deleteOrder, updateOrderInfo } from '@/data/admin'
 import { KiloEditor } from '@/components/KiloEditor'
 import { OrderIncentives } from '@/components/OrderIncentives'
 import { PaymentHistory } from '@/components/PaymentHistory'
 import { PrintDialog } from '@/components/PrintDialog'
+import { whatsappUrl } from '@/lib/reports'
 import { buildDocument, docKindLabel, type DocKind } from '@/lib/receipt'
 import { Card, inputClass, orderStatusTone, paymentTone, primaryButton, SectionTitle, StatusChip } from '@/components/ui'
 import { addPayment, setOrderStatus, useStore } from '@/data/store'
@@ -19,7 +20,8 @@ import {
   paymentMethodLabel,
   paymentStatus,
   paymentStatusLabel,
-  whatsappReadyUrl,
+  paymentRequestMessage,
+  readyPickupMessage,
   type OrderStatus,
   type PaymentMethod,
 } from '@/lib/orders'
@@ -37,12 +39,26 @@ const dateTime = new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeSty
 export function OrderDetailPage() {
   const { orderId } = useParams()
   const orders = useStore((s) => s.orders)
+  const employees = useStore((s) => s.employees)
   const shop = useStore((s) => s.shop)
   const order = orders.find((o) => o.id === orderId)
-  const [printKind, setPrintKind] = useState<DocKind | null>(null)
+  const [printKinds, setPrintKinds] = useState<DocKind[] | null>(null)
   const { session } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
 
+  // Cetak otomatis setelah pesanan dibuat (Nota + Label), seperti aplikasi Android.
+  const autoPrint = (location.state as { print?: DocKind[] } | null)?.print
+  useEffect(() => {
+    if (!autoPrint?.length) return
+    setPrintKinds(autoPrint)
+    navigate(location.pathname, { replace: true, state: null })
+  }, [autoPrint, location.pathname, navigate])
+
+  const [editInfo, setEditInfo] = useState(false)
+  const [infoCashier, setInfoCashier] = useState('')
+  const [infoNote, setInfoNote] = useState('')
+  const [infoError, setInfoError] = useState<string | null>(null)
   const [amount, setAmount] = useState('')
   const [method, setMethod] = useState<PaymentMethod>('cash')
   const [error, setError] = useState<string | null>(null)
@@ -62,6 +78,7 @@ export function OrderDetailPage() {
   }
 
   const remaining = order.total - order.paid
+  const waOrder = { customer: order.customerName, number: order.number, total: order.total, remaining }
   const pay = paymentStatus(order.total, order.paid)
   const transitions = nextStatuses(order.status)
 
@@ -69,6 +86,8 @@ export function OrderDetailPage() {
     if (!order) return
     if (status === 'cancelled' && !window.confirm('Batalkan pesanan ini?')) return
     setOrderStatus(order.id, status)
+    // Tanda terima pengambilan langsung ditawarkan saat pesanan diambil.
+    if (status === 'picked_up') setPrintKinds(['pickup'])
   }
 
   function submitPayment(e: FormEvent) {
@@ -76,8 +95,11 @@ export function OrderDetailPage() {
     if (!order) return
     setError(null)
     try {
-      addPayment(order.id, Number(amount.replace(/\./g, '').replace(',', '.')), method)
+      const value = Number(amount.replace(/\./g, '').replace(',', '.'))
+      addPayment(order.id, value, method)
       setAmount('')
+      // Pelunasan setelah barang diambil: tawarkan Nota Lunas.
+      if (order.status === 'picked_up' && value >= order.total - order.paid) setPrintKinds(['receipt'])
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal mencatat pembayaran.')
     }
@@ -122,6 +144,66 @@ export function OrderDetailPage() {
               ))}
             </ul>
             {order.note && <p className="mt-3 rounded-xl bg-canvas p-3 text-sm">Catatan: {order.note}</p>}
+            <p className="mt-3 text-sm text-muted">Penanggung jawab: {order.cashier ?? '-'}</p>
+            {session?.role === 'owner' && !editInfo && (
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm mt-3"
+                onClick={() => {
+                  setInfoCashier(order.cashier ?? '')
+                  setInfoNote(order.note)
+                  setInfoError(null)
+                  setEditInfo(true)
+                }}
+              >
+                Ubah info
+              </button>
+            )}
+            {editInfo && (
+              <form
+                noValidate
+                className="mt-3 space-y-3"
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  try {
+                    updateOrderInfo(order.id, infoCashier, infoNote)
+                    setEditInfo(false)
+                  } catch (err) {
+                    setInfoError(err instanceof Error ? err.message : 'Gagal menyimpan.')
+                  }
+                }}
+              >
+                <label className="block text-sm font-semibold">
+                  Penanggung jawab
+                  <select value={infoCashier} onChange={(e) => setInfoCashier(e.target.value)} className={`${inputClass} mt-1.5`}>
+                    <option value="">-</option>
+                    {order.cashier && !employees.some((e) => e.name === order.cashier) && <option value={order.cashier}>{order.cashier}</option>}
+                    {employees.filter((e) => e.active).map((e) => (
+                      <option key={e.id} value={e.name}>
+                        {e.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block text-sm font-semibold">
+                  Catatan
+                  <textarea value={infoNote} onChange={(e) => setInfoNote(e.target.value)} rows={2} className="field field-area mt-1.5" />
+                </label>
+                {infoError && (
+                  <p role="alert" className="text-sm font-medium text-danger">
+                    {infoError}
+                  </p>
+                )}
+                <div className="flex gap-2">
+                  <button type="submit" className={primaryButton}>
+                    Simpan
+                  </button>
+                  <button type="button" className="btn btn-secondary" onClick={() => setEditInfo(false)}>
+                    Batal
+                  </button>
+                </div>
+              </form>
+            )}
           </Card>
 
           <PaymentHistory order={order} />
@@ -129,16 +211,15 @@ export function OrderDetailPage() {
           <Card>
             <SectionTitle>Cetak</SectionTitle>
             <p className="mb-3 text-xs text-muted">
-              Tiap dokumen dicetak satu per satu agar kertas bisa dipotong dan dibagikan sendiri-sendiri.
+              Nota + Label tercetak sekali tekan, dipisah garis potong. Tanda Terima untuk pesanan yang diambil.
             </p>
             <div className="flex flex-wrap gap-2">
+              <button type="button" onClick={() => setPrintKinds(['receipt', 'label'])} className="btn btn-primary">
+                <Printer className="size-4" aria-hidden />
+                Nota + Label
+              </button>
               {(['receipt', 'label', 'pickup'] as DocKind[]).map((k) => (
-                <button
-                  key={k}
-                  type="button"
-                  onClick={() => setPrintKind(k)}
-                  className="btn btn-secondary"
-                >
+                <button key={k} type="button" onClick={() => setPrintKinds([k])} className="btn btn-secondary">
                   {docKindLabel[k]}
                 </button>
               ))}
@@ -235,13 +316,7 @@ export function OrderDetailPage() {
             )}
             {order.status === 'ready' && (
               <a
-                href={whatsappReadyUrl({
-                  phone: order.customerPhone,
-                  customer: order.customerName,
-                  number: order.number,
-                  remaining,
-                  formattedRemaining: formatRupiah(remaining),
-                })}
+                href={whatsappUrl(order.customerPhone, readyPickupMessage(waOrder, shop.name, formatRupiah))}
                 target="_blank"
                 rel="noreferrer"
                 className="btn btn-accent mt-2 w-full"
@@ -249,6 +324,25 @@ export function OrderDetailPage() {
                 <MessageCircle className="size-4" aria-hidden />
                 Kabari via WhatsApp
               </a>
+            )}
+            {order.status === 'picked_up' && remaining > 0 && (
+              <div className="mt-2 space-y-2">
+                <p className="text-xs font-semibold text-muted">Minta pelunasan lewat WhatsApp</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {['Transfer', 'QRIS'].map((m) => (
+                    <a
+                      key={m}
+                      href={whatsappUrl(order.customerPhone, paymentRequestMessage(waOrder, m, formatRupiah))}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="btn btn-accent"
+                    >
+                      <MessageCircle className="size-4" aria-hidden />
+                      {m}
+                    </a>
+                  ))}
+                </div>
+              </div>
             )}
             {session?.role === 'owner' && (
               <DeleteButton
@@ -280,12 +374,12 @@ export function OrderDetailPage() {
         </aside>
       </div>
 
-      {printKind && (
+      {printKinds && (
         <PrintDialog
-          title={`${docKindLabel[printKind]} · ${order.number}`}
-          lines={buildDocument(printKind, order, shop)}
+          title={`${printKinds.map((k) => docKindLabel[k]).join(' + ')} · ${order.number}`}
+          build={(w) => printKinds.map((k) => ({ title: docKindLabel[k], lines: buildDocument(k, order, { ...shop, paperWidth: w }) }))}
           paperWidth={shop.paperWidth}
-          onClose={() => setPrintKind(null)}
+          onClose={() => setPrintKinds(null)}
         />
       )}
     </div>

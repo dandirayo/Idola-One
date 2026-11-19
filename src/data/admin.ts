@@ -154,6 +154,25 @@ export function updateInventoryItem(id: string, name: string, unit: string, min:
   }))
 }
 
+/** Ubah penanggung jawab (kasir) dan catatan pesanan. Tidak menyentuh uang, jadi alasan tidak wajib. */
+export function updateOrderInfo(orderId: string, cashier: string, note: string) {
+  const order = getState().orders.find((o) => o.id === orderId)
+  if (!order) throw new Error('Pesanan tidak ditemukan.')
+  const who = cashier.trim()
+  if (who && !getState().employees.some((e) => e.name === who) && who !== order.cashier) {
+    throw new Error('Pilih penanggung jawab dari daftar karyawan.')
+  }
+  const next = { cashier: who || undefined, note: note.trim() }
+  update((s) => ({
+    ...s,
+    orders: s.orders.map((o) => (o.id === orderId ? { ...o, ...next } : o)),
+    audit: [
+      audit('Pesanan', orderId, order.number, 'Ubah info pesanan', `${order.cashier ?? '-'} · ${order.note || '-'}`, `${next.cashier ?? '-'} · ${next.note || '-'}`),
+      ...s.audit,
+    ],
+  }))
+}
+
 export function deleteInventoryItem(id: string) {
   const item = getState().inventory.find((i) => i.id === id)
   if (!item) throw new Error('Barang tidak ditemukan.')

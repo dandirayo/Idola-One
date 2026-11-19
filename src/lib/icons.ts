@@ -4,6 +4,7 @@
 // lucide-react dengan pasangan tetap: Plus, Pencil, Trash2, Search, X.
 import {
   Banknote,
+  DatabaseBackup,
   Bell,
   BarChart3,
   Briefcase,
@@ -55,6 +56,7 @@ export const concept = {
   business: Store,
   switchBusiness: Repeat,
   settings: Settings,
+  backup: DatabaseBackup,
   notifications: Bell,
   pos: ShoppingCart,
   drinks: Coffee,
@@ -69,6 +71,7 @@ export const concept = {
 export const routeIcons: Record<string, LucideIcon> = {
   '/dashboard': concept.dashboard,
   '/orders': concept.orders,
+  '/orders/me': concept.orders,
   '/customers': concept.customers,
   '/services': concept.services,
   '/inventory': concept.stock,
@@ -86,6 +89,8 @@ export const routeIcons: Record<string, LucideIcon> = {
   '/reports/payments': concept.receivable,
   '/audit': concept.audit,
   '/trash': concept.trash,
+  '/backup': concept.backup,
+  '/profile': concept.settings,
   '/businesses/manage': concept.business,
   '/settings/shop': concept.settings,
   '/pos': concept.dashboard,

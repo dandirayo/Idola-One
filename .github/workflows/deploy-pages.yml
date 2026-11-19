@@ -35,6 +35,9 @@ jobs:
 
       - name: Build project
         run: npm run build
+        env:
+          # Client ID OAuth web untuk sinkron Google Contacts (bukan rahasia). Atur di Settings > Variables.
+          VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

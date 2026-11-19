@@ -26,6 +26,18 @@
   --shadow-card: 0 1px 2px rgb(27 27 40 / 0.04), 0 4px 16px rgb(27 27 40 / 0.04);
 }
 
+/* Tinggi top bar: satu sumber untuk bar itu sendiri dan sidebar yang menempel di bawahnya. */
+:root {
+  --topbar-h: 4.25rem;
+  --shell-gap: 1.25rem;
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --topbar-h: 4.5rem;
+  }
+}
+
 html,
 body,
 #root {
@@ -83,6 +95,11 @@ body {
   .receipt-print {
     margin: 0;
     padding: 2mm 3mm;
+  }
+
+  /* Nota + Label sekali cetak: dokumen berikutnya mulai di halaman (potongan) baru. */
+  .receipt-page + .receipt-page {
+    break-before: page;
   }
 }
 

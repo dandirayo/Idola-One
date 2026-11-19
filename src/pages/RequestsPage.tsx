@@ -15,6 +15,7 @@ import {
   requestStatuses,
   requestTypeLabel,
   type RequestAction,
+  type RequestType,
   type RequestStatus,
 } from '@/lib/requests'
 
@@ -31,8 +32,9 @@ const dateTime = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'shor
 export function RequestsPage() {
   const requests = useStore((s) => s.requests)
   const [filter, setFilter] = useState<RequestStatus | 'all'>('all')
+  const [typeFilter, setTypeFilter] = useState<RequestType | 'all'>('all')
 
-  const visible = requests.filter((r) => filter === 'all' || r.status === filter)
+  const visible = requests.filter((r) => (filter === 'all' || r.status === filter) && (typeFilter === 'all' || r.type === typeFilter))
   const pending = requests.filter((r) => r.status === 'pending').length
 
   return (
@@ -66,6 +68,14 @@ export function RequestsPage() {
             className="seg-item"
           >
             {s === 'all' ? 'Semua' : requestStatusLabel[s]}
+          </button>
+        ))}
+      </div>
+
+      <div className="seg flex-wrap" role="group" aria-label="Filter kategori">
+        {(['all', ...(Object.keys(requestTypeLabel) as RequestType[])] as const).map((t) => (
+          <button key={t} type="button" aria-pressed={typeFilter === t} onClick={() => setTypeFilter(t)} className="seg-item">
+            {t === 'all' ? 'Semua kategori' : requestTypeLabel[t]}
           </button>
         ))}
       </div>

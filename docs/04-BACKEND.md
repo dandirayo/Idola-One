@@ -102,6 +102,8 @@ Dampak untuk versi web:
 
 **Status (16 Nov 2026):** jalur cadangan sudah dibuat di web, yaitu dokumen cetak (nota, label, bukti pengambilan) lewat dialog cetak browser dan "Simpan sebagai PDF", dengan lebar 58 atau 80 mm. Belum diuji pada printer fisik, dan cetak langsung ke printer thermal belum ada.
 
+**Pembaruan (18 Nov 2026):** isi dokumen cetak disamakan dengan aplikasi Android (Nota Pesanan/Lunas dengan logo dan Kasir, Label Cucian besar, Tanda Terima Pengambilan). Nota + Label tercetak sekali tekan dengan pemisah halaman, jadi di printer thermal dengan pemotong otomatis keluar dua lembar. Pilihan 58/80 mm ada di dialog.
+
 Jalur akhir ditentukan setelah **nama/tipe printer** diketahui dan satu uji cetak dilakukan. Lokasi mini server (di toko atau di rumah) juga menentukan: layanan cetak hanya bisa memakai printer yang terhubung ke server atau jaringan yang sama.
 
 ## 7. Pertanyaan yang masih terbuka

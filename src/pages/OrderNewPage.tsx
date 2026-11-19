@@ -1,3 +1,5 @@
+import { pushNewCustomer } from '@/lib/google-contacts'
+import { SearchSelect, type SearchOption } from '@/components/SearchSelect'
 import { Trash2, UserPlus } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
@@ -8,6 +10,17 @@ import { lineAmount, MIN_KG, orderTotal, paymentMethodLabel, subtotal, type Paym
 import { INCENTIVE_OPTIONS } from '@/lib/payroll'
 
 type PayChoice = 'none' | 'half' | 'full'
+
+const AUTO_PRINT_KEY = 'idola-one:auto-print'
+
+/** Bawaan menyala, sama dengan sakelar "Cetak Struk Otomatis" di aplikasi Android. */
+function readAutoPrint(): boolean {
+  try {
+    return localStorage.getItem(AUTO_PRINT_KEY) !== '0'
+  } catch {
+    return true
+  }
+}
 
 export function OrderNewPage() {
   const navigate = useNavigate()
@@ -31,13 +44,30 @@ export function OrderNewPage() {
   const [method, setMethod] = useState<PaymentMethod>('cash')
   const [note, setNote] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [autoPrint, setAutoPrintState] = useState(readAutoPrint)
+  const setAutoPrint = (v: boolean) => {
+    setAutoPrintState(v)
+    try {
+      localStorage.setItem(AUTO_PRINT_KEY, v ? '1' : '0')
+    } catch {
+      // penyimpanan diblokir: pilihan hanya berlaku di halaman ini
+    }
+  }
 
   const selected = services.find((s) => s.id === serviceId)
-  const serviceGroups = [
-    ...services
-      .reduce((map, s) => map.set(s.category ?? 'Lainnya', [...(map.get(s.category ?? 'Lainnya') ?? []), s]), new Map<string, typeof services>())
-      .entries(),
-  ]
+  const serviceOptions: SearchOption[] = services.map((s) => ({
+    id: s.id,
+    label: s.name,
+    detail: `${formatRupiah(s.price)}/${s.unit}`,
+    group: s.category ?? 'Lainnya',
+    keywords: [s.unit],
+  }))
+  const customerOptions: SearchOption[] = customers.map((c) => ({
+    id: c.id,
+    label: c.name,
+    detail: c.phone,
+    phones: [c.phone],
+  }))
   const estimate = orderTotal(items, skipMinKg)
   const raw = subtotal(items, skipMinKg)
   const hasKg = items.some((i) => i.unit === 'kg')
@@ -77,6 +107,7 @@ export function OrderNewPage() {
     setError(null)
     try {
       const c = addCustomer(newName, newPhone)
+      pushNewCustomer(c)
       setCustomerId(c.id)
       setAdding(false)
       setNewName('')
@@ -97,7 +128,7 @@ export function OrderNewPage() {
         note,
         initialPayment: payAmount > 0 ? { amount: payAmount, method } : null,
       })
-      navigate(`/orders/${order.id}`, { replace: true })
+      navigate(`/orders/${order.id}`, { replace: true, state: autoPrint ? { print: ['receipt', 'label'] } : null })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal menyimpan pesanan.')
     }
@@ -117,21 +148,15 @@ export function OrderNewPage() {
           <Card>
             <SectionTitle>Pelanggan</SectionTitle>
             <div className="flex gap-2">
-              <label className="flex-1">
-                <span className="sr-only">Pelanggan</span>
-                <select
+              <div className="min-w-0 flex-1">
+                <SearchSelect
+                  label="Pelanggan"
+                  placeholder="Cari nama atau nomor HP"
+                  options={customerOptions}
                   value={customerId}
-                  onChange={(e) => setCustomerId(e.target.value)}
-                  className={inputClass}
-                >
-                  <option value="">Pilih pelanggan</option>
-                  {customers.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name} · {c.phone}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  onChange={setCustomerId}
+                />
+              </div>
               <button
                 type="button"
                 onClick={() => setAdding((v) => !v)}
@@ -168,21 +193,17 @@ export function OrderNewPage() {
 
           <Card>
             <SectionTitle>Layanan</SectionTitle>
-            <div className="grid gap-2 sm:grid-cols-[1fr_8rem_auto]">
-              <label>
-                <span className="sr-only">Layanan</span>
-                <select value={serviceId} onChange={(e) => setServiceId(e.target.value)} className={inputClass}>
-                  {serviceGroups.map(([cat, list]) => (
-                    <optgroup key={cat} label={cat}>
-                      {list.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.name} · {formatRupiah(s.price)}/{s.unit}
-                        </option>
-                      ))}
-                    </optgroup>
-                  ))}
-                </select>
-              </label>
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+              <div className="col-span-full">
+                <SearchSelect
+                  label="Layanan"
+                  placeholder="Cari layanan, misal: jas setrika"
+                  options={serviceOptions}
+                  value={serviceId}
+                  onChange={setServiceId}
+                  limit={60}
+                />
+              </div>
               <label>
                 <span className="sr-only">Berat atau jumlah</span>
                 <input
@@ -343,6 +364,10 @@ export function OrderNewPage() {
                 {error}
               </p>
             )}
+            <label className="mt-4 flex items-center gap-2 text-sm font-semibold">
+              <input type="checkbox" checked={autoPrint} onChange={(e) => setAutoPrint(e.target.checked)} />
+              Cetak otomatis Nota + Label setelah simpan
+            </label>
             <button type="submit" className={`${primaryButton} btn-lg mt-4 hidden w-full lg:inline-flex`}>
               Simpan Pesanan
             </button>

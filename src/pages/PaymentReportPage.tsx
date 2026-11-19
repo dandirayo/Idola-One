@@ -92,7 +92,7 @@ export function PaymentReportPage() {
             />
           </label>
           <a
-            href={whatsappUrl(shop.phone, text)}
+            href={whatsappUrl(shop.ownerPhone || shop.phone, text)}
             target="_blank"
             rel="noreferrer"
             className="btn btn-accent mt-3 w-full"

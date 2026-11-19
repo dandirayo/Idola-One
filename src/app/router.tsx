@@ -2,6 +2,8 @@ import { createBrowserRouter, Navigate } from 'react-router'
 import { AppShell } from '@/app/AppShell'
 import { AttendancePage } from '@/pages/AttendancePage'
 import { AuditPage } from '@/pages/AuditPage'
+import { BackupPage } from '@/pages/BackupPage'
+import { ProfilePage } from '@/pages/ProfilePage'
 import { TrashPage } from '@/pages/TrashPage'
 import { BusinessManagePage } from '@/pages/BusinessManagePage'
 import { BusinessSelectorPage } from '@/pages/BusinessSelectorPage'
@@ -43,6 +45,7 @@ export const router = createBrowserRouter([
       { index: true, element: <Navigate to="/dashboard" replace /> },
       { path: 'dashboard', element: <DashboardRoute /> },
       { path: 'orders', element: <OrdersPage /> },
+      { path: 'orders/me', element: <OrdersPage mine /> },
       { path: 'orders/new', element: <OrderNewPage /> },
       { path: 'orders/:orderId', element: <OrderDetailPage /> },
       { path: 'customers', element: <CustomersPage /> },
@@ -64,6 +67,8 @@ export const router = createBrowserRouter([
       { path: 'projects', element: <ProjectsPage /> },
       { path: 'audit', element: <AuditPage /> },
       { path: 'trash', element: <TrashPage /> },
+      { path: 'backup', element: <BackupPage /> },
+      { path: 'profile', element: <ProfilePage /> },
       { path: 'notifications', element: <NotificationsPage /> },
       { path: 'businesses/manage', element: <BusinessManagePage /> },
       { path: 'settings/shop', element: <SettingsPage /> },

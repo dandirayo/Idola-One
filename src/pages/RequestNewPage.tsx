@@ -13,6 +13,7 @@ const placeholders: Record<RequestType, string> = {
   leave: 'Contoh: Izin sakit tanggal 20 November',
   cash_advance: 'Contoh: Kasbon untuk keperluan keluarga',
   forgot_attendance: 'Contoh: Lupa absen masuk karena HP mati',
+  incentive: 'Contoh: Insentif cuci 12 sepatu pada nota IDL-20261117-0003',
 }
 
 export function RequestNewPage() {

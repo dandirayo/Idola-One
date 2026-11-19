@@ -17,7 +17,7 @@ Idola One adalah aplikasi operasional dan kasir multi-usaha untuk Idola Laundry 
 - **Aplikasi Android (Flutter)** untuk owner dan karyawan: pesanan, pembayaran, cetak nota, absensi, pengajuan, stok, kas, dan POS minuman.
 - **Dashboard web (React + Vite)** khusus owner: ringkasan, koreksi data, laporan, dan audit. Cakupannya baru sebagian modul Laundry.
 
-**Idola One Web** menyatukan keduanya menjadi **satu aplikasi berbasis web** yang dipakai owner dan karyawan dari ponsel, tablet, maupun komputer. Aplikasi ini memakai **database Supabase yang sudah berjalan** (project "Idola One"), sehingga data yang sudah ada tetap dipakai tanpa dipindahkan.
+**Idola One Web** menyatukan keduanya menjadi **satu aplikasi berbasis web** yang dipakai owner dan karyawan dari ponsel, tablet, maupun komputer. Data operasional disimpan di **PostgreSQL pada server sendiri** (VPS atau mini server). Data yang sekarang masih di Supabase dipindahkan ke sana lewat migrasi terkontrol (04-BACKEND bagian 2).
 
 ## 2. Latar belakang dan alasan pindah ke web
 
@@ -63,13 +63,13 @@ Hak akses mengikuti data yang sudah ada:
 - akses usaha diambil dari `businesses` dan `business_members`;
 - data dibatasi oleh `shop_id` dan `business_id`.
 
-**RLS di database tetap menjadi penjaga utama.** Menyembunyikan menu di UI bukan pengganti RLS.
+**Backend menjadi penjaga utama.** Peran dan toko diperiksa di API pada setiap permintaan. Menyembunyikan menu di UI bukan pengganti pemeriksaan itu.
 
 ## 5. Prinsip produk
 
-1. **Satu backend bersama.** Web memakai Supabase project yang sama dengan Android. Tidak ada database kedua.
-2. **Server yang menentukan angka.** Total, nomor nota, pembayaran, kas, poin, dan stok dihitung oleh RPC dan trigger yang sudah ada. Web tidak menghitung ulang dengan rumus sendiri.
-3. **Perubahan database hanya menambah.** Skema baru wajib lewat migration baru, dilengkapi RLS dan audit. Dilarang mengubah ID, snapshot harga, pembayaran, atau tanggal transaksi historis.
+1. **Satu backend bersama.** Semua peran memakai API dan database yang sama. Selama masa paralel, Android dan web tidak boleh menulis ke dua database berbeda.
+2. **Server yang menentukan angka.** Total, nomor nota, pembayaran, kas, poin, dan stok dihitung oleh fungsi dan trigger di database. Web tidak menghitung ulang dengan rumus sendiri.
+3. **Perubahan database hanya menambah.** Skema baru wajib lewat migration baru, dilengkapi pemeriksaan akses dan audit. Dilarang mengubah ID, snapshot harga, pembayaran, atau tanggal transaksi historis.
 4. **Ponsel dulu untuk karyawan, layar lebar untuk owner.** Tata letak responsif, bukan dua aplikasi berbeda.
 5. **Status harus bermakna.** Pakai istilah yang sama dengan Android: Menunggu, Disetujui, Ditolak, Dilaksanakan, Diproses, Siap Diambil, Diambil, Belum Bayar, DP, Lunas.
 6. **Gagal cetak tidak membatalkan transaksi.** Transaksi disimpan dulu, cetak menyusul dan bisa diulang.
@@ -79,21 +79,21 @@ Hak akses mengikuti data yang sudah ada:
 Pertimbangan utama:
 
 - aplikasi ini internal dan memerlukan login, jadi tidak butuh SEO maupun server rendering;
-- backend sudah lengkap di Supabase (Auth, Postgres, RPC, Realtime, Storage);
-- dashboard web sekarang sudah memakai React, TypeScript, Vite, dan supabase-js, sehingga pengetahuan dan sebagian kode bisa dilanjutkan.
+- backend dibangun di server sendiri (04-BACKEND.md), bukan layanan Supabase;
+- dashboard web sekarang sudah memakai React, TypeScript, dan Vite, sehingga pengetahuan dan sebagian kode bisa dilanjutkan.
 
 | Lapisan | Rekomendasi | Alasan |
 | --- | --- | --- |
-| Bahasa | **TypeScript** (strict) | Tipe data dari skema Supabase dapat dibuat otomatis, sehingga kesalahan kolom terdeteksi sebelum rilis |
+| Bahasa | **TypeScript** (strict) | Tipe data bisa dipakai bersama frontend dan API, sehingga kesalahan kolom terdeteksi sebelum rilis |
 | Framework UI | **React** + **Vite** (Single Page App) | Sama dengan dashboard sekarang. Ringan, cepat, cocok untuk PWA, dan cukup di-hosting sebagai file statis. |
 | Routing | **React Router** (terpasang di proyek) | Route per peran dan guard. TanStack Router tidak jadi dipakai karena React Router sudah cukup. |
-| Data dan cache | **TanStack Query** + **supabase-js** | Cache, refetch saat fokus, dan invalidasi saat event Realtime. Pola ini sudah dipakai di Flutter dan dashboard. |
+| Data dan cache | **TanStack Query** + `fetch` ke API sendiri | Cache, refetch saat fokus, dan invalidasi saat ada event dari server. Saat ini aplikasi masih memakai data contoh di memori dan localStorage. |
 | Tampilan | **Tailwind CSS v4** + komponen sendiri (shadcn/ui dapat ditambahkan bila perlu) | Komponen aksesibel (dialog, sheet, tabel, form) yang bisa disesuaikan dengan token warna Idola |
 | Form dan validasi | **React Hook Form** + **Zod** | Validasi form pesanan, pembayaran, dan pengajuan konsisten di satu tempat |
 | Tabel dan grafik | **TanStack Table**, **Recharts** | Tabel dengan paginasi/filter server, grafik laporan |
 | PWA dan offline | **vite-plugin-pwa** (Workbox), **Dexie** (IndexedDB) | Bisa dipasang di layar utama, cache tampilan, antrean aksi ringan saat jaringan putus |
 | Notifikasi push | **Web Push** lewat service worker (FCM web atau VAPID) | Pengganti Firebase Messaging di Android |
-| Backend | **Supabase** yang sudah ada | Data, RLS, RPC, trigger, Realtime, Storage, dan Edge Function tetap dipakai |
+| Backend | API **TypeScript** (Fastify) + **PostgreSQL** di server sendiri | Keputusan 16 Nov 2026, detail dan alternatif di 04-BACKEND.md. Aturan bisnis tetap sebagai fungsi dan trigger SQL. |
 | Pengujian | **Vitest**, **Testing Library**, **Playwright** | Unit, komponen, dan uji alur kasir end-to-end |
 | Kualitas kode | **oxlint**, **Vitest**, **npm** | oxlint sudah dipakai dashboard sekarang. npm dipilih karena sudah terpasang di komputer, tanpa memasang alat tambahan. |
 | Hosting | Hosting statis (Cloudflare Pages atau VPS + Nginx) | Tidak perlu server aplikasi. Lihat keputusan terbuka K-03. |
@@ -103,7 +103,7 @@ Versi persis setiap paket ditentukan saat setup proyek dan dikunci di lockfile.
 
 **Alternatif yang dipertimbangkan:**
 
-- **Next.js.** Kuat, tetapi menambah lapisan server yang tidak dibutuhkan karena seluruh logika sudah ada di Supabase.
+- **Next.js.** Kuat, tetapi menambah lapisan server yang tidak dibutuhkan karena logika bisnis ada di API dan database, dan frontend cukup berupa file statis.
 - **Flutter Web.** Memakai ulang kode Dart, tetapi ukuran unduhan besar, tampilan tabel dan form di browser kurang alami, dan cakupan PWA lebih terbatas.
 
 ## 7. Batasan platform web dan solusinya
@@ -114,11 +114,11 @@ Beberapa fitur Android memakai kemampuan perangkat yang **tidak sama** di browse
 | --- | --- | --- | --- |
 | **Printer thermal Bluetooth 58/80 mm (ESC/POS)** | Web Bluetooth hanya mendukung BLE, sedangkan banyak printer thermal murah (misal RPP02N) memakai Bluetooth Classic. iOS Safari tidak mendukung Web Bluetooth. | (1) Uji printer yang dipakai sekarang dengan Web Bluetooth. (2) Bila tidak didukung, kirim data ESC/POS ke aplikasi print service Android (misal RawBT) lewat intent/share. (3) Di laptop, pakai Web Serial atau cetak HTML berukuran 58/80 mm. (4) Selalu sediakan cadangan PDF dan bagikan ke WhatsApp. | P0, perlu uji perangkat |
 | **Sinkron kontak Google** | Browser tidak bisa membaca atau menulis kontak otomatis. Contact Picker API hanya ada di Chrome Android, hanya baca, dan dipilih manual. | v1: tambah pelanggan manual dan Contact Picker (pilih kontak saat membuat pesanan). v2: integrasi Google People API dengan izin OAuth owner. | P1 |
-| **Absensi selfie** | Kamera bisa diakses lewat `getUserMedia` atau `<input capture>` | Ambil foto di browser, unggah ke Supabase Storage, waktu dicatat server | P0 |
-| **Notifikasi push (FCM)** | Web Push didukung Chrome/Edge/Firefox. Di iPhone hanya bila PWA dipasang ke layar utama (iOS 16.4+). | Web Push via service worker, notifikasi in-app Realtime tetap utama | P1 |
+| **Absensi selfie** | Kamera bisa diakses lewat `getUserMedia` atau `<input capture>` | Ambil foto di browser, unggah ke penyimpanan file di server sendiri, waktu dicatat server | P0 |
+| **Notifikasi push (FCM)** | Web Push didukung Chrome/Edge/Firefox. Di iPhone hanya bila PWA dipasang ke layar utama (iOS 16.4+). | Web Push via service worker, notifikasi in-app tetap utama | P1 |
 | **Update APK dari cloud** | Tidak diperlukan | Service worker mendeteksi versi baru dan menampilkan tombol "Muat ulang" | P0 |
 | **Buka WhatsApp dengan template** | Didukung lewat tautan `wa.me` | Sama seperti sekarang | P0 |
-| **PIN buka cepat** | Tidak ada keamanan tingkat perangkat seperti Android | v1: sesi Supabase dengan masa aktif dan kunci layar opsional. Pertimbangkan WebAuthn/passkey. | P2 |
+| **PIN buka cepat** | Tidak ada keamanan tingkat perangkat seperti Android | v1: sesi login dengan masa aktif dan kunci layar opsional. Pertimbangkan WebAuthn/passkey. | P2 |
 | **Mode offline** | Service worker dan IndexedDB tersedia | Lihat bagian 10 (NFR-05) | P1 |
 
 ## 8. Ruang lingkup fitur
@@ -133,19 +133,19 @@ Prioritas:
 
 | ID | Kebutuhan | Prioritas |
 | --- | --- | --- |
-| AUTH-01 | Login email/username dan password via Supabase Auth. Akun nonaktif ditolak. | P0 |
+| AUTH-01 | Login username dan password lewat API sendiri. Akun nonaktif ditolak. | P0 |
 | AUTH-02 | Setelah login, tampilkan usaha aktif yang boleh diakses. Pilihan usaha disimpan sebagai konteks sesi. | P0 |
 | AUTH-03 | Shell navigasi berbeda untuk Owner Laundry, Karyawan Laundry, dan Anggota POS | P0 |
 | AUTH-04 | Owner menambah usaha (jenis minuman) dan mengatur karyawan per usaha | P1 |
 | AUTH-05 | Profil pengguna dan ganti password | P0 |
-| AUTH-06 | Logout membersihkan sesi, cache data sensitif, dan langganan Realtime | P0 |
+| AUTH-06 | Logout membersihkan sesi, cache data sensitif, dan koneksi event | P0 |
 
 ### 8.2 Pesanan Laundry
 
 | ID | Kebutuhan | Prioritas |
 | --- | --- | --- |
 | ORD-01 | Buat pesanan Kiloan, Satuan, atau Gabung. Pilih atau tambah pelanggan, layanan dan varian (sprei 160/180/200 terpisah), berat desimal per 0,1 kg (minimal 3 kg dengan pengecualian), jumlah item. Tambahkan penerima, petugas, tenggat, dan catatan. | P0 |
-| ORD-02 | Simpan lewat RPC `create_laundry_order` secara atomik. Server membuat nomor nota (`IDL-YYYYMMDD-0001`), snapshot harga, dan pembulatan total ke atas kelipatan Rp1.000. | P0 |
+| ORD-02 | Simpan lewat satu transaksi database (`create_laundry_order`) secara atomik. Server membuat nomor nota (`IDL-YYYYMMDD-0001`), snapshot harga, dan pembulatan total ke atas kelipatan Rp1.000. | P0 |
 | ORD-03 | Daftar pesanan dengan pencarian, filter status, filter periode, dan paginasi server. Karyawan melihat "Pesanan Saya". | P0 |
 | ORD-04 | Detail pesanan: item, pelanggan, penerima, petugas, tenggat, catatan, riwayat pembayaran, sisa tagihan, poin | P0 |
 | ORD-05 | Ubah status: Diterima → Diproses → Siap Diambil → Diambil, dan Batal. Mengikuti aturan transisi di server. | P0 |
@@ -159,9 +159,9 @@ Prioritas:
 | ID | Kebutuhan | Prioritas |
 | --- | --- | --- |
 | PAY-01 | Status bayar: Belum Bayar, DP, Lunas, atau nominal manual. Metode: Tunai, Transfer, QRIS. Pembayaran tunai dan transfer dalam satu nota ditandai Hybrid. | P0 |
-| PAY-02 | Pembayaran tambahan wajib lewat RPC `record_order_payment` | P0 |
+| PAY-02 | Pembayaran tambahan wajib lewat transaksi `record_order_payment` | P0 |
 | PAY-03 | Setiap pembayaran otomatis tercatat di `cash_transactions` oleh trigger. Web tidak menulis kas pembayaran sendiri. | P0 |
-| PAY-04 | Koreksi pembayaran (nominal, metode, tanggal) hanya oleh owner, lewat RPC, dan tercatat di audit | P0 |
+| PAY-04 | Koreksi pembayaran (nominal, metode, tanggal) hanya oleh owner, lewat transaksi database, dan tercatat di audit | P0 |
 | PAY-05 | Buku Kas owner: saldo akhir, masuk, keluar, rincian per metode, filter Hari ini/Kemarin/Minggu ini/Bulan ini/rentang tanggal, ekspor CSV | P0 |
 | PAY-06 | Laporan Pembayaran karyawan: rincian per metode pada periode terpilih, lalu draf WhatsApp ke owner | P0 |
 | PAY-07 | Kas manual (masuk/keluar) oleh owner | P1 |
@@ -208,7 +208,7 @@ Prioritas:
 
 | ID | Kebutuhan | Prioritas |
 | --- | --- | --- |
-| EMP-01 | Owner menambah akun karyawan (Edge Function yang ada), mengubah profil/posisi/gaji mingguan, dan mengaktifkan atau menonaktifkan | P0 |
+| EMP-01 | Owner menambah akun karyawan (endpoint API), mengubah profil/posisi/gaji mingguan, dan mengaktifkan atau menonaktifkan | P0 |
 | SHF-01 | Jadwal shift mingguan dan hari libur. Karyawan melihat "Jadwal Saya". | P1 |
 | ATT-01 | Absen masuk/pulang dengan foto selfie ke Storage, waktu dicatat server, dicek terhadap jadwal (keterlambatan) | P0 |
 | ATT-02 | Pengajuan "Lupa Absen" dengan alasan, disetujui owner | P1 |
@@ -229,7 +229,7 @@ Prioritas:
 
 | ID | Kebutuhan | Prioritas |
 | --- | --- | --- |
-| NTF-01 | Kotak notifikasi in-app dengan badge, tandai dibaca, dan hapus. Diperbarui lewat Realtime. | P0 |
+| NTF-01 | Kotak notifikasi in-app dengan badge, tandai dibaca, dan hapus. Diperbarui lewat event dari server. | P0 |
 | NTF-02 | Tautan notifikasi hanya membuka route internal aplikasi | P0 |
 | NTF-03 | Web Push untuk pengajuan baru, perubahan status, dan pengingat tagihan belum lunas | P1 |
 
@@ -259,7 +259,7 @@ Prioritas:
 | --- | --- | --- |
 | RPT-01 | Beranda owner: pesanan hari ini, pesanan baru, pelanggan, karyawan aktif, pemasukan bulan ini, stok menipis, pengajuan menunggu, pesanan terbaru | P0 |
 | RPT-02 | Laporan Pesanan dan Keuangan: empat angka utama dan panel rincian (status, layanan, volume, metode, kategori) | P0 |
-| RPT-03 | Angka laporan dihitung dengan aggregate/RPC di server, bukan dari data yang kebetulan termuat di browser | P0 |
+| RPT-03 | Angka laporan dihitung dengan fungsi aggregate di server, bukan dari data yang kebetulan termuat di browser | P0 |
 | RPT-04 | Analitik: grafik pesanan masuk dan selesai per minggu (Senin–Minggu) atau bulan kalender, posisi pesanan, sisa tagihan | P1 |
 | RPT-05 | Ekspor CSV untuk pesanan, kas, dan pelanggan | P1 |
 | AUD-01 | Audit: garis waktu dengan pencarian, filter tabel, perbandingan data sebelum/sesudah, paginasi server. Tidak bisa diedit. | P1 |
@@ -283,16 +283,16 @@ Prioritas:
 8. **Poin:** `floor(total_price / 10.000)`, satu event per pesanan, hanya untuk pesanan berpelanggan yang lunas.
 9. **Snapshot:** nama pelanggan, layanan, produk, dan harga disalin ke transaksi agar histori tidak berubah.
 10. **Periode:** "Minggu ini" berarti Senin–Minggu kalender. "Bulan ini" berarti tanggal 1 sampai akhir bulan. Zona waktu WIB (Asia/Jakarta).
-11. **Mutasi data** harus mengembalikan baris yang berubah. Nol baris (misal ditolak RLS) dianggap gagal, bukan sukses.
+11. **Mutasi data** harus mengembalikan baris yang berubah. Nol baris (misal ditolak pemeriksaan akses) dianggap gagal, bukan sukses.
 
 ## 10. Persyaratan non-fungsional
 
 | ID | Area | Persyaratan |
 | --- | --- | --- |
-| NFR-01 | Keamanan | Hanya publishable/anon key dan JWT pengguna di browser. `service_role` tidak boleh masuk bundle. Semua tabel memakai RLS. Uji akses lintas toko dan lintas usaha wajib lulus. |
-| NFR-02 | Integritas | Operasi uang dan stok hanya lewat RPC/trigger yang ada. Tidak ada transaksi setengah tersimpan. |
+| NFR-01 | Keamanan | Tidak ada kunci rahasia di bundle browser maupun repo. Sesi lewat cookie `HttpOnly`, password di-hash. Peran dan toko diperiksa di API pada setiap permintaan. Uji akses lintas toko dan lintas usaha wajib lulus. |
+| NFR-02 | Integritas | Operasi uang dan stok hanya lewat fungsi atau trigger database. Tidak ada transaksi setengah tersimpan. |
 | NFR-03 | Kinerja | Halaman kasir siap dipakai kurang dari 3 detik di ponsel kelas menengah dengan 4G. Membuat pesanan sederhana selesai kurang dari 60 detik. Daftar panjang memakai paginasi server. |
-| NFR-04 | Sinkronisasi | Perubahan dari perangkat lain terlihat ≤ 5 detik lewat Realtime. Ada refetch saat tab kembali fokus dan rekonsiliasi berkala (15 detik) saat koneksi Realtime putus. Event hanya memicu query ulang, bukan dipakai sebagai angka final. |
+| NFR-04 | Sinkronisasi | Perubahan dari perangkat lain terlihat ≤ 5 detik lewat event dari server (SSE atau WebSocket). Ada refetch saat tab kembali fokus dan rekonsiliasi berkala (15 detik) saat koneksi event putus. Event hanya memicu query ulang, bukan dipakai sebagai angka final. |
 | NFR-05 | Offline | v1: tampilan dan data terakhir tetap dapat dibaca. Aksi keuangan (pesanan, pembayaran) membutuhkan koneksi dan menampilkan pesan jelas saat offline. Antrean offline untuk aksi tertentu dievaluasi di P2. |
 | NFR-06 | Responsif | Bekerja di lebar 360 px (ponsel), tablet, dan desktop. Target sentuh minimal 44 px. |
 | NFR-07 | Aksesibilitas | Navigasi keyboard, fokus terlihat, label form, kontras memadai. Status memakai teks, tidak hanya warna. |
@@ -329,7 +329,8 @@ Dokumen desain rinci (wireframe tiap layar) dibuat terpisah sebagai `docs/03-UI-
 
 ## 12. Data dan backend
 
-- **Project Supabase:** "Idola One" (`sqydcdhvsmmkvlpsjzgx`, region ap-south-1). Ada 35 tabel `public` dengan RLS aktif dan 38 migration sudah terpasang, yang terakhir `20261106073457_harden_security_definer_execution`.
+- **Target:** PostgreSQL + API TypeScript di VPS atau mini server sendiri (04-BACKEND.md). Belum dibangun; aplikasi masih memakai data contoh.
+- **Sumber data sekarang:** project Supabase "Idola One" (`sqydcdhvsmmkvlpsjzgx`, region ap-south-1) dengan 35 tabel `public` dan 38 migration, terakhir `20261106073457_harden_security_definer_execution`. Hanya dibaca sebagai referensi skema. Jangan ditutup sebelum data dipindahkan dan diverifikasi.
 - **Kelompok tabel utama:**
   - Tenant: `shops`, `businesses`, `business_members`, `profiles`, `employees`.
   - Laundry: `orders`, `order_items`, `services`, `service_categories`, `customers`.
@@ -339,19 +340,19 @@ Dokumen desain rinci (wireframe tiap layar) dibuat terpisah sebagai `docs/03-UI-
   - Proyek: `laundry_projects`, `laundry_project_batches`, `laundry_project_payments`.
   - POS: `pos_products`, `pos_sales`, `pos_sale_items`, `business_daily_operations`.
   - Lainnya: `notifications`, `audit_logs`, `customer_point_events`, `customer_point_balances`.
-- **RPC yang dipakai ulang:** `create_laundry_order`, `record_order_payment`, `update_order_kilo_services`, `record_inventory_purchase`, `record_inventory_usage`, `adjust_inventory_stock`, `create_pos_sale`, `owner_correct_order_payment`, trigger `app_private.sync_customer_points`, serta Edge Function `create-employee-user` dan `join-employee-user`.
-- **Tipe TypeScript** dibuat otomatis dari skema dengan `supabase gen types`.
-- **Kebutuhan backend baru** (lewat migration baru, setelah diuji di staging):
-  - RPC aggregate untuk metrik dashboard dan laporan (RPT-03);
+- **Fungsi database yang dipertahankan (ditulis sebagai SQL biasa):** `create_laundry_order`, `record_order_payment`, `update_order_kilo_services`, `record_inventory_purchase`, `record_inventory_usage`, `adjust_inventory_stock`, `create_pos_sale`, `owner_correct_order_payment`, trigger `app_private.sync_customer_points`, serta pembuatan akun karyawan yang menjadi endpoint API (pengganti Edge Function `create-employee-user` dan `join-employee-user`).
+- **Tipe TypeScript** dibuat dari skema PostgreSQL (alat dipilih saat backend dimulai).
+- **Kebutuhan backend baru** (lewat migration baru, setelah diuji di server uji):
+  - fungsi aggregate untuk metrik dashboard dan laporan (RPT-03);
   - tabel histori transisi status pesanan, append-only, untuk grafik "selesai" yang akurat;
   - tabel langganan Web Push (NTF-03);
-  - menambahkan tabel POS ke publication Realtime, atau polling yang terdokumentasi.
+  - event perubahan data lewat `LISTEN/NOTIFY` PostgreSQL, atau polling yang terdokumentasi.
 
 ## 13. Rencana rilis bertahap
 
 | Fase | Isi | Kriteria selesai |
 | --- | --- | --- |
-| **0. Fondasi** | Setup repo, CI, tema, auth, pemilih usaha, shell per peran, tipe Supabase, lingkungan staging | Login owner dan karyawan berhasil di staging, CI hijau |
+| **0. Fondasi** | Setup repo, CI, tema, auth, pemilih usaha, shell per peran, skema dan tipe data, server uji | Login owner dan karyawan berhasil di server uji, CI hijau |
 | **1. Kasir Laundry (P0)** | Pesanan, pembayaran, status, WhatsApp, cetak (setelah uji printer), pelanggan, layanan, notifikasi in-app | Uji E2E alur kasir lulus. Satu karyawan memakai web paralel dengan Android selama 1 minggu tanpa selisih data. |
 | **2. Operasional dan owner (P0)** | Stok, pengeluaran, Buku Kas, laporan berbasis server, absensi selfie, pengajuan, karyawan, pengaturan | Laporan web sama dengan laporan Android untuk periode yang sama |
 | **3. Paritas penuh (P1)** | Shift, payroll, insentif, proyek B2B, POS minuman, poin, audit, analitik, ekspor, Web Push | Semua fitur P1 tersedia. APK dibekukan (hanya perbaikan kritis). |
@@ -362,7 +363,7 @@ Dokumen desain rinci (wireframe tiap layar) dibuat terpisah sebagai `docs/03-UI-
 
 - 100% pesanan, pembayaran, dan kas yang dibuat dari web konsisten dengan data yang dibuat Android pada masa paralel (tidak ada selisih rekonsiliasi).
 - Waktu membuat pesanan laundry sederhana ≤ 60 detik. Transaksi POS ≤ 30 detik.
-- Nol akses lintas toko atau lintas usaha pada pengujian RLS.
+- Nol akses lintas toko atau lintas usaha pada pengujian akses.
 - Owner dapat menjalankan seluruh pekerjaan harian dari laptop maupun ponsel tanpa membuka APK.
 - Pembaruan aplikasi sampai ke semua karyawan dalam satu hari tanpa instal manual.
 
@@ -371,11 +372,11 @@ Dokumen desain rinci (wireframe tiap layar) dibuat terpisah sebagai `docs/03-UI-
 | Risiko | Dampak | Mitigasi |
 | --- | --- | --- |
 | Printer thermal tidak bisa diakses dari browser | Kasir tidak bisa mencetak nota/label | Uji printer di Fase 0. Siapkan jalur RawBT/intent, Web Serial, dan cadangan PDF. Pertimbangkan printer BLE bila perlu. |
-| Web dan Android menulis ke database yang sama saat masa paralel | Data ganda atau tidak konsisten | Semua tulis lewat RPC yang sama. Masa paralel dibatasi dan direkonsiliasi harian. |
+| Web dan Android menulis ke database yang sama saat masa paralel | Data ganda atau tidak konsisten | Semua tulis lewat API yang sama. Masa paralel dibatasi dan direkonsiliasi harian. |
 | Repo `LaundryApp` branch `main` belum memuat migration terakhir (`20261106073457`) yang sudah ada di database | Kode migration tidak mencerminkan database produksi | Satukan migration ke satu sumber sebelum Fase 0 (lihat K-02) |
 | Sinkron kontak otomatis hilang | Input pelanggan lebih lambat | Contact Picker dan tambah cepat di form pesanan. Google People API di P2. |
 | Koneksi internet toko tidak stabil | Transaksi tertunda | Indikator offline yang jelas. Data tetap dapat dibaca. Antrean offline dievaluasi. |
-| Notifikasi push di iPhone terbatas | Owner pengguna iPhone tidak mendapat push | Notifikasi in-app Realtime dan anjuran memasang PWA |
+| Notifikasi push di iPhone terbatas | Owner pengguna iPhone tidak mendapat push | Notifikasi in-app dan anjuran memasang PWA |
 
 ## 16. Keputusan terbuka
 

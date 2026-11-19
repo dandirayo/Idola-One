@@ -14,12 +14,17 @@ export const COLUMNS: Record<PaperWidth, number> = { 58: 32, 80: 48 }
 export const docKindLabel: Record<DocKind, string> = {
   receipt: 'Nota Pelanggan',
   label: 'Label Cucian',
-  pickup: 'Bukti Pengambilan',
+  pickup: 'Tanda Terima',
 }
+
+/** Nama merek di kepala nota, sama dengan aplikasi Android. */
+export const BRAND = 'IDOLA LAUNDRY'
 
 export interface ShopInfo {
   name: string
   phone: string
+  /** Nomor WhatsApp owner: penerima laporan pembayaran. Kosong: memakai telepon toko. */
+  ownerPhone?: string
   address: string
   footer: string
   paperWidth: PaperWidth
@@ -34,6 +39,8 @@ export interface ReceiptOrder {
   paid: number
   note: string
   skipMinKg: boolean
+  /** Nama pembuat pesanan (baris Kasir). */
+  cashier?: string
 }
 
 export interface Line {
@@ -41,6 +48,8 @@ export interface Line {
   large?: boolean
   bold?: boolean
   center?: boolean
+  /** Baris khusus: logo toko (gambar), hanya di kepala nota. */
+  logo?: boolean
 }
 
 const dateTimeFormat = new Intl.DateTimeFormat('id-ID', {
@@ -89,14 +98,21 @@ const dashes = (cols: number): Line => ({ text: '-'.repeat(cols) })
 const plain = (text: string, cols: number, opts: Omit<Line, 'text'> = {}): Line[] =>
   wrap(text, cols).map((t) => ({ text: t, ...opts }))
 
+const largeColsOf = (cols: number) => Math.floor(cols / 1.5)
+
+/** Kepala nota seperti aplikasi Android: logo, merek, nama toko, alamat, dan telepon. */
 function header(shop: ShopInfo, cols: number): Line[] {
-  const largeCols = Math.floor(cols / 1.5)
+  const name = shop.name.trim().toUpperCase()
   return [
-    ...plain(shop.name, largeCols, { large: true, bold: true, center: true }),
-    ...(shop.phone ? plain(shop.phone, cols, { center: true }) : []),
+    { text: '', logo: true, center: true },
+    ...plain(BRAND, largeColsOf(cols), { large: true, bold: true, center: true }),
+    ...(name && name !== BRAND ? plain(name, cols, { bold: true, center: true }) : []),
     ...(shop.address ? plain(shop.address, cols, { center: true }) : []),
+    ...(shop.phone ? plain(shop.phone, cols, { center: true }) : []),
   ]
 }
+
+const remainingOf = (order: ReceiptOrder) => Math.max(0, order.total - order.paid)
 
 const qtyText = (qty: number, unit: Unit) => `${formatQty(qty)} ${unit}`
 
@@ -108,9 +124,12 @@ function summaryOf(order: ReceiptOrder): string {
 export function buildReceipt(order: ReceiptOrder, shop: ShopInfo): Line[] {
   const cols = COLUMNS[shop.paperWidth]
   const lines: Line[] = [...header(shop, cols), dashes(cols)]
-  lines.push({ text: padLine('Nota', order.number, cols) })
-  lines.push({ text: padLine('Tanggal', dateTimeFormat.format(new Date(order.createdAt)), cols) })
+  lines.push({ text: remainingOf(order) === 0 ? 'NOTA LUNAS' : 'NOTA PESANAN', bold: true, center: true })
+  lines.push(dashes(cols))
+  lines.push({ text: padLine('No. Nota', order.number, cols) })
+  lines.push({ text: padLine('Tgl Masuk', dateTimeFormat.format(new Date(order.createdAt)), cols) })
   lines.push(...plain(`Pelanggan: ${order.customerName}`, cols))
+  if (order.cashier) lines.push(...plain(`Kasir: ${order.cashier}`, cols))
   lines.push(dashes(cols))
 
   let listed = 0
@@ -126,54 +145,64 @@ export function buildReceipt(order: ReceiptOrder, shop: ShopInfo): Line[] {
   if (raw > listed) {
     lines.push({ text: padLine('Minimal 3 kg', formatRupiah(raw - listed), cols) })
   }
-  lines.push({ text: padLine('Subtotal', formatRupiah(raw), cols) })
   if (order.total > raw) {
+    lines.push({ text: padLine('Subtotal', formatRupiah(raw), cols) })
     lines.push({ text: padLine('Pembulatan', formatRupiah(order.total - raw), cols) })
   }
   lines.push({ text: padLine('TOTAL', formatRupiah(order.total), cols), bold: true })
   lines.push({ text: padLine('Dibayar', formatRupiah(order.paid), cols) })
-  const remaining = Math.max(0, order.total - order.paid)
-  lines.push({ text: padLine('Sisa', formatRupiah(remaining), cols), bold: true })
-  lines.push({ text: padLine('Status', paymentStatusLabel[paymentStatus(order.total, order.paid)], cols) })
+  lines.push({ text: padLine('Sisa', formatRupiah(remainingOf(order)), cols), bold: true })
+  lines.push({ text: padLine('Status Bayar', paymentStatusLabel[paymentStatus(order.total, order.paid)].toUpperCase(), cols) })
 
   if (order.note) {
     lines.push(dashes(cols))
     lines.push(...plain(`Catatan: ${order.note}`, cols))
   }
-  if (shop.footer) {
+  lines.push(dashes(cols))
+  lines.push(...plain('Simpan nota ini sebagai bukti pesanan.', cols, { center: true }))
+  if (shop.footer) lines.push(...plain(shop.footer, cols, { center: true }))
+  return lines
+}
+
+/** Label cucian seperti aplikasi Android: huruf besar agar mudah dibaca di bungkus. */
+export function buildLabel(order: ReceiptOrder, shop: ShopInfo): Line[] {
+  const cols = COLUMNS[shop.paperWidth]
+  const big = largeColsOf(cols)
+  const pay = paymentStatusLabel[paymentStatus(order.total, order.paid)].toUpperCase()
+  const lines: Line[] = [
+    { text: 'LABEL CUCIAN', large: true, bold: true, center: true },
+    dashes(cols),
+    ...plain(order.number, shop.paperWidth === 80 ? big : cols, { large: shop.paperWidth === 80, bold: true, center: true }),
+    ...plain(order.customerName.toUpperCase(), big, { large: true, bold: true, center: true }),
+    dashes(cols),
+    { text: 'BERAT / JUMLAH', bold: true },
+  ]
+  for (const item of order.items) {
+    lines.push(...plain(qtyText(item.qty, item.unit), big, { large: true, bold: true }))
+    lines.push(...plain(item.name, cols))
+  }
+  lines.push(dashes(cols))
+  lines.push(...plain(`BAYAR: ${pay}`, big, { large: true, bold: true }))
+  lines.push({ text: padLine('SISA', formatRupiah(remainingOf(order)), cols), bold: true })
+  lines.push({ text: padLine('Masuk', dateTimeFormat.format(new Date(order.createdAt)), cols) })
+  if (order.note) {
     lines.push(dashes(cols))
-    lines.push(...plain(shop.footer, cols, { center: true }))
+    lines.push({ text: 'CATATAN', bold: true })
+    lines.push(...plain(order.note.toUpperCase(), big, { large: true, bold: true }))
   }
   return lines
 }
 
-/** Label cucian: huruf besar agar mudah dibaca di bungkus. */
-export function buildLabel(order: ReceiptOrder, shop: ShopInfo): Line[] {
-  const cols = COLUMNS[shop.paperWidth]
-  const largeCols = Math.floor(cols / 1.5)
-  const pay = paymentStatusLabel[paymentStatus(order.total, order.paid)]
-  const lines: Line[] = [
-    ...plain(order.number, largeCols, { large: true, bold: true, center: true }),
-    ...plain(order.customerName, largeCols, { large: true, bold: true, center: true }),
-    dashes(cols),
-    ...plain(summaryOf(order), cols, { bold: true }),
-    { text: padLine('Bayar', pay, cols), bold: true },
-    { text: padLine('Masuk', dateTimeFormat.format(new Date(order.createdAt)), cols) },
-  ]
-  if (order.note) lines.push(...plain(`Catatan: ${order.note}`, cols))
-  return lines
-}
-
-/** Bukti pengambilan. Tetap menampilkan sisa tagihan bila pesanan diambil belum lunas. */
+/** Tanda terima pengambilan. Tetap menampilkan sisa tagihan bila pesanan diambil belum lunas. */
 export function buildPickup(order: ReceiptOrder, shop: ShopInfo, now: Date = new Date()): Line[] {
   const cols = COLUMNS[shop.paperWidth]
   const remaining = Math.max(0, order.total - order.paid)
   const lines: Line[] = [
     ...header(shop, cols),
     dashes(cols),
-    { text: 'BUKTI PENGAMBILAN', bold: true, center: true },
+    { text: 'TANDA TERIMA PENGAMBILAN', bold: true, center: true },
     dashes(cols),
-    { text: padLine('Nota', order.number, cols) },
+    { text: padLine('No. Nota', order.number, cols) },
     ...plain(`Pelanggan: ${order.customerName}`, cols),
     ...plain(summaryOf(order), cols),
     { text: padLine('Diambil', dateTimeFormat.format(now), cols) },
@@ -181,6 +210,7 @@ export function buildPickup(order: ReceiptOrder, shop: ShopInfo, now: Date = new
     { text: padLine('Total', formatRupiah(order.total), cols) },
     { text: padLine('Dibayar', formatRupiah(order.paid), cols) },
     { text: padLine('Sisa', formatRupiah(remaining), cols), bold: true },
+    { text: padLine('Status Barang', 'SUDAH DIAMBIL', cols), bold: true },
   ]
   if (remaining > 0) {
     lines.push({ text: 'BELUM LUNAS', bold: true, center: true })
@@ -188,6 +218,7 @@ export function buildPickup(order: ReceiptOrder, shop: ShopInfo, now: Date = new
     lines.push({ text: 'LUNAS', bold: true, center: true })
   }
   lines.push(dashes(cols), { text: '' }, { text: 'Penerima: ____________' }, { text: '' })
+  lines.push(...plain('Bukti barang telah diterima pelanggan.', cols, { center: true }))
   if (shop.footer) lines.push(...plain(shop.footer, cols, { center: true }))
   return lines
 }

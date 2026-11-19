@@ -121,15 +121,53 @@ export function normalizePhone(raw: string): string {
   return `62${digits}`
 }
 
-export function whatsappReadyUrl(opts: {
-  phone: string
+export type Speed = 'reguler' | 'express' | 'kilat'
+
+export const speedLabel: Record<Speed, string> = { reguler: 'Reguler', express: 'Express', kilat: 'Kilat' }
+
+/** Kecepatan layanan dari namanya (katalog lama: "... Express", "... Kilat"). */
+export function serviceSpeed(name: string): Speed {
+  if (/\bkilat\b/i.test(name)) return 'kilat'
+  if (/\bexpress\b/i.test(name)) return 'express'
+  return 'reguler'
+}
+
+/** Kecepatan pesanan = layanan tercepat di dalamnya. */
+export function orderSpeed(items: { name: string }[]): Speed {
+  const speeds = items.map((i) => serviceSpeed(i.name))
+  return speeds.includes('kilat') ? 'kilat' : speeds.includes('express') ? 'express' : 'reguler'
+}
+
+export interface WhatsappOrder {
   customer: string
   number: string
+  total: number
   remaining: number
-  formattedRemaining: string
-}): string {
-  const tail =
-    opts.remaining > 0 ? ` Sisa tagihan ${opts.formattedRemaining}.` : ' Pembayaran sudah lunas.'
-  const text = `Halo ${opts.customer}, cucian Anda (nota ${opts.number}) sudah siap diambil.${tail} Terima kasih.`
-  return `https://wa.me/${normalizePhone(opts.phone)}?text=${encodeURIComponent(text)}`
+}
+
+/** Pesan "siap diambil", teks sama dengan aplikasi Android. */
+export function readyPickupMessage(o: WhatsappOrder, shopName: string, rupiah: (n: number) => string): string {
+  const remainingText = o.remaining <= 0 ? 'Sudah lunas' : `Sisa pembayaran ${rupiah(o.remaining)}`
+  return (
+    `Halo ${o.customer}, pesanan ${o.number} sudah selesai dan siap diambil di ${shopName}.
+
+` +
+    `Total: ${rupiah(o.total)}
+${remainingText}
+
+Terima kasih.`
+  )
+}
+
+/** Permintaan bayar sisa lewat Transfer atau QRIS setelah barang diambil, teks sama dengan aplikasi Android. */
+export function paymentRequestMessage(o: WhatsappOrder, method: string, rupiah: (n: number) => string): string {
+  return (
+    `Halo ${o.customer}, pesanan ${o.number} sudah diambil dengan sisa pembayaran ${rupiah(o.remaining)}.
+
+` +
+    `Silakan lakukan pembayaran melalui ${method}. Setelah membayar, mohon kirim bukti pembayaran melalui WhatsApp ini.
+
+` +
+    'Terima kasih.'
+  )
 }

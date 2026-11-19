@@ -138,7 +138,7 @@ export function SettingsPage() {
       {testOpen && (
         <PrintDialog
           title="Cetak Uji"
-          lines={buildTestPage(shop)}
+          build={(w) => [{ title: 'Cetak Uji', lines: buildTestPage({ ...shop, paperWidth: w }) }]}
           paperWidth={shop.paperWidth}
           onClose={() => setTestOpen(false)}
         />

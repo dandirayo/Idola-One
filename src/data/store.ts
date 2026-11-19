@@ -80,6 +80,8 @@ export interface Order {
   createdAt: string
   skipMinKg: boolean
   payments: Payment[]
+  /** Nama pembuat pesanan, dicetak sebagai baris Kasir. */
+  cashier?: string
 }
 
 export interface InventoryItem {
@@ -114,6 +116,7 @@ export interface Employee {
   position: string
   weeklySalary: number
   active: boolean
+  phone?: string
 }
 
 /** Jejak perubahan penting. Hanya ditambah, tidak pernah diubah atau dihapus. */
@@ -372,6 +375,7 @@ function seedOrder(
     note: '',
     createdAt,
     skipMinKg: false,
+    cashier: ['Rina', 'Dika', 'Sari'][n % 3],
     payments: paid > 0 ? [{ id: `p${n}`, amount: paid, method: 'cash', at: createdAt }] : [],
   }
 }
@@ -708,6 +712,7 @@ export function createOrder(input: NewOrderInput): Order {
     note: input.note,
     createdAt: now,
     skipMinKg: input.skipMinKg,
+    cashier: actorName,
     payments:
       paid > 0 && input.initialPayment
         ? [{ id: `p${stamp}`, amount: paid, method: input.initialPayment.method, at: now }]
@@ -737,6 +742,28 @@ export function addCustomer(name: string, phone: string): Customer {
   const customer: Customer = { id: uid('c'), ...valid, active: true }
   emit({ ...state, customers: [...state.customers, customer] })
   return customer
+}
+
+/** Pelanggan contoh (bawaan pratinjau) tidak pernah dikirim ke Google Contacts. */
+const SEED_CUSTOMER_IDS = new Set(customers.map((c) => c.id))
+export function isSeedCustomer(id: string): boolean {
+  return SEED_CUSTOMER_IDS.has(id)
+}
+
+/** Menambah banyak pelanggan sekaligus (impor Google). Yang tidak valid atau nomornya sudah ada dilewati. */
+export function importCustomers(list: { name: string; phone: string }[]): Customer[] {
+  const added: Customer[] = []
+  const known = new Set(state.customers.map((c) => normalizePhone(c.phone)))
+  for (const item of list) {
+    const name = item.name.trim()
+    const digits = item.phone.replace(/\D/g, '')
+    const key = normalizePhone(digits)
+    if (!name || digits.length < 9 || known.has(key)) continue
+    known.add(key)
+    added.push({ id: uid('c'), name, phone: digits, active: true })
+  }
+  if (added.length) emit({ ...state, customers: [...state.customers, ...added] })
+  return added
 }
 
 export function updateCustomer(id: string, name: string, phone: string) {
@@ -1114,6 +1141,15 @@ export function addEmployee(name: string, position: string, weeklySalary: number
 export function updateEmployee(id: string, name: string, position: string, weeklySalary: number) {
   const valid = validateEmployee(name, position, weeklySalary)
   emit({ ...state, employees: state.employees.map((e) => (e.id === id ? { ...e, ...valid } : e)) })
+}
+
+/** Karyawan mengubah profilnya sendiri: nama dan nomor HP. */
+export function updateEmployeeProfile(id: string, name: string, phone: string) {
+  const clean = name.trim()
+  if (!clean) throw new Error('Nama wajib diisi.')
+  const digits = phone.replace(/\D/g, '')
+  if (digits && digits.length < 9) throw new Error('Nomor telepon tidak valid.')
+  emit({ ...state, employees: state.employees.map((e) => (e.id === id ? { ...e, name: clean, phone: digits } : e)) })
 }
 
 /** Nonaktifkan, bukan hapus: riwayat absensi dan gaji tetap utuh. */

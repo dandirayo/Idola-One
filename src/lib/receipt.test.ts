@@ -66,6 +66,20 @@ describe('buildReceipt', () => {
     expect(t).toMatch(/Dibayar\s+Rp 10\.000/)
     expect(t).toMatch(/Sisa\s+Rp 18\.000/)
     expect(t).toContain('DP')
+    expect(t).toContain('NOTA PESANAN')
+    expect(t).toContain('IDOLA LAUNDRY')
+  })
+
+  it('judul NOTA LUNAS bila sisa nol, dan baris Kasir bila ada', () => {
+    const t = text(buildReceipt(order({ paid: 28000, cashier: 'Rina' }), shop()))
+    expect(t).toContain('NOTA LUNAS')
+    expect(t).not.toContain('NOTA PESANAN')
+    expect(t).toContain('Kasir: Rina')
+    expect(t).toContain('LUNAS')
+  })
+
+  it('kepala nota diawali baris logo', () => {
+    expect(buildReceipt(order(), shop())[0].logo).toBe(true)
   })
 
   it('menampilkan pembulatan ke atas dan tagihan minimal 3 kg', () => {
@@ -82,7 +96,7 @@ describe('buildReceipt', () => {
     expect(t).toMatch(/Minimal 3 kg\s+Rp 3\.625/)
     expect(t).toMatch(/Subtotal\s+Rp 21\.750/)
     expect(t).toMatch(/Pembulatan\s+Rp 250/)
-    expect(t).toContain('Belum Bayar')
+    expect(t).toMatch(/Status Bayar\s+BELUM BAYAR/)
   })
 
   it('tidak ada baris yang melebihi lebar kertas 58 mm maupun 80 mm', () => {
@@ -101,17 +115,25 @@ describe('buildReceipt', () => {
 })
 
 describe('buildLabel', () => {
-  it('memakai huruf besar untuk nomor dan nama pelanggan', () => {
-    const lines = buildLabel(order(), shop())
-    expect(lines.filter((l) => l.large).map((l) => l.text)).toEqual(['IDL-20261116-0012', 'Bu Sinta'])
-    expect(text(lines)).toMatch(/Bayar\s+DP/)
+  it('judul LABEL CUCIAN, nama kapital besar, jumlah per item besar', () => {
+    const lines = buildLabel(order({ note: 'pisah putih' }), shop())
+    const large = lines.filter((l) => l.large).map((l) => l.text)
+    expect(large).toEqual(['LABEL CUCIAN', 'IDL-20261116-0012', 'BU SINTA', '3,5 kg', 'BAYAR: DP', 'PISAH PUTIH'])
+    expect(text(lines)).toContain('BERAT / JUMLAH')
+    expect(text(lines)).toMatch(/SISA\s+Rp 18\.000/)
+  })
+
+  it('di 58 mm nomor nota tidak besar agar muat', () => {
+    const lines = buildLabel(order(), shop(58))
+    expect(lines.find((l) => l.text === 'IDL-20261116-0012')?.large).toBeFalsy()
   })
 })
 
 describe('buildPickup', () => {
   it('menandai BELUM LUNAS dan menampilkan sisa bila diambil belum lunas', () => {
     const t = text(buildPickup(order(), shop(), new Date(2026, 10, 17, 10, 0)))
-    expect(t).toContain('BUKTI PENGAMBILAN')
+    expect(t).toContain('TANDA TERIMA PENGAMBILAN')
+    expect(t).toMatch(/Status Barang\s+SUDAH DIAMBIL/)
     expect(t).toContain('BELUM LUNAS')
     expect(t).toMatch(/Sisa\s+Rp 18\.000/)
     expect(t).toContain('Penerima:')

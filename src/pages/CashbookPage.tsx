@@ -5,11 +5,11 @@ import { useAuth } from '@/lib/auth'
 import { ManualCashForm } from '@/components/ManualCashForm'
 import { Card, Hint, inputClass, primaryButton, SectionTitle } from '@/components/ui'
 import { addExpense, useStore } from '@/data/store'
-import { balance, inRange, type CashEntry, periodLabel, periodRange, summarize, type Period } from '@/lib/finance'
+import { balance, choiceLabel, choiceRange, inRangeOrAll, initialPeriod, type CashEntry, summarize } from '@/lib/finance'
+import { PeriodPicker } from '@/components/PeriodPicker'
 import { formatRupiah } from '@/lib/format'
 import { paymentMethodLabel, type PaymentMethod } from '@/lib/orders'
 
-const periods: Period[] = ['today', 'yesterday', 'week', 'month']
 const dateTime = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
 const INITIAL_ROWS = 10
 
@@ -17,7 +17,8 @@ export function CashbookPage() {
   const cash = useStore((s) => s.cash)
   const isOwner = useAuth().session?.role === 'owner'
 
-  const [period, setPeriod] = useState<Period>('today')
+  const [period, setPeriod] = useState(() => initialPeriod('today'))
+  const periodText = choiceLabel(period)
   const [showAll, setShowAll] = useState(false)
   const [formOpen, setFormOpen] = useState(false)
   const [manualOpen, setManualOpen] = useState(false)
@@ -28,8 +29,8 @@ export function CashbookPage() {
   const [error, setError] = useState<string | null>(null)
 
   const entries = useMemo(() => {
-    const range = periodRange(period)
-    return cash.filter((e) => inRange(e.at, range)).sort((a, b) => b.at.localeCompare(a.at))
+    const range = choiceRange(period)
+    return cash.filter((e) => inRangeOrAll(e.at, range)).sort((a, b) => b.at.localeCompare(a.at))
   }, [cash, period])
   const summary = summarize(entries)
   const closing = balance(cash)
@@ -128,22 +129,13 @@ export function CashbookPage() {
         </Card>
       )}
 
-      <div className="seg" role="group" aria-label="Periode">
-        {periods.map((p) => (
-          <button
-            key={p}
-            type="button"
-            aria-pressed={period === p}
-            onClick={() => {
-              setPeriod(p)
-              setShowAll(false)
-            }}
-            className="seg-item"
-          >
-            {periodLabel[p]}
-          </button>
-        ))}
-      </div>
+      <PeriodPicker
+        value={period}
+        onChange={(v) => {
+          setPeriod(v)
+          setShowAll(false)
+        }}
+      />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Card variant="dark">
@@ -152,17 +144,17 @@ export function CashbookPage() {
           <p className="mt-1 text-xs text-white/60">Sepanjang waktu</p>
         </Card>
         <Card>
-          <p className="text-xs font-semibold text-muted">Masuk · {periodLabel[period]}</p>
+          <p className="text-xs font-semibold text-muted">Masuk · {periodText}</p>
           <p className="mt-1 text-2xl font-bold text-success">{formatRupiah(summary.in)}</p>
         </Card>
         <Card>
-          <p className="text-xs font-semibold text-muted">Keluar · {periodLabel[period]}</p>
+          <p className="text-xs font-semibold text-muted">Keluar · {periodText}</p>
           <p className="mt-1 text-2xl font-bold text-danger">{formatRupiah(summary.out)}</p>
         </Card>
       </div>
 
       <Card>
-        <SectionTitle>Rincian per metode · {periodLabel[period]}</SectionTitle>
+        <SectionTitle>Rincian per metode · {periodText}</SectionTitle>
         <div className="grid gap-3 sm:grid-cols-3">
           {(Object.keys(paymentMethodLabel) as PaymentMethod[]).map((m) => (
             <div key={m} className="rounded-2xl bg-canvas p-3 text-sm">
@@ -180,7 +172,7 @@ export function CashbookPage() {
         </h2>
         {entries.length === 0 ? (
           <Card>
-            <p className="text-sm text-muted">Belum ada transaksi pada {periodLabel[period].toLowerCase()}.</p>
+            <p className="text-sm text-muted">Belum ada transaksi pada {periodText.toLowerCase()}.</p>
           </Card>
         ) : (
           <DataList
