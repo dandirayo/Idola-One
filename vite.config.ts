@@ -4,7 +4,8 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
-  base: './',
+  // Di GitHub Pages situs ada di subfolder (/Idola-One/). CI mengisi VITE_BASE.
+  base: process.env.VITE_BASE ?? '/',
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },

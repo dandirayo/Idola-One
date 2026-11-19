@@ -1064,8 +1064,8 @@ export function payRequest(id: string, method: PaymentMethod) {
   if (r.status !== 'approved') throw new Error('Setujui pengajuan terlebih dahulu.')
   const expense: Expense = {
     id: uid('e'),
-    description: `${r.type === 'cash_advance' ? 'Kasbon' : 'Pengajuan'}: ${r.requester}`,
-    category: 'Kasbon',
+    description: `${r.type === 'cash_advance' ? 'Kasbon' : 'Biaya operasional'}: ${r.requester}`,
+    category: r.type === 'cash_advance' ? 'Kasbon' : 'Operasional',
     amount: r.amount,
     method,
     at: new Date().toISOString(),

@@ -36,8 +36,12 @@ jobs:
       - name: Build project
         run: npm run build
         env:
+          VITE_BASE: /${{ github.event.repository.name }}/
           # Client ID OAuth web untuk sinkron Google Contacts (bukan rahasia). Atur di Settings > Variables.
           VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
+
+      - name: SPA fallback (muat ulang di halaman dalam)
+        run: cp dist/index.html dist/404.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

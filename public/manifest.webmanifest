@@ -3,9 +3,9 @@
   "short_name": "Idola One",
   "description": "Operasional dan kasir Idola Laundry",
   "lang": "id",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#f6f6f2",
   "theme_color": "#1e1e2d",
-  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+  "icons": [{ "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
 }
