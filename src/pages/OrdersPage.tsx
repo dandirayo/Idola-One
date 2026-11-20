@@ -112,7 +112,7 @@ export function OrdersPage({ mine = false }: { mine?: boolean }) {
 
       <Hint>Perubahan hanya tersimpan sementara dan hilang saat halaman dimuat ulang.</Hint>
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-4">
         <label className="relative w-full sm:w-72">
           <span className="sr-only">Cari nota, nama, atau nomor HP</span>
           <Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden />
@@ -145,7 +145,7 @@ export function OrdersPage({ mine = false }: { mine?: boolean }) {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-4">
         <PeriodPicker value={period} onChange={(v) => { setPeriod(v); setPage(0) }} choices={['all', 'today', 'yesterday', 'week', 'month', 'custom']} />
         <div className="seg" role="group" aria-label="Filter kecepatan">
           {(['all', 'reguler', 'express', 'kilat'] as const).map((sp) => (
@@ -179,19 +179,19 @@ export function OrdersPage({ mine = false }: { mine?: boolean }) {
               <li>
                 <Link
                   to={`/orders/${o.id}`}
-                  className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-card bg-surface p-4 shadow-card card-hover"
+                  className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-2 rounded-card bg-surface p-4 shadow-card card-hover sm:flex sm:flex-wrap"
                 >
-                  <div className="min-w-0 flex-1 basis-48">
+                  <div className="min-w-0 flex-1 sm:basis-48">
                     <p className="truncate font-semibold">{o.customerName}</p>
-                    <p className="truncate text-xs text-muted">
+                    <p className="text-xs text-muted sm:truncate">
                       {o.number} · {dateFormat.format(new Date(o.createdAt))}
                     </p>
                   </div>
-                  <p className="text-sm text-muted">
+                  <p className="col-span-2 row-start-2 text-sm text-muted sm:col-auto sm:row-auto">
                     {o.items.map((i) => `${formatQty(i.qty)} ${i.unit} ${i.name}`).join(', ')}
                   </p>
-                  <p className="w-28 text-right font-semibold">{formatRupiah(o.total)}</p>
-                  <div className="flex gap-2">
+                  <p className="col-start-2 row-start-1 text-right font-semibold sm:col-auto sm:row-auto sm:w-28">{formatRupiah(o.total)}</p>
+                  <div className="col-span-2 flex gap-2 sm:col-auto">
                     <StatusChip label={orderStatusLabel[o.status]} tone={orderStatusTone[o.status]} />
                     <StatusChip label={paymentStatusLabel[pay]} tone={paymentTone[pay]} />
                   </div>

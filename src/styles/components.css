@@ -206,6 +206,23 @@
   .seg::-webkit-scrollbar {
     display: none;
   }
+  /* HP: satu baris yang bisa digeser kiri-kanan. Tepi kanan memudar sebagai petunjuk ada pilihan lain. */
+  @media (max-width: 639px) {
+    .seg {
+      scroll-snap-type: x proximity;
+      -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 1.5rem), transparent);
+      mask-image: linear-gradient(to right, #000 calc(100% - 1.5rem), transparent);
+      padding-right: 1.5rem;
+    }
+    .seg[aria-label='Tampilan daftar'] {
+      -webkit-mask-image: none;
+      mask-image: none;
+      padding-right: 0.25rem;
+    }
+    .seg-item {
+      scroll-snap-align: start;
+    }
+  }
   .seg-item {
     flex-shrink: 0;
     height: 2.25rem;

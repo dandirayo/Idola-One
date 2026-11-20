@@ -172,7 +172,7 @@ export function AppShell() {
   )
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-[1600px] flex-col px-3 pb-28 sm:px-5 sm:pb-28 lg:pb-5">
+    <div className="mx-auto flex min-h-screen max-w-[1600px] flex-col px-4 pb-28 sm:px-5 sm:pb-28 lg:pb-5">
       {/* HP dan tablet: keterangan pratinjau satu baris di atas top bar. Desktop: ringkas di dalam top bar. */}
       {!barClosed && (
         <div role="note" className="mt-3 flex items-center gap-2 rounded-2xl bg-sidebar py-0.5 pl-4 pr-0.5 text-xs font-semibold text-white print:hidden lg:hidden">
