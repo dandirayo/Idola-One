@@ -313,6 +313,8 @@ export interface TrashItem {
 
 export interface State {
   services: Service[]
+  /** Kategori layanan yang dibuat owner dan belum punya layanan. Kategori berisi layanan diturunkan dari layanan. */
+  serviceCategories: string[]
   customers: Customer[]
   orders: Order[]
   inventory: InventoryItem[]
@@ -576,6 +578,7 @@ export function projectPaymentCash(p: ProjectPaymentRow, name: string): CashEntr
 
 const seedState: State = {
   services,
+  serviceCategories: [],
   customers,
   orders: seedOrders,
   inventory,
@@ -814,8 +817,9 @@ export function addService(name: string, unit: Unit, price: number, category?: s
 }
 
 /** Harga baru tidak mengubah pesanan lama: harga disalin ke item saat pesanan dibuat. */
-export function updateService(id: string, name: string, price: number, details?: ServiceDetails) {
+export function updateService(id: string, name: string, price: number, details?: ServiceDetails, category?: string) {
   const valid = validateService(name, price)
+  const cat = category === undefined ? undefined : category.trim()
   const extra = details ? cleanServiceDetails(details) : undefined
   const old = state.services.find((x) => x.id === id)
   const audit =
@@ -834,12 +838,59 @@ export function updateService(id: string, name: string, price: number, details?:
       : state.audit
   emit({ ...state, services: state.services.map((x) => {
       if (x.id !== id) return x
-      if (!extra) return { ...x, ...valid }
+      const withCat = (v: Service): Service => {
+        if (cat === undefined) return v
+        const { category: _old, ...noCat } = v
+        return cat ? { ...noCat, category: cat } : noCat
+      }
+      if (!extra) return withCat({ ...x, ...valid })
       const { subcategory: _a, size: _b, material: _c, estimateHours: _d, ...rest } = x
-      return { ...rest, ...valid, ...extra }
+      return withCat({ ...rest, ...valid, ...extra })
     }),
     audit,
   })
+}
+
+/** Semua nama kategori: dari layanan dan dari kategori kosong buatan owner. Tanpa duplikat. */
+export function allServiceCategories(s: Pick<State, 'services' | 'serviceCategories'>): string[] {
+  const names = new Set<string>()
+  for (const x of s.services) if (x.category) names.add(x.category)
+  for (const c of s.serviceCategories) names.add(c)
+  return [...names]
+}
+
+function validateCategoryName(name: string, except?: string): string {
+  const clean = name.trim()
+  if (!clean) throw new Error('Nama kategori wajib diisi.')
+  if (clean.toLowerCase() === 'lainnya') throw new Error('Nama "Lainnya" dipakai untuk layanan tanpa kategori.')
+  const dup = allServiceCategories(state).find((c) => c.toLowerCase() === clean.toLowerCase() && c !== except)
+  if (dup) throw new Error(`Kategori "${dup}" sudah ada.`)
+  return clean
+}
+
+export function addServiceCategory(name: string) {
+  const clean = validateCategoryName(name)
+  emit({ ...state, serviceCategories: [...state.serviceCategories, clean] })
+}
+
+/** Mengganti nama kategori pada semua layanannya. Harga dan pesanan lama tidak berubah. */
+export function renameServiceCategory(from: string, to: string) {
+  const clean = validateCategoryName(to, from)
+  if (clean === from) return
+  const count = state.services.filter((x) => x.category === from).length
+  emit({
+    ...state,
+    services: state.services.map((x) => (x.category === from ? { ...x, category: clean } : x)),
+    serviceCategories: state.serviceCategories.map((c) => (c === from ? clean : c)),
+    audit: [makeAudit('Kategori layanan', from, clean, 'Ubah nama kategori', from, `${clean} (${count} layanan)`), ...state.audit],
+  })
+}
+
+/** Hanya kategori kosong yang boleh dihapus; kategori berisi layanan harus dikosongkan dulu. */
+export function deleteServiceCategory(name: string) {
+  const used = state.services.filter((x) => x.category === name).length
+  if (used > 0) throw new Error(`Kategori masih dipakai ${used} layanan. Pindahkan atau hapus layanannya dulu.`)
+  emit({ ...state, serviceCategories: state.serviceCategories.filter((c) => c !== name) })
 }
 
 export function setServiceActive(id: string, active: boolean) {

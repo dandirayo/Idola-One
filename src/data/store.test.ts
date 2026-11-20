@@ -3,6 +3,11 @@ import {
   addCustomer,
   addPayment,
   addService,
+  addServiceCategory,
+  allServiceCategories,
+  deleteServiceCategory,
+  getState,
+  renameServiceCategory,
   createOrder,
   getOrder,
   setCustomerActive,
@@ -80,5 +85,41 @@ describe('rincian layanan', () => {
   it('menolak estimasi bukan bilangan bulat positif', () => {
     expect(() => addService('Cuci Tas Uji 2', 'pcs', 30000, 'Tas', { estimateHours: 0 })).toThrow(/Estimasi/)
     expect(() => addService('Cuci Tas Uji 3', 'pcs', 30000, 'Tas', { estimateHours: 1.5 })).toThrow(/Estimasi/)
+  })
+})
+
+describe('kategori layanan', () => {
+  it('menambah kategori kosong, menolak duplikat dan nama Lainnya', () => {
+    addServiceCategory('Karpet Uji')
+    expect(allServiceCategories(getState())).toContain('Karpet Uji')
+    expect(() => addServiceCategory(' karpet uji ')).toThrow(/sudah ada/)
+    expect(() => addServiceCategory('Lainnya')).toThrow(/Lainnya/)
+    expect(() => addServiceCategory('  ')).toThrow(/wajib/)
+  })
+
+  it('mengganti nama kategori pada semua layanannya dan kategori kosong', () => {
+    addServiceCategory('Gorden Uji')
+    const s = addService('Gorden Besar Uji', 'pcs', 40000, 'Gorden Uji')
+    renameServiceCategory('Gorden Uji', 'Tirai Uji')
+    expect(getState().services.find((x) => x.id === s.id)?.category).toBe('Tirai Uji')
+    expect(getState().serviceCategories).not.toContain('Gorden Uji')
+    expect(() => renameServiceCategory('Tirai Uji', 'Karpet Uji')).toThrow(/sudah ada/)
+  })
+
+  it('hanya menghapus kategori yang kosong', () => {
+    addServiceCategory('Boneka Uji')
+    addService('Boneka Besar Uji', 'pcs', 20000, 'Boneka Uji')
+    expect(() => deleteServiceCategory('Boneka Uji')).toThrow(/masih dipakai/)
+    addServiceCategory('Kosong Uji')
+    deleteServiceCategory('Kosong Uji')
+    expect(allServiceCategories(getState())).not.toContain('Kosong Uji')
+  })
+
+  it('memindahkan layanan ke kategori lain lewat updateService', () => {
+    const s = addService('Pindah Uji', 'pcs', 15000, 'Boneka Uji')
+    updateService(s.id, 'Pindah Uji', 15000, undefined, 'Karpet Uji')
+    expect(getState().services.find((x) => x.id === s.id)?.category).toBe('Karpet Uji')
+    updateService(s.id, 'Pindah Uji', 15000, undefined, '')
+    expect(getState().services.find((x) => x.id === s.id)?.category).toBeUndefined()
   })
 })

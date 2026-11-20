@@ -25,7 +25,7 @@ Arti kolom Status pada tabel di bawah:
 - **Sebagian:** ada sebagian yang jadi, sisanya belum. Contoh yang belum ada: login sungguhan (0.10), Realtime pada notifikasi (1.11), unggah foto ke Storage dan uji kamera sungguhan (2.9), paginasi server pada Audit (3.12), Contact Picker (1.2), filter periode, paginasi server, dan "Pesanan Saya" (1.5), kolom penerima (1.6), kolom khusus per jenis pengajuan (2.10), dan akun login karyawan (2.11). Status "Tampilan saja" hanya dipakai bila semua bagian yang tertulis pada tugas sudah ada.
 - **Belum:** belum dikerjakan.
 
-Ringkasan dari 67 tugas (Fase 0 sampai 3): 4 Selesai, 31 Tampilan saja, 17 Sebagian, 15 Belum. Empat belas tugas baru (3.16 sampai 3.29) ditambahkan pada 17 sampai 20 November 2026.
+Ringkasan dari 67 tugas (Fase 0 sampai 3): 4 Selesai, 31 Tampilan saja, 17 Sebagian, 15 Belum. Lima belas tugas baru (3.16 sampai 3.30) ditambahkan pada 17 sampai 20 November 2026.
 
 ---
 
@@ -152,6 +152,7 @@ Tujuan: karyawan dapat menjalankan alur harian dari web.
 | 3.25 | Paritas Android: template WhatsApp (siap diambil dengan total, minta bayar Transfer/QRIS), filter periode dan kecepatan di Pesanan, Pesanan Saya, ubah penanggung jawab dan catatan pesanan, rentang tanggal bebas di Buku Kas dan Laporan, Profil, jenis pengajuan Insentif dan filter kategori | ORD, CSH, RPT, REQ | Tampilan saja |
 | 3.26 | Backup dan Ekspor owner: unduh JSON, pulihkan dari JSON (mengganti data, tercatat di Audit), CSV pelanggan, layanan, pesanan, kas | SET-02 | Tampilan saja |
 | 3.27 | Kerangka halaman baru: top bar selebar layar (logo, cari, lonceng, profil) dan sidebar yang mulai sejajar dengan judul halaman di semua halaman. Tinggi dari --topbar-h. | UX-02 | Tampilan saja |
+| 3.30 | Kategori layanan bisa ditambah, diganti namanya (ikut semua layanannya), dan dihapus bila kosong; kategori tiap layanan bisa diubah. Kategori kosong disimpan di `serviceCategories` | REQ-01 | Tampilan saja |
 | 3.29 | Paritas layanan dan laporan: subkategori, ukuran, bahan, dan estimasi selesai (jam) per layanan; pemasukan dan pengeluaran terbesar di laporan keuangan (5 teratas, tanpa saldo awal); label catatan owner pada persetujuan pengajuan | REQ-01, RPT-01 | Tampilan saja |
 | 3.28 | Form pengajuan terstruktur per jenis (stok, izin, tukar shift, lembur) dan jenis Biaya Operasional (dana operasional atau reimbursement, dibayar lewat tombol Bayar ke kas). Detail disusun `buildRequestDetail` di `src/lib/requests.ts`. Alamat GitHub Pages diperbaiki: router memakai `basename` dari `VITE_BASE` (CI mengisi `/Idola-One/`), `404.html` cadangan, manifest relatif | REQ-01, REQ-04 | Tampilan saja |
 | 3.21 | Katalog layanan asli (161 layanan aktif dari sistem lama) sebagai data contoh, dikelompokkan per kategori, dengan satuan baru pasang, set, meter, dan m². Sumber: `src/data/seed-services.ts`. | SVC-01, 02 | Tampilan saja |
