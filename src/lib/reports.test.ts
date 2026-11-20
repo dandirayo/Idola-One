@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { CashEntry } from './finance'
-import { periodRange } from './finance'
+import { OPENING_CATEGORY, periodRange } from './finance'
 import {
   cashCsv,
   cashReport,
@@ -201,5 +201,30 @@ describe('paymentReportMessage dan whatsappUrl', () => {
 
   it('mengkodekan karakter khusus pada teks', () => {
     expect(whatsappUrl('', 'a b\nc')).toBe('https://wa.me/?text=a%20b%0Ac')
+  })
+})
+
+describe('transaksi terbesar', () => {
+  const e = (id: string, direction: 'in' | 'out', amount: number, category = 'Penjualan'): CashEntry => ({
+    id,
+    at: '2026-11-10T08:00:00.000Z',
+    direction,
+    amount,
+    method: 'cash',
+    category,
+    description: id,
+  })
+  const range = { from: new Date('2026-11-01T00:00:00.000Z'), to: new Date('2026-12-01T00:00:00.000Z') }
+
+  it('mengurutkan dari terbesar, memisahkan masuk dan keluar, dan memotong sampai lima', () => {
+    const entries = [1, 2, 3, 4, 5, 6, 7].map((n) => e(`in${n}`, 'in', n * 1000)).concat([e('out1', 'out', 500), e('out2', 'out', 9000)])
+    const r = cashReport(entries, range)
+    expect(r.topIn.map((x) => x.id)).toEqual(['in7', 'in6', 'in5', 'in4', 'in3'])
+    expect(r.topOut.map((x) => x.id)).toEqual(['out2', 'out1'])
+  })
+
+  it('tidak menghitung saldo awal', () => {
+    const r = cashReport([e('open', 'in', 5_000_000, OPENING_CATEGORY), e('a', 'in', 1000)], range)
+    expect(r.topIn.map((x) => x.id)).toEqual(['a'])
   })
 })

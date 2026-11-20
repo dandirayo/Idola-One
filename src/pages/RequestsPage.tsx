@@ -161,7 +161,7 @@ function RequestCard({ request: r }: { request: EmployeeRequest }) {
         <div className="mt-3 space-y-2 border-t border-line pt-3">
           {r.status === 'pending' && (
             <label className="block text-sm font-semibold">
-              Catatan (wajib bila menolak)
+              Catatan untuk pengaju (wajib bila menolak)
               <input value={note} onChange={(e) => setNote(e.target.value)} className={`${inputClass} mt-1.5`} />
             </label>
           )}

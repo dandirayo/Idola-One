@@ -88,6 +88,18 @@ export interface CashReport {
   count: number
   byMethod: ReturnType<typeof summarize>['byMethod']
   byCategory: CategoryRow[]
+  /** Transaksi terbesar pada periode, terpisah untuk masuk dan keluar (paling banyak TOP_ENTRIES). */
+  topIn: CashEntry[]
+  topOut: CashEntry[]
+}
+
+export const TOP_ENTRIES = 5
+
+function largest(entries: CashEntry[], direction: 'in' | 'out'): CashEntry[] {
+  return entries
+    .filter((e) => e.direction === direction)
+    .sort((a, b) => b.amount - a.amount || b.at.localeCompare(a.at))
+    .slice(0, TOP_ENTRIES)
 }
 
 /** Laporan keuangan periode. Saldo pembuka tidak dihitung sebagai pemasukan. */
@@ -107,6 +119,8 @@ export function cashReport(entries: CashEntry[], range: Range): CashReport {
     count: inPeriod.length,
     byMethod: s.byMethod,
     byCategory: [...categories.values()].sort((a, b) => b.in + b.out - (a.in + a.out)),
+    topIn: largest(inPeriod, 'in'),
+    topOut: largest(inPeriod, 'out'),
   }
 }
 

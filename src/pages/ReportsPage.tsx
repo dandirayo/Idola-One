@@ -9,6 +9,7 @@ import { downloadCsv } from '@/lib/download'
 import { formatQty, formatRupiah } from '@/lib/format'
 import { orderStatusLabel, paymentMethodLabel, type OrderStatus, type PaymentMethod } from '@/lib/orders'
 import { cashCsv, cashReport, orderReport, ordersCsv } from '@/lib/reports'
+import type { CashEntry } from '@/lib/finance'
 
 type Tab = 'orders' | 'cash'
 
@@ -173,8 +174,41 @@ export function ReportsPage() {
               )}
             </Card>
           </div>
+
+          <div className="grid gap-5 lg:grid-cols-2">
+            <TopEntries title="Pemasukan terbesar" entries={cashRep.topIn} tone="text-success" sign="+" />
+            <TopEntries title="Pengeluaran terbesar" entries={cashRep.topOut} tone="text-danger" sign="−" />
+          </div>
         </div>
       )}
     </div>
+  )
+}
+
+function TopEntries({ title, entries, tone, sign }: { title: string; entries: CashEntry[]; tone: string; sign: string }) {
+  return (
+    <Card>
+      <SectionTitle>{title}</SectionTitle>
+      {entries.length === 0 ? (
+        <p className="text-sm text-muted">Belum ada transaksi pada periode ini.</p>
+      ) : (
+        <ol className="space-y-2 text-sm">
+          {entries.map((e) => (
+            <li key={e.id} className="flex justify-between gap-3">
+              <span className="min-w-0">
+                <span className="block truncate font-medium">{e.description}</span>
+                <span className="text-xs text-muted">
+                  {e.category} · {paymentMethodLabel[e.method]} · {e.at.slice(0, 10)}
+                </span>
+              </span>
+              <span className={`shrink-0 font-semibold ${tone}`}>
+                {sign}
+                {formatRupiah(e.amount)}
+              </span>
+            </li>
+          ))}
+        </ol>
+      )}
+    </Card>
   )
 }

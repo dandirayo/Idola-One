@@ -40,6 +40,28 @@ export interface Service {
   category?: string
   /** Item satuan yang boleh diberi insentif karyawan (sepatu, helm, tas). */
   incentive?: boolean
+  /** Rincian opsional seperti di aplikasi Android. */
+  subcategory?: string
+  size?: string
+  material?: string
+  /** Estimasi selesai dalam jam. */
+  estimateHours?: number
+}
+
+export type ServiceDetails = Pick<Service, 'subcategory' | 'size' | 'material' | 'estimateHours'>
+
+/** Merapikan rincian layanan: teks kosong dibuang, estimasi harus bilangan bulat positif. */
+export function cleanServiceDetails(d: ServiceDetails = {}): ServiceDetails {
+  const out: ServiceDetails = {}
+  for (const k of ['subcategory', 'size', 'material'] as const) {
+    const v = d[k]?.trim()
+    if (v) out[k] = v
+  }
+  if (d.estimateHours !== undefined && !Number.isNaN(d.estimateHours)) {
+    if (!Number.isInteger(d.estimateHours) || d.estimateHours <= 0) throw new Error('Estimasi selesai harus bilangan bulat jam lebih dari nol.')
+    out.estimateHours = d.estimateHours
+  }
+  return out
 }
 
 export interface Customer {
@@ -783,17 +805,18 @@ function validateService(name: string, price: number) {
   return { name: clean, price }
 }
 
-export function addService(name: string, unit: Unit, price: number, category?: string): Service {
+export function addService(name: string, unit: Unit, price: number, category?: string, details?: ServiceDetails): Service {
   const valid = validateService(name, price)
   const cat = category?.trim()
-  const service: Service = { id: uid('s'), ...valid, unit, active: true, ...(cat ? { category: cat } : {}) }
+  const service: Service = { id: uid('s'), ...valid, unit, active: true, ...(cat ? { category: cat } : {}), ...cleanServiceDetails(details) }
   emit({ ...state, services: [...state.services, service] })
   return service
 }
 
 /** Harga baru tidak mengubah pesanan lama: harga disalin ke item saat pesanan dibuat. */
-export function updateService(id: string, name: string, price: number) {
+export function updateService(id: string, name: string, price: number, details?: ServiceDetails) {
   const valid = validateService(name, price)
+  const extra = details ? cleanServiceDetails(details) : undefined
   const old = state.services.find((x) => x.id === id)
   const audit =
     old && (old.price !== valid.price || old.name !== valid.name)
@@ -809,7 +832,14 @@ export function updateService(id: string, name: string, price: number) {
           ...state.audit,
         ]
       : state.audit
-  emit({ ...state, services: state.services.map((x) => (x.id === id ? { ...x, ...valid } : x)), audit })
+  emit({ ...state, services: state.services.map((x) => {
+      if (x.id !== id) return x
+      if (!extra) return { ...x, ...valid }
+      const { subcategory: _a, size: _b, material: _c, estimateHours: _d, ...rest } = x
+      return { ...rest, ...valid, ...extra }
+    }),
+    audit,
+  })
 }
 
 export function setServiceActive(id: string, active: boolean) {

@@ -68,3 +68,17 @@ describe('pembayaran', () => {
     expect(getOrder(order.id)?.paid).toBe(30000)
   })
 })
+
+describe('rincian layanan', () => {
+  it('menyimpan subkategori, ukuran, bahan, dan estimasi; membuang teks kosong', () => {
+    const s = addService('Cuci Tas Uji', 'pcs', 30000, 'Tas', { subcategory: ' Ransel ', size: 'Besar', material: '', estimateHours: 48 })
+    expect(s.subcategory).toBe('Ransel')
+    expect(s.size).toBe('Besar')
+    expect(s.material).toBeUndefined()
+    expect(s.estimateHours).toBe(48)
+  })
+  it('menolak estimasi bukan bilangan bulat positif', () => {
+    expect(() => addService('Cuci Tas Uji 2', 'pcs', 30000, 'Tas', { estimateHours: 0 })).toThrow(/Estimasi/)
+    expect(() => addService('Cuci Tas Uji 3', 'pcs', 30000, 'Tas', { estimateHours: 1.5 })).toThrow(/Estimasi/)
+  })
+})

@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/auth'
 import { DeleteButton } from '@/components/ConfirmDialog'
 import { deleteService, serviceUsage } from '@/data/admin'
 import { Card, Hint, inputClass, primaryButton, StatusChip } from '@/components/ui'
-import { addService, setServiceActive, updateService, useStore, type Service } from '@/data/store'
+import { addService, setServiceActive, updateService, useStore, type Service, type ServiceDetails } from '@/data/store'
 import { formatRupiah } from '@/lib/format'
 import { unitLabel, type Unit } from '@/lib/orders'
 
@@ -21,6 +21,7 @@ export function ServicesPage() {
   const [unit, setUnit] = useState<Unit>('kg')
   const [price, setPrice] = useState('')
   const [category, setCategory] = useState('')
+  const [det, setDet] = useState({ subcategory: '', size: '', material: '', estimate: '' })
   const [query, setQuery] = useState('')
   const [error, setError] = useState<string | null>(null)
 
@@ -31,6 +32,12 @@ export function ServicesPage() {
     setUnit(target === 'new' ? 'kg' : target.unit)
     setPrice(target === 'new' ? '' : String(target.price))
     setCategory(target === 'new' ? '' : (target.category ?? ''))
+    setDet({
+      subcategory: target === 'new' ? '' : (target.subcategory ?? ''),
+      size: target === 'new' ? '' : (target.size ?? ''),
+      material: target === 'new' ? '' : (target.material ?? ''),
+      estimate: target === 'new' || !target.estimateHours ? '' : String(target.estimateHours),
+    })
   }
 
   function submit(e: FormEvent) {
@@ -38,8 +45,14 @@ export function ServicesPage() {
     setError(null)
     try {
       const value = Number(price.replace(/\./g, ''))
-      if (editing === 'new') addService(name, unit, value, category)
-      else if (editing) updateService(editing.id, name, value)
+      const details: ServiceDetails = {
+        subcategory: det.subcategory,
+        size: det.size,
+        material: det.material,
+        ...(det.estimate.trim() ? { estimateHours: Number(det.estimate) } : {}),
+      }
+      if (editing === 'new') addService(name, unit, value, category, details)
+      else if (editing) updateService(editing.id, name, value, details)
       setEditing(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal menyimpan layanan.')
@@ -101,7 +114,7 @@ export function ServicesPage() {
 
       {editing && isOwner && (
         <Card>
-          <form onSubmit={submit} noValidate className="grid gap-3 sm:grid-cols-[1fr_12rem_12rem_9rem_auto_auto] sm:items-end">
+          <form onSubmit={submit} noValidate className="grid gap-3 sm:grid-cols-[1fr_12rem_12rem_9rem] sm:items-end">
             <label className="block text-sm font-semibold">
               Nama layanan
               <input value={name} onChange={(e) => setName(e.target.value)} className={`${inputClass} mt-1.5`} />
@@ -146,16 +159,30 @@ export function ServicesPage() {
                 className={`${inputClass} mt-1.5`}
               />
             </label>
-            <button type="submit" className={primaryButton}>
-              {editing === 'new' ? 'Simpan' : 'Perbarui'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setEditing(null)}
-              className="btn btn-secondary"
-            >
-              Batal
-            </button>
+            <label className="block text-sm font-semibold">
+              Subkategori (opsional)
+              <input value={det.subcategory} onChange={(e) => setDet({ ...det, subcategory: e.target.value })} className={`${inputClass} mt-1.5`} />
+            </label>
+            <label className="block text-sm font-semibold">
+              Ukuran (opsional)
+              <input value={det.size} onChange={(e) => setDet({ ...det, size: e.target.value })} placeholder="Kecil, Sedang, Besar" className={`${inputClass} mt-1.5`} />
+            </label>
+            <label className="block text-sm font-semibold">
+              Bahan (opsional)
+              <input value={det.material} onChange={(e) => setDet({ ...det, material: e.target.value })} placeholder="Kulit, Kanvas, ..." className={`${inputClass} mt-1.5`} />
+            </label>
+            <label className="block text-sm font-semibold">
+              Estimasi selesai (jam)
+              <input inputMode="numeric" value={det.estimate} onChange={(e) => setDet({ ...det, estimate: e.target.value })} className={`${inputClass} mt-1.5`} />
+            </label>
+            <div className="flex gap-2 sm:col-span-4">
+              <button type="submit" className={primaryButton}>
+                {editing === 'new' ? 'Simpan' : 'Perbarui'}
+              </button>
+              <button type="button" onClick={() => setEditing(null)} className="btn btn-secondary">
+                Batal
+              </button>
+            </div>
           </form>
           {error && (
             <p role="alert" className="mt-3 text-sm font-medium text-danger">
@@ -211,6 +238,10 @@ export function ServicesPage() {
                       <p className="truncate font-semibold">{s.name}</p>
                       <p className="text-xs text-muted">
                         {formatRupiah(s.price)} / {s.unit}
+                        {[s.subcategory, s.size, s.material, s.estimateHours ? `estimasi ${s.estimateHours} jam` : null]
+                          .filter(Boolean)
+                          .map((t) => ` · ${t}`)
+                          .join('')}
                       </p>
                     </div>
                     {!s.active && <StatusChip label="Nonaktif" tone="peach" />}
