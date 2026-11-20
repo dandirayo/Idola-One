@@ -220,7 +220,7 @@ Prioritas:
 
 | ID | Kebutuhan | Prioritas |
 | --- | --- | --- |
-| REQ-01 | Karyawan mengajukan dengan form sesuai jenis: Kebutuhan Stok, Lembur, Tukar Shift, Izin, Kasbon | P0 |
+| REQ-01 | Karyawan mengajukan dengan form sesuai jenis: Kebutuhan Stok, Lembur, Tukar Shift, Izin, Kasbon, Biaya Operasional (dana operasional atau reimbursement) | P0 |
 | REQ-02 | Pusat Pengajuan owner: filter status, Setujui atau Tolak dengan catatan, Bayar (untuk pengajuan uang), Tandai Dilaksanakan (non-uang) | P0 |
 | REQ-03 | Label status: Menunggu, Disetujui, Ditolak, Dibayar, Dilaksanakan. Nilai `completed` di database tidak ditampilkan sebagai "Selesai". | P0 |
 | REQ-04 | Pengajuan yang berdampak kas tercatat otomatis oleh trigger | P0 |
